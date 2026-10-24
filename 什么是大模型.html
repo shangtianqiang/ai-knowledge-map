@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#FBFAF7">
+<title>大模型是什么？ | 第 0 课 · 给刚接触 AI 的你</title>
+<meta name="description" content="AI 知识地图第 0 课：一页讲清楚大模型（LLM）——下一词预测、Transformer、预训练/微调/对齐三段式训练、上下文窗口与涌现。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2317151F'/%3E%3Ctext x='16' y='22' font-size='15' font-family='monospace' fill='%2394A3B8' text-anchor='middle'%3E%3E_%3C/text%3E%3C/svg%3E">
+<style>
+  :root{
+    --cream:#FBFAF7;
+    --ink:#17151F;
+    --paper:#FFFFFF;
+    --yellow:#FFD166;
+    --slate:#475569;
+    --slate-light:#94A3B8;
+    --muted:rgba(23,21,31,.64);
+    --faint:rgba(23,21,31,.45);
+    --line:rgba(23,21,31,.14);
+    --line-strong:rgba(23,21,31,.85);
+    --cream-muted:rgba(251,250,247,.68);
+    --cream-faint:rgba(251,250,247,.42);
+    --cream-line:rgba(251,250,247,.16);
+    --mono:"SF Mono",ui-monospace,"JetBrains Mono",Menlo,Consolas,"Liberation Mono",monospace;
+    --shadow-card:0 1px 2px rgba(23,21,31,.05),0 10px 28px -14px rgba(23,21,31,.18);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    *,*::before,*::after{animation:none!important;transition:none!important}
+  }
+  body{
+    font-family:"PingFang SC","Microsoft YaHei","Inter Variable",system-ui,sans-serif;
+    background:var(--cream);
+    color:var(--ink);
+    font-size:16px;
+    line-height:1.75;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+  }
+  ::selection{background:var(--slate);color:#fff}
+  a{color:inherit}
+  .container{max-width:1128px;margin:0 auto;padding:0 24px}
+
+  html.js .reveal{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s ease}
+  html.js .reveal.in{opacity:1;transform:none}
+  @media (prefers-reduced-motion:reduce){html.js .reveal{opacity:1;transform:none}}
+  @media print{html.js .reveal{opacity:1!important;transform:none!important}}
+
+  .nav{
+    position:sticky;top:0;z-index:50;
+    background:rgba(251,250,247,.92);
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  .nav-inner{display:flex;align-items:center;justify-content:space-between;height:60px;gap:16px}
+  .brand{display:flex;align-items:center;gap:10px;text-decoration:none;font-weight:800;font-size:15px;letter-spacing:.01em}
+  .brand-mark{
+    width:26px;height:26px;background:var(--ink);color:var(--slate-light);
+    font-family:var(--mono);font-size:12px;font-weight:700;line-height:26px;text-align:center;
+    border-radius:5px;flex:none;
+  }
+  .nav-links{display:flex;align-items:center;gap:22px;list-style:none}
+  .nav-links a{text-decoration:none;font-size:13.5px;font-weight:500;color:var(--muted);transition:color .15s}
+  .nav-links a:hover{color:var(--ink)}
+  .nav-links a.nav-cta{
+    color:var(--ink);font-weight:700;border:1.5px solid var(--line-strong);
+    padding:6px 14px;border-radius:0;
+  }
+  .nav-links a.nav-cta:hover{background:var(--ink);color:var(--cream)}
+  @media (max-width:720px){.nav-links li.hide-sm{display:none}}
+
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:13px 26px;border-radius:0;border:1.5px solid transparent;
+    font-family:inherit;font-size:15px;font-weight:700;letter-spacing:.02em;
+    text-decoration:none;cursor:pointer;transition:transform .15s ease,background .15s ease,color .15s ease,box-shadow .15s ease;
+  }
+  .btn:active{transform:translateY(1px)}
+  .btn-primary{background:var(--slate);color:#fff}
+  .btn-primary:hover{box-shadow:0 6px 0 -2px rgba(23,21,31,.9)}
+  .btn-ghost{border-color:var(--line-strong);color:var(--ink);background:transparent}
+  .btn-ghost:hover{background:var(--ink);color:var(--cream)}
+  .btn-sm{padding:9px 18px;font-size:13.5px}
+
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:9px;
+    font-size:12.5px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;
+  }
+  .eyebrow::before{content:"";width:9px;height:9px;background:currentColor;flex:none}
+  h1{font-size:clamp(42px,6.6vw,74px);line-height:1.08;font-weight:800;letter-spacing:-.015em}
+  h2{font-size:clamp(30px,4.4vw,44px);line-height:1.18;font-weight:800;letter-spacing:-.01em}
+  h3{font-size:20px;font-weight:800;line-height:1.4}
+  .lead{font-size:clamp(17px,2vw,19.5px);line-height:1.8}
+
+  .hero{padding:76px 0 88px}
+  .hero-grid{display:grid;grid-template-columns:1.02fr .98fr;gap:56px;align-items:center}
+  @media (max-width:980px){.hero-grid{grid-template-columns:1fr;gap:44px}}
+  .hero .eyebrow{color:var(--ink);margin-bottom:26px}
+  .hero h1{margin-bottom:24px}
+  .hero .lead{color:var(--ink);margin-bottom:16px;max-width:34em}
+  .hero .example{color:var(--muted);font-size:15.5px;max-width:36em;margin-bottom:32px}
+  .hero .example b{color:var(--ink);font-weight:700}
+  .hero-actions{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:30px}
+  .hero-meta{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{
+    font-size:12px;font-weight:600;color:var(--muted);
+    border:1px solid var(--line);padding:5px 11px;border-radius:999px;
+    display:inline-flex;align-items:center;gap:6px;background:var(--paper);
+  }
+  .chip .dot{width:6px;height:6px;border-radius:50%;background:var(--slate)}
+
+  .terminal{
+    background:var(--ink);border-radius:14px;overflow:hidden;
+    box-shadow:0 2px 4px rgba(23,21,31,.12),0 30px 60px -22px rgba(23,21,31,.45);
+    border:1px solid rgba(23,21,31,.9);
+  }
+  .terminal-bar{
+    display:flex;align-items:center;gap:7px;
+    padding:13px 16px;border-bottom:1px solid var(--cream-line);
+  }
+  .terminal-bar i{width:11px;height:11px;border-radius:50%;background:rgba(251,250,247,.22)}
+  .terminal-bar i:first-child{background:#FF5F57}
+  .terminal-bar i:nth-child(2){background:#FEBC2E}
+  .terminal-bar i:nth-child(3){background:#28C840}
+  .terminal-bar .terminal-title{
+    margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--cream-faint);letter-spacing:.08em;
+  }
+  .terminal-steps{display:flex;gap:6px;padding:12px 14px 0;flex-wrap:wrap}
+  .terminal-steps button{
+    font-family:inherit;font-size:12.5px;font-weight:700;letter-spacing:.04em;
+    background:transparent;color:var(--cream-faint);
+    border:1px solid var(--cream-line);border-radius:999px;
+    padding:5px 13px;cursor:pointer;transition:all .18s;
+  }
+  .terminal-steps button:hover{color:var(--cream);border-color:var(--cream-faint)}
+  .terminal-steps button.active{background:var(--slate);border-color:var(--slate);color:#fff}
+  .terminal-body{padding:18px 20px 22px;min-height:238px;font-family:var(--mono);font-size:13.5px;line-height:1.9}
+  .t-line{white-space:pre-wrap;word-break:break-all}
+  .t-prompt{color:var(--slate-light);font-weight:700;margin-right:9px}
+  .t-cmd{color:var(--cream)}
+  .t-out{color:var(--cream-faint)}
+  .t-ok{color:#3EE8C6}
+  .t-dim{color:rgba(251,250,247,.35)}
+  .t-user{color:var(--yellow)}
+  .t-note{color:var(--cream-faint);font-family:"PingFang SC","Microsoft YaHei",sans-serif;font-size:12px;margin-top:12px;padding-top:10px;border-top:1px dashed var(--cream-line)}
+  .cursor{display:inline-block;width:8px;height:15px;background:var(--slate-light);vertical-align:-2px;animation:blink 1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+  @media (prefers-reduced-motion:reduce){.cursor{animation:none}}
+
+  .section{padding:96px 0}
+  .section-head{max-width:680px;margin-bottom:52px}
+  .section-head .eyebrow{margin-bottom:20px}
+  .section-head p{color:var(--muted);margin-top:16px;font-size:16.5px}
+
+  .section-yellow{background:var(--yellow)}
+  .section-yellow .section-head p{color:rgba(23,21,31,.72)}
+
+  .section-dark{background:var(--ink);color:var(--cream)}
+  .section-dark .eyebrow{color:var(--slate-light)}
+
+  .parts-layout{display:grid;grid-template-columns:.9fr 1.1fr;gap:36px;align-items:start}
+  @media (max-width:900px){.parts-layout{grid-template-columns:1fr}}
+  .parts-list{display:flex;flex-direction:column;gap:10px}
+  .part-btn{
+    display:flex;align-items:center;gap:14px;text-align:left;width:100%;
+    background:var(--paper);border:1.5px solid transparent;border-radius:10px;
+    padding:15px 18px;font-family:inherit;cursor:pointer;
+    transition:transform .16s ease,box-shadow .16s ease,border-color .16s;
+    box-shadow:var(--shadow-card);
+  }
+  .part-btn:hover{transform:translateY(-2px)}
+  .part-btn .num{
+    font-family:var(--mono);font-size:12px;font-weight:700;color:var(--muted);
+    width:30px;height:30px;border:1.5px solid var(--line);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;flex:none;transition:all .16s;
+  }
+  .part-btn .t-name{font-size:15.5px;font-weight:700}
+  .part-btn .t-desc{font-size:13px;color:var(--muted);margin-top:2px}
+  .part-btn.active{border-color:var(--ink);transform:translateY(-2px)}
+  .part-btn.active .num{background:var(--ink);border-color:var(--ink);color:var(--slate-light)}
+  .parts-terminal{position:sticky;top:84px}
+  @media (max-width:900px){.parts-terminal{position:static}}
+
+  .layers{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(23,21,31,.22);border:1.5px solid var(--ink);border-radius:12px;overflow:hidden;margin-top:56px}
+  @media (max-width:820px){.layers{grid-template-columns:1fr}}
+  .layer{background:var(--yellow);padding:26px 26px 24px}
+  .layer .lv{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.14em;color:rgba(23,21,31,.55);display:block;margin-bottom:12px}
+  .layer h3{font-size:17px;margin-bottom:8px}
+  .layer p{font-size:13.5px;color:rgba(23,21,31,.72);line-height:1.7}
+  .layer code{font-family:var(--mono);font-size:12.5px;background:rgba(23,21,31,.1);padding:2px 6px;border-radius:4px}
+
+  .cards-3{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+  @media (max-width:900px){.cards-3{grid-template-columns:1fr}}
+  .card{
+    background:var(--paper);border:1px solid var(--line);border-radius:12px;
+    padding:30px 28px 26px;box-shadow:var(--shadow-card);
+    display:flex;flex-direction:column;
+  }
+  .card .tag-row{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:20px}
+  .tag{
+    font-size:10.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+    padding:4px 9px;border:1px solid var(--line);border-radius:4px;color:var(--muted);
+  }
+  .tag.tag-accent{background:var(--ink);color:var(--slate-light);border-color:var(--ink)}
+  .card h3{margin-bottom:12px}
+  .card p{font-size:14.5px;color:var(--muted);flex:1}
+  .card .seed{
+    margin-top:20px;padding-top:16px;border-top:1px dashed var(--line);
+    font-family:var(--mono);font-size:12px;color:var(--faint);word-break:break-all;
+  }
+  .card .seed b{color:var(--ink);font-weight:700}
+  .cards-note{margin-top:30px;font-size:13px;color:var(--faint);display:flex;align-items:center;gap:8px}
+  .cards-note::before{content:"※";color:var(--muted)}
+
+  .statement{max-width:820px}
+  .statement h2{margin-bottom:28px}
+  .statement .quote{
+    font-size:clamp(17px,2vw,19px);line-height:1.85;color:var(--cream-muted);
+    border-left:3px solid var(--slate-light);padding-left:22px;margin-bottom:52px;max-width:36em;
+  }
+  .statement .quote b{color:var(--cream)}
+  .statement .quote code{font-family:var(--mono);font-size:14px;background:rgba(251,250,247,.12);padding:2px 7px;border-radius:4px;color:var(--cream)}
+  .pillars{display:grid;grid-template-columns:repeat(3,1fr);gap:34px}
+  @media (max-width:820px){.pillars{grid-template-columns:1fr}}
+  .pillar .p-no{font-family:var(--mono);font-size:13px;color:var(--slate-light);font-weight:700;letter-spacing:.12em;display:block;margin-bottom:14px}
+  .pillar h3{color:var(--cream);margin-bottom:10px;font-size:17.5px}
+  .pillar p{font-size:14.5px;color:var(--cream-muted);line-height:1.8}
+  .pillar code{font-family:var(--mono);font-size:12.5px;background:rgba(251,250,247,.12);padding:2px 6px;border-radius:4px;color:var(--cream)}
+
+  .facts{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  @media (max-width:820px){.facts{grid-template-columns:1fr}}
+  .fact{background:var(--paper);padding:26px 26px 22px}
+  .fact .f-k{font-size:12px;font-weight:800;letter-spacing:.14em;color:var(--faint);text-transform:uppercase;display:block;margin-bottom:10px}
+  .fact .f-v{font-size:15.5px;font-weight:600;line-height:1.65}
+  .fact .f-v small{display:block;font-weight:400;font-size:13px;color:var(--muted);margin-top:4px}
+
+  .deep-block{margin-top:76px}
+  .deep-block>h3{margin-bottom:26px;font-size:clamp(21px,2.6vw,25px)}
+
+  .timeline{list-style:none;border-left:2px solid var(--ink);margin-left:6px}
+  .timeline li{position:relative;padding:0 0 26px 28px}
+  .timeline li:last-child{padding-bottom:0}
+  .timeline li::before{
+    content:"";position:absolute;left:-7px;top:9px;width:12px;height:12px;
+    background:var(--slate);border:2px solid var(--ink);border-radius:50%;
+  }
+  .timeline .tl-year{font-family:var(--mono);font-size:12.5px;font-weight:700;letter-spacing:.1em;color:var(--faint);display:block;margin-bottom:4px}
+  .timeline .tl-t{font-weight:800;font-size:16.5px}
+  .timeline p{font-size:14px;color:var(--muted);margin-top:4px;max-width:40em}
+  .timeline code{font-family:var(--mono);font-size:12.5px;background:rgba(23,21,31,.07);padding:2px 6px;border-radius:4px;color:var(--ink)}
+
+  .tensions{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:14px 28px}
+  @media (max-width:820px){.tensions{grid-template-columns:1fr}}
+  .tensions li{
+    display:flex;gap:12px;font-size:14.5px;color:var(--muted);line-height:1.7;
+    padding:14px 0;border-bottom:1px solid var(--line);
+  }
+  .tensions li b{color:var(--ink)}
+  .tensions li::before{content:"◆";color:var(--slate);font-weight:800;flex:none;font-size:12px;padding-top:5px}
+  .tensions-warn{
+    margin-top:26px;padding:18px 22px;border-radius:10px;
+    background:rgba(71,85,105,.08);border:1px solid rgba(71,85,105,.4);
+    font-size:14px;color:var(--muted);
+  }
+  .tensions-warn b{color:var(--ink)}
+
+  .faq-list{max-width:780px}
+  .faq-item{background:var(--paper);border:1.5px solid var(--ink);border-radius:10px;margin-bottom:14px;overflow:hidden;box-shadow:var(--shadow-card)}
+  .faq-item summary{
+    list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:18px;
+    padding:20px 24px;font-weight:700;font-size:16px;
+  }
+  .faq-item summary::-webkit-details-marker{display:none}
+  .faq-item summary .plus{
+    flex:none;width:26px;height:26px;border:1.5px solid var(--ink);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:400;font-size:16px;line-height:1;transition:transform .2s ease,background .2s,color .2s;
+  }
+  .faq-item[open] summary .plus{background:var(--ink);color:var(--yellow);transform:rotate(45deg)}
+  .faq-item .faq-body{padding:0 24px 22px;font-size:14.5px;color:var(--muted);line-height:1.85}
+  .faq-item .faq-body b{color:var(--ink)}
+  .faq-item .faq-body code{font-family:var(--mono);font-size:12.5px;background:rgba(23,21,31,.07);padding:2px 6px;border-radius:4px;color:var(--ink)}
+
+  .aud-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+  @media (max-width:1000px){.aud-grid{grid-template-columns:1fr 1fr}}
+  @media (max-width:640px){.aud-grid{grid-template-columns:1fr}}
+  .aud-card{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:26px 24px;box-shadow:var(--shadow-card);display:flex;flex-direction:column}
+  .aud-card .a-who{font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin-bottom:12px}
+  .aud-card h3{font-size:16.5px;margin-bottom:10px}
+  .aud-card p{font-size:13.5px;color:var(--muted);flex:1;line-height:1.75}
+  .aud-card .start{
+    margin-top:16px;font-family:var(--mono);font-size:11.5px;color:#fff;
+    background:var(--slate);padding:7px 11px;border-radius:6px;word-break:break-all;
+  }
+
+  .sources-card{background:var(--ink);color:var(--cream);border-radius:16px;padding:52px 54px;max-width:860px}
+  @media (max-width:720px){.sources-card{padding:36px 26px}}
+  .sources-card .eyebrow{color:var(--yellow);margin-bottom:28px}
+  .source-item{display:flex;gap:18px;padding:16px 0;border-bottom:1px solid var(--cream-line);text-decoration:none;transition:padding-left .18s}
+  .source-item:hover{padding-left:8px}
+  .source-item:last-of-type{border-bottom:none}
+  .source-item .s-no{font-family:var(--mono);font-size:12.5px;color:var(--slate-light);font-weight:700;flex:none;padding-top:2px}
+  .source-item .s-t{font-weight:700;font-size:15.5px;color:var(--cream)}
+  .source-item .s-d{font-size:13px;color:var(--cream-faint);margin-top:3px}
+  .source-item .s-arrow{margin-left:auto;color:var(--cream-faint);flex:none;padding-top:2px}
+  .sources-note{margin-top:26px;font-size:12.5px;color:var(--cream-faint)}
+
+  .section-cta{background:var(--slate)}
+  .cta-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:48px;align-items:center}
+  @media (max-width:820px){.cta-grid{grid-template-columns:1fr}}
+  .section-cta .eyebrow{color:rgba(255,255,255,.72);margin-bottom:22px}
+  .section-cta h2{margin-bottom:18px;color:#fff}
+  .section-cta p{color:rgba(255,255,255,.85);max-width:30em;margin-bottom:30px}
+  .cta-cmd{
+    display:flex;align-items:flex-start;gap:12px;background:var(--ink);border-radius:10px;
+    padding:16px 18px;font-family:var(--mono);font-size:13px;line-height:1.9;color:var(--cream);
+    max-width:520px;box-shadow:0 14px 30px -12px rgba(23,21,31,.5);
+  }
+  .cta-cmd pre{font-family:inherit;white-space:pre-wrap;word-break:break-all;flex:1;margin:0}
+  .cta-cmd .t-cm{color:var(--slate-light)}
+  .copy-btn{
+    flex:none;font-family:inherit;font-size:11px;font-weight:700;letter-spacing:.08em;
+    background:transparent;color:var(--cream-faint);border:1px solid var(--cream-line);
+    border-radius:4px;padding:4px 9px;cursor:pointer;transition:all .15s;
+  }
+  .cta-cmd .copy-btn{color:var(--cream-muted);border-color:var(--cream-line)}
+  .cta-cmd .copy-btn:hover{color:var(--yellow);border-color:var(--yellow)}
+  .cta-art{display:flex;align-items:center;justify-content:center;gap:22px;font-family:var(--mono);font-weight:700}
+  .cta-art .q,.cta-art .v{font-size:clamp(56px,7vw,88px);line-height:1}
+  .cta-art .q{color:rgba(255,255,255,.32)}
+  .cta-art .v{color:#fff}
+  .cta-art .arrow{font-size:34px;color:rgba(255,255,255,.55)}
+  @media (max-width:820px){.cta-art{display:none}}
+
+  footer{background:var(--ink);color:var(--cream);padding:64px 0 36px}
+  .foot-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:44px;margin-bottom:52px}
+  @media (max-width:820px){.foot-grid{grid-template-columns:1fr}}
+  .foot-brand .brand{color:var(--cream);margin-bottom:16px}
+  .foot-brand .brand-mark{background:var(--slate);color:#fff}
+  .foot-brand p{font-size:13.5px;color:var(--cream-faint);max-width:26em}
+  .foot-col h4{font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--cream-faint);margin-bottom:18px}
+  .foot-col ul{list-style:none}
+  .foot-col li{margin-bottom:11px}
+  .foot-col a{font-size:14px;color:var(--cream-muted);text-decoration:none;transition:color .15s}
+  .foot-col a:hover{color:var(--cream)}
+  .foot-bottom{border-top:1px solid var(--cream-line);padding-top:26px;font-size:12.5px;color:var(--cream-faint);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+  [id]{scroll-margin-top:76px}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="container nav-inner">
+    <a class="brand" href="#top"><span class="brand-mark">&gt;_</span>大模型是什么？</a>
+    <ul class="nav-links">
+      <li class="hide-sm"><a href="#parts">它是怎么炼成的</a></li>
+      <li class="hide-sm"><a href="#timeline">编年史</a></li>
+      <li class="hide-sm"><a href="#makers">代表玩家</a></li>
+      <li class="hide-sm"><a href="#faq">常见问题</a></li>
+      <li><a class="nav-cta" href="index.html">🏠 知识地图</a></li>
+    </ul>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="container hero-grid">
+    <div>
+      <p class="eyebrow">第 0 课 · 给刚接触 AI 的你</p>
+      <h1>大模型<br>是什么？</h1>
+      <p class="lead">大模型（LLM，Large Language Model）是一种用海量文本训练出来的神经网络，它的本职只有一件事：<strong>预测"下一个最合理的词"</strong>。听起来简单，但当规模足够大，这个动作涌现出了翻译、写作、写代码、推理——成了你天天在用的 AI。</p>
+      <p class="example">比如你问"天空为什么是蓝色的"，它并不是在"查资料"，而是在上千亿个参数里算出<b>最像答案的那串词</b>。理解了这一点，你就能明白它为什么会一本正经地编（幻觉）、为什么换个问法答案不同、为什么需要外挂知识（RAG）——后面每一课都从这里出发。</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#parts">看它是怎么炼成的 ↓</a>
+        <a class="btn btn-ghost" href="index.html">🏠 知识地图</a>
+      </div>
+      <div class="hero-meta">
+        <span class="chip"><i class="dot"></i>2017 · Transformer 架构</span>
+        <span class="chip"><i class="dot"></i>2020 · GPT-3 涌现</span>
+        <span class="chip"><i class="dot"></i>下一词预测</span>
+        <span class="chip"><i class="dot"></i>三段式训练</span>
+      </div>
+    </div>
+
+    <div class="terminal" aria-label="大模型原理演示">
+      <div class="terminal-bar"><i></i><i></i><i></i><span class="terminal-title">llm — 原理演示</span></div>
+      <div class="terminal-steps" role="tablist" aria-label="演示步骤">
+        <button type="button" role="tab" data-step="0" aria-selected="true">① 它的本职</button>
+        <button type="button" role="tab" data-step="1" aria-selected="false">② 怎么炼成</button>
+        <button type="button" role="tab" data-step="2" aria-selected="false">③ 规模的回报</button>
+      </div>
+      <div class="terminal-body" id="hero-term" aria-live="polite"></div>
+    </div>
+  </div>
+</header>
+
+<section class="section section-yellow" id="parts">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">六个关键词</p>
+      <h2>把"黑盒"拆开看</h2>
+      <p>不需要数学基础，六个词就能建立正确的直觉。点击左侧关键词，右侧看它的意思。</p>
+    </div>
+
+    <div class="parts-layout">
+      <div class="parts-list" id="parts-list" role="tablist" aria-label="关键词列表"></div>
+      <div class="parts-terminal">
+        <div class="terminal">
+          <div class="terminal-bar"><i></i><i></i><i></i><span class="terminal-title">llm — 内部视角</span></div>
+          <div class="terminal-body" id="parts-term" aria-live="polite"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="layers reveal">
+      <div class="layer">
+        <span class="lv">2017 · 架构奠基</span>
+        <h3>Transformer</h3>
+        <p>Google 团队发表《Attention Is All You Need》：注意力机制让大规模并行训练成为可能——今天所有大模型的共同底座。</p>
+      </div>
+      <div class="layer">
+        <span class="lv">2020 · 涌现时刻</span>
+        <h3>GPT-3</h3>
+        <p>1750 亿参数的模型证明：规模够大时，"给几个例子就会新任务"（few-shot）出现了——能力的来源是规模。</p>
+      </div>
+      <div class="layer">
+        <span class="lv">2022+ · 走进大众</span>
+        <h3>ChatGPT</h3>
+        <p>对话界面 + 对齐训练，让大模型从研究名词变成全民工具——你现在用的 AI 产品，引擎都是它。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="makers">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">代表玩家</p>
+      <h2>三条路线，一个赛道</h2>
+      <p>模型厂商很多，路线大致三条。按本系列惯例：列举不等于背书，能力数字以各家技术报告为准。</p>
+    </div>
+    <div class="cards-3">
+      <article class="card reveal">
+        <div class="tag-row"><span class="tag tag-accent">OpenAI</span><span class="tag">闭源标杆</span></div>
+        <h3>GPT 系列</h3>
+        <p>从 GPT-3（2020）到 GPT-4 与后续推理模型，再到 ChatGPT 产品——把"预测下一个词"变成了现象级消费产品。</p>
+        <div class="seed">关键词 → <b>ChatGPT · 推理模型</b></div>
+      </article>
+      <article class="card reveal">
+        <div class="tag-row"><span class="tag tag-accent">Google</span><span class="tag">研究发源</span></div>
+        <h3>Transformer 与 Gemini</h3>
+        <p>架构诞生地（2017 年论文出自 Google 团队），后以 Gemini 系列参战，多模态与研究积累是它的底色。</p>
+        <div class="seed">关键词 → <b>Transformer · Gemini</b></div>
+      </article>
+      <article class="card reveal">
+        <div class="tag-row"><span class="tag tag-accent">开源阵营</span><span class="tag">Llama · DeepSeek</span></div>
+        <h3>开放权重路线</h3>
+        <p>Meta 的 Llama 与 DeepSeek 等开放权重模型，让任何人都能下载、微调、私有部署——本系列的 DeepSeek 就是代表。</p>
+        <div class="seed">关键词 → <b>开放权重 · 私有部署</b></div>
+      </article>
+    </div>
+    <p class="cards-note reveal">模型与版本迭代极快 · 选择时以最新技术报告与评测为准。</p>
+  </div>
+</section>
+
+<section class="section section-dark" id="why">
+  <div class="container">
+    <div class="statement reveal">
+      <p class="eyebrow">为什么重要</p>
+      <h2>它不是数据库，<br>也不是搜索引擎。</h2>
+      <p class="quote">大模型内化的是<b>"语言与世界的模式"</b>，不是一条条事实的快照。所以它的知识会过时、有缺口、给不出出处——这不是 bug，是这种"压缩式记忆"的天然属性。理解了这一点，本系列后面每一页才有了共同的坐标系：RAG 是<b>补知识</b>，提示工程是<b>改输入</b>，幻觉管理是<b>管错误</b>。</p>
+      <div class="pillars">
+        <div class="pillar reveal">
+          <span class="p-no">01</span>
+          <h3>下一词预测</h3>
+          <p>一切能力的源头：把"猜下一个词"做到极致，语言、知识、推理就在参数里长了出来。</p>
+        </div>
+        <div class="pillar reveal">
+          <span class="p-no">02</span>
+          <h3>压缩式记忆</h3>
+          <p>训练像把整个互联网"压缩"进参数——记住的是模式，不是原文；所以会过时、有缺口、无出处。</p>
+        </div>
+        <div class="pillar reveal">
+          <span class="p-no">03</span>
+          <h3>规模带来质变</h3>
+          <p>参数、数据、算力一起涨，能力不只是"变好"，还会"变出"新能力（涌现）——这就是 Scaling Law 的信仰来源。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="what">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">依据与事实</p>
+      <h2>先说清楚这个引擎</h2>
+    </div>
+    <div class="facts reveal">
+      <div class="fact"><span class="f-k">全称</span><div class="f-v">LLM · Large Language Model<small>大语言模型——"用海量语言数据训练出来的模型"</small></div></div>
+      <div class="fact"><span class="f-k">架构</span><div class="f-v">Transformer（2017）<small>《Attention Is All You Need》，arXiv:1706.03762</small></div></div>
+      <div class="fact"><span class="f-k">本职</span><div class="f-v">下一词预测<small>每个回答都是一串概率接龙</small></div></div>
+      <div class="fact"><span class="f-k">训练</span><div class="f-v">预训练 → SFT → RLHF<small>学语言 → 学当助手 → 学好好说话</small></div></div>
+      <div class="fact"><span class="f-k">规模</span><div class="f-v">千亿参数起步<small>GPT-3 已是 175B（2020）；如今更大且更高效</small></div></div>
+      <div class="fact"><span class="f-k">边界</span><div class="f-v">会过时 · 有缺口 · 无出处<small>知识冻结在训练数据——所以需要 RAG 与搜索工具</small></div></div>
+    </div>
+
+    <div class="deep-block reveal" id="timeline">
+      <h3>一部简短的编年史</h3>
+      <ul class="timeline">
+        <li>
+          <span class="tl-year">2017</span>
+          <span class="tl-t">架构奠基</span>
+          <p>Google 团队发表 Transformer 架构：注意力机制取代循环网络，"大"第一次有了可行的工程路径。</p>
+        </li>
+        <li>
+          <span class="tl-year">2020</span>
+          <span class="tl-t">涌现时刻</span>
+          <p>GPT-3 论文证明：不改一个参数，只把示例写进输入，模型就能学会新任务——上下文学习走入视野。</p>
+        </li>
+        <li>
+          <span class="tl-year">2022</span>
+          <span class="tl-t">全民化</span>
+          <p>ChatGPT 上线两个月破亿用户；同年思维链论文发表——大模型的能力与用法同时被打开。</p>
+        </li>
+        <li>
+          <span class="tl-year">2023–2024</span>
+          <span class="tl-t">多线开花</span>
+          <p>开源权重（Llama、DeepSeek）、多模态、推理模型（o1）相继出现——能力曲线全面陡增。</p>
+        </li>
+        <li>
+          <span class="tl-year">2025–2026</span>
+          <span class="tl-t">成为基础设施</span>
+          <p>大模型沉到 Agent、编程工具、办公软件的地基里——你天天用的 AI 产品，引擎全是它。</p>
+        </li>
+      </ul>
+    </div>
+
+    <div class="deep-block reveal">
+      <h3>设计张力与常见误解</h3>
+      <ul class="tensions">
+        <li><span><b>更大 vs 更贵</b>——参数越大能力越强，训练与推理成本也越高；MoE 与蒸馏是省钱的艺术。</span></li>
+        <li><span><b>通用 vs 专精</b>——通用模型什么都会一点，垂域模型在窄处更深；按场景选。</span></li>
+        <li><span><b>开源 vs 闭源</b>——开放权重换自由与隐私，闭源换顶尖能力与省心；两者长期共存。</span></li>
+        <li><span><b>生成 vs 检索</b>——模型擅长"像"，不负责"真"；事实性交给 RAG 与搜索工具。</span></li>
+        <li><span><b>快 vs 深</b>——秒回的直觉答案 vs 慢下来的推理链；推理档位是给难题准备的。</span></li>
+        <li><span><b>中文 vs 英文</b>——训练语料英文 historically 更多，但主流模型的中英差距已大幅缩小。</span></li>
+      </ul>
+      <p class="tensions-warn"><b>三个常见误解：</b>① "它会联网查资料"——默认不会，除非产品接了搜索工具；② "它记得训练时的原文"——记住的是压缩后的模式，不是抄写；③ "AI = 大模型"——大模型只是引擎，Agent、工具、界面都是外挂（这正是本系列后面几课的内容）。</p>
+    </div>
+  </div>
+</section>
+
+<section class="section section-yellow" id="faq">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">接下来继续了解</p>
+      <h2>常见问题</h2>
+    </div>
+    <div class="faq-list">
+      <details class="faq-item reveal">
+        <summary>大模型和 ChatGPT 是什么关系？<span class="plus">+</span></summary>
+        <div class="faq-body">引擎和整车的关系：大模型是引擎（能力来源），ChatGPT 是整车（对话界面 + 工具 + 安全 + 产品设计）。同一家可以拿引擎造不同的车，别家也能造自己的引擎。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>Token 是什么？为什么按它收费？<span class="plus">+</span></summary>
+        <div class="faq-body">Token 是模型读文本的最小单位，一个汉字约 1–2 个。你输入的和它输出的都按 token 计量——所以"提示写得又长又乱"不只是效果问题，也是真金白银。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>它训练完就定死了吗？新事情它怎么知道？<span class="plus">+</span></summary>
+        <div class="faq-body">对，训练结束那一刻，它的知识就"冻结"了（知识截止日期的由来）。之后的世界它一无所知——除非给它接搜索工具，或用 RAG 把新资料检索给它（见本系列 RAG 一课）。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>参数量越大越好吗？<span class="plus">+</span></summary>
+        <div class="faq-body">大体正相关，但不绝对：数据质量、训练方法、架构效率都影响结果——今天的小模型在很多任务上能打几年前的巨无霸。看评测选型，别只看参数。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>开源模型和闭源模型怎么选？<span class="plus">+</span></summary>
+        <div class="faq-body">闭源换顶尖能力与省心（API 一调就用）；开源（开放权重）换自由——可私有部署、可微调、数据不出门。预算敏感、数据敏感选开源；追极限能力选闭源 API。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>我该从哪里开始用？<span class="plus">+</span></summary>
+        <div class="faq-body">直接用起来：打开任意一个 AI 对话产品，问一个你熟悉领域的问题，然后追问三次"为什么"。用过一周，再回到<a href="什么是思维链.html">第 01 课：思维链</a>——你会发现每一课都说的是你刚经历的事。</div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="who">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">它适合谁</p>
+      <h2>四类读者，四个入口</h2>
+    </div>
+    <div class="aud-grid">
+      <div class="aud-card reveal">
+        <span class="a-who">For Beginners</span>
+        <h3>零基础新手</h3>
+        <p>建立正确的第一直觉：它会猜、会编、会过时——这些不是缺陷清单，是使用说明书。</p>
+        <div class="start">下一课 → 思维链</div>
+      </div>
+      <div class="aud-card reveal">
+        <span class="a-who">For Students</span>
+        <h3>学生</h3>
+        <p>从 Transformer 论文与 GPT-3 论文读起，理解"规模"二字在 AI 史上的分量。</p>
+        <div class="start">起点 → arXiv:1706.03762</div>
+      </div>
+      <div class="aud-card reveal">
+        <span class="a-who">For PMs</span>
+        <h3>产品经理</h3>
+        <p>知道引擎的能力边界，才能设计出合理的产品承诺与兜底体验。</p>
+        <div class="start">起点 → 构件 ④ 上下文窗口</div>
+      </div>
+      <div class="aud-card reveal">
+        <span class="a-who">For Curious</span>
+        <h3>好奇者</h3>
+        <p>看懂新闻里的"参数""微调""对齐"到底在说什么，从此不听唬。</p>
+        <div class="start">起点 → 术语速查（主页）</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="sources" style="padding-top:24px">
+  <div class="container">
+    <div class="sources-card reveal">
+      <p class="eyebrow">来源与延伸阅读</p>
+      <a class="source-item" href="https://arxiv.org/abs/1706.03762" target="_blank" rel="noopener">
+        <span class="s-no">01</span>
+        <span><span class="s-t">arXiv:1706.03762 · Attention Is All You Need</span><br><span class="s-d">Transformer 架构原始论文（2017）</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="https://arxiv.org/abs/2005.14165" target="_blank" rel="noopener">
+        <span class="s-no">02</span>
+        <span><span class="s-t">arXiv:2005.14165 · GPT-3 论文</span><br><span class="s-d">Language Models are Few-Shot Learners（2020）</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="https://www.3blue1brown.com/topics/neural-networks" target="_blank" rel="noopener">
+        <span class="s-no">03</span>
+        <span><span class="s-t">3Blue1Brown · 神经网络系列视频</span><br><span class="s-d">公认最好的可视化入门，含大模型专题</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="https://www.promptingguide.ai/zh" target="_blank" rel="noopener">
+        <span class="s-no">04</span>
+        <span><span class="s-t">提示工程指南（中文版）</span><br><span class="s-d">基础概念速览与后续学习路线</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="什么是思维链.html">
+        <span class="s-no">05</span>
+        <span><span class="s-t">下一课 · 什么是思维链？</span><br><span class="s-d">懂了引擎，再学怎么让它想清楚（本系列）</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <p class="sources-note">本页内容整理自以上公开资料，更新于 2026 年 10 月。模型迭代极快，能力数字以各家技术报告为准。</p>
+    </div>
+  </div>
+</section>
+
+<section class="section section-cta">
+  <div class="container cta-grid">
+    <div class="reveal">
+      <p class="eyebrow">开始动手</p>
+      <h2>从一次对话开始</h2>
+      <p>理论讲完了——最好的理解方式是带着这个问题去用一周 AI。</p>
+      <div class="cta-cmd">
+        <pre><span class="t-cm">·</span> 问一个你熟悉领域的问题
+<span class="t-cm">·</span> 追问它的依据
+<span class="t-cm">·</span> 换个问法再问一次
+<span class="t-cm">·</span> 观察：哪里稳、哪里编</pre>
+        <button class="copy-btn" data-copy="问一个你熟悉领域的问题&#10;追问它的依据&#10;换个问法再问一次&#10;观察：哪里稳、哪里编">复制</button>
+      </div>
+    </div>
+    <div class="cta-art" aria-hidden="true">
+      <span class="q">?</span><span class="arrow">→</span><span class="v">✓</span>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <a class="brand" href="#top"><span class="brand-mark">&gt;_</span>大模型是什么？</a>
+        <p>第 0 课：下一词预测、三段式训练、压缩式记忆与涌现——后面每一课的坐标系。</p>
+      </div>
+      <div class="foot-col">
+        <h4>本页导航</h4>
+        <ul>
+          <li><a href="#parts">六个关键词</a></li>
+          <li><a href="#timeline">编年史</a></li>
+          <li><a href="#makers">代表玩家</a></li>
+          <li><a href="#faq">常见问题</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h4>本系列</h4>
+        <ul>
+          <li><a href="index.html">🏠 知识地图（主页）</a></li>
+          <li><a href="#top">什么是大模型？（本页）</a></li>
+          <li><a href="什么是思维链.html">什么是思维链？</a></li>
+          <li><a href="什么是Prompt工程.html">什么是 Prompt 工程？</a></li>
+          <li><a href="什么是幻觉.html">什么是幻觉？</a></li>
+          <li><a href="什么是RAG.html">什么是 RAG？</a></li>
+          <li><a href="什么是Agent.html">什么是 AI Agent？</a></li>
+          <li><a href="什么是Skill.html">什么是 Skill？</a></li>
+          <li><a href="什么是MCP.html">什么是 MCP？</a></li>
+          <li><a href="什么是AgentHarness.html">什么是 Agent Harness？</a></li>
+          <li><a href="什么是DeepSeekHarness.html">什么是 DeepSeek Harness？</a></li>
+          <li><a href="什么是飞书CLI.html">什么是飞书 CLI？</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>本页为独立学习指南，与所提及的各家公司没有关联 · 内容整理自公开资料</span>
+      <span>更新于 2026 年 10 月</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+document.documentElement.classList.add('js');
+
+var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function el(tag, cls, text){
+  var n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text !== undefined) n.textContent = text;
+  return n;
+}
+
+function typeCmd(span, text, done){
+  if (reduceMotion){ span.textContent = text; done && done(); return; }
+  var i = 0;
+  (function tick(){
+    span.textContent = text.slice(0, ++i);
+    if (i < text.length){ setTimeout(tick, text[i-1] === ' ' ? 34 : 18); }
+    else { done && done(); }
+  })();
+}
+
+function renderTerm(container, spec){
+  container.innerHTML = '';
+  var line = el('div','t-line');
+  var prompt = el('span','t-prompt', spec.prompt || '❯');
+  var cmd = el('span','t-cmd');
+  var cur = el('span','cursor');
+  line.appendChild(prompt); line.appendChild(cmd); line.appendChild(cur);
+  container.appendChild(line);
+  typeCmd(cmd, spec.cmd, function(){
+    cur.remove();
+    (spec.out || []).forEach(function(o){
+      container.appendChild(el('div','t-line ' + (o.cls || 't-out'), o.text));
+    });
+    if (spec.note) container.appendChild(el('div','t-note', spec.note));
+  });
+}
+
+var heroSteps = [
+  {
+    cmd: '"天空为什么是"',
+    prompt: '你',
+    out: [
+      { text: '→ 模型计算下一个词的概率分布', cls: 't-out' },
+      { text: '"蓝" 87% · "这么" 6% · "红" 2% …', cls: 't-out' },
+      { text: '✓ 选一个，接上，再算下一个——如此往复', cls: 't-ok' }
+    ],
+    note: '一切回答都是概率接龙：没有"查资料"动作，只有"最合理的续写"。'
+  },
+  {
+    cmd: '预训练 → SFT → RLHF',
+    out: [
+      { text: '① 预训练：读遍互联网，学语言与世界', cls: 't-out' },
+      { text: '② 微调 SFT：看人类示范，学"怎么当助手"', cls: 't-out' },
+      { text: '③ RLHF：人类打分，学会好好说话', cls: 't-ok' },
+      { text: '✓ 能力来自第一段，礼貌来自后两段', cls: 't-ok' }
+    ],
+    note: '三段各管一层——这也是"同一个模型，不同产品性格不同"的原因。'
+  },
+  {
+    cmd: '参数 ↑ 数据 ↑ 算力 ↑',
+    out: [
+      { text: '→ 2020：GPT-3 证明"大"有回报', cls: 't-out' },
+      { text: '→ 给几个例子就会新任务（few-shot）', cls: 't-out' },
+      { text: '✓ 涌现 + Scaling Law：整个行业的信仰曲线', cls: 't-ok' }
+    ],
+    note: '规模不只是"变好"，还会"变出"新能力——这是大模型的"大"字的分量。'
+  }
+];
+
+var heroTerm = document.getElementById('hero-term');
+var heroBtns = document.querySelectorAll('.terminal-steps button');
+var heroStopped = false;
+
+function showHeroStep(i){
+  heroBtns.forEach(function(b, j){
+    b.classList.toggle('active', i === j);
+    b.setAttribute('aria-selected', i === j ? 'true' : 'false');
+  });
+  renderTerm(heroTerm, heroSteps[i]);
+}
+heroBtns.forEach(function(b){
+  b.addEventListener('click', function(){
+    heroStopped = true;
+    showHeroStep(+b.dataset.step);
+  });
+});
+showHeroStep(0);
+(function autoAdvance(){
+  if (reduceMotion) return;
+  var idx = 0;
+  setInterval(function(){
+    if (heroStopped) return;
+    idx = (idx + 1) % heroSteps.length;
+    showHeroStep(idx);
+  }, 7000);
+})();
+
+var parts = [
+  {
+    name: 'Token 词元', desc: '模型眼里的最小文字单位',
+    spec: {
+      cmd: '"天空" → [3024, 1186]',
+      out: [
+        { text: '→ 一个汉字约 1–2 个 token', cls: 't-out' },
+        { text: '→ 输入输出都按 token 计量与计费', cls: 't-out' },
+        { text: '✓ 上下文窗口的大小也用它衡量', cls: 't-ok' }
+      ],
+      note: '提示写得又长又乱，不只是效果差——也是真金白银。'
+    }
+  },
+  {
+    name: '预训练', desc: '读遍互联网，学语言与世界',
+    spec: {
+      cmd: 'next-token prediction × 万亿级',
+      out: [
+        { text: '→ 海量文本上反复做"猜下一个词"', cls: 't-out' },
+        { text: '→ 语法、事实、推理模式被压进参数', cls: 't-out' },
+        { text: '✓ 一次训练：数月 · 数千卡 · 数千万美元', cls: 't-ok' }
+      ],
+      note: '压缩的是"模式"不是"原文"——这决定了它的知识会过时、有缺口。'
+    }
+  },
+  {
+    name: '微调与对齐', desc: 'SFT + RLHF · 学会当助手',
+    spec: {
+      cmd: 'human demo → reward model',
+      out: [
+        { text: '→ SFT：照着人类示范学回答格式', cls: 't-out' },
+        { text: '→ RLHF：人对回答打分，模型学偏好', cls: 't-out' },
+        { text: '✓ 同一引擎，不同产品"性格"不同', cls: 't-ok' }
+      ],
+      note: '能力在预训练里，"好好说话"在后两段——三段缺一不可。'
+    }
+  },
+  {
+    name: '上下文窗口', desc: '它一次能"看到"多少',
+    spec: {
+      cmd: 'context window: 128K ~ 1M tokens',
+      out: [
+        { text: '→ 窗口内的内容它才"知道"', cls: 't-out' },
+        { text: '→ 窗口外的，只能靠训练记忆或外挂', cls: 't-out' },
+        { text: '→ 超长会话要做压缩（compaction）', cls: 't-ok' },
+        { text: '✓ 上下文工程的主战场', cls: 't-ok' }
+      ],
+      note: '它没有真正的"长期记忆"——所谓记住，是每一轮都把内容重新放进窗口。'
+    }
+  },
+  {
+    name: '涌现与 Scaling Law', desc: '规模的回报曲线',
+    spec: {
+      cmd: 'loss ↓ (smooth) · 能力 ↑ (jumpy)',
+      out: [
+        { text: '→ 训练损失平滑下降', cls: 't-out' },
+        { text: '→ 某些能力在跨过规模门槛后突然出现', cls: 't-out' },
+        { text: '✓ "大"字的分量：不只是更好，是会变出', cls: 't-ok' }
+      ],
+      note: '涌现与 Scaling Law 是行业信仰的地基——也是巨额投入的理由。'
+    }
+  },
+  {
+    name: '它不是数据库', desc: '压缩式记忆的边界',
+    spec: {
+      cmd: 'knowledge = f(训练数据, 截止日)',
+      out: [
+        { text: '→ 记住的是模式，不是原文', cls: 't-out' },
+        { text: '→ 训练截止后的事，一无所知', cls: 't-out' },
+        { text: '→ 缺口处：流畅但可能编造', cls: 't-out' },
+        { text: '✓ 所以需要 RAG / 搜索工具补位', cls: 't-ok' }
+      ],
+      note: '记住这条，幻觉与 RAG 两课就都有了坐标系。'
+    }
+  }
+];
+
+var partsList = document.getElementById('parts-list');
+var partsTerm = document.getElementById('parts-term');
+parts.forEach(function(t, i){
+  var b = el('button', 'part-btn' + (i === 0 ? ' active' : ''));
+  b.type = 'button';
+  b.setAttribute('role', 'tab');
+  b.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
+  b.appendChild(el('span', 'num', String(i + 1)));
+  var wrap = el('span');
+  wrap.appendChild(el('span', 't-name', t.name));
+  wrap.appendChild(document.createElement('br'));
+  wrap.appendChild(el('span', 't-desc', t.desc));
+  b.appendChild(wrap);
+  b.addEventListener('click', function(){
+    partsList.querySelectorAll('.part-btn').forEach(function(x){
+      x.classList.remove('active'); x.setAttribute('aria-selected', 'false');
+    });
+    b.classList.add('active'); b.setAttribute('aria-selected', 'true');
+    renderTerm(partsTerm, t.spec);
+  });
+  partsList.appendChild(b);
+});
+renderTerm(partsTerm, parts[0].spec);
+
+document.querySelectorAll('.copy-btn').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    var text = btn.dataset.copy || '';
+    var done = function(){
+      var old = btn.textContent;
+      btn.textContent = '已复制 ✓';
+      setTimeout(function(){ btn.textContent = old; }, 1600);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done, function(){ fallbackCopy(text); done(); });
+    } else { fallbackCopy(text); done(); }
+  });
+});
+function fallbackCopy(text){
+  var ta = document.createElement('textarea');
+  ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); } catch(e){}
+  ta.remove();
+}
+
+var revealEls = document.querySelectorAll('.reveal');
+if ('IntersectionObserver' in window && !reduceMotion){
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if (en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); }
+    });
+  }, { threshold: 0.12 });
+  revealEls.forEach(function(n){ io.observe(n); });
+} else {
+  revealEls.forEach(function(n){ n.classList.add('in'); });
+}
+</script>
+</body>
+</html>

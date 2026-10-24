@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#FBFAF7">
-<title>AI 大模型知识地图 | 八个专题，从怎么问到怎么动手</title>
-<meta name="description" content="一套中文 AI 知识手册：思维链、Prompt 工程、幻觉、RAG、MCP、Agent Harness、DeepSeek Harness、飞书 CLI——八个专题页与 30+ 术语速查，全部整理自公开资料。">
+<title>AI 大模型知识地图 | 十一个专题，从怎么问到怎么动手</title>
+<meta name="description" content="一套中文 AI 知识手册：大模型、思维链、Prompt 工程、幻觉、RAG、AI Agent、Skill、MCP、Agent Harness、DeepSeek Harness、飞书 CLI——十一个专题页与 40+ 术语速查，全部整理自公开资料。">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2317151F'/%3E%3Ctext x='16' y='22' font-size='15' font-family='monospace' fill='%23FFD166' text-anchor='middle'%3E%3E_%3C/text%3E%3C/svg%3E">
 <style>
   :root{
@@ -265,14 +265,14 @@
     <div>
       <p class="eyebrow">一套正在生长的中文知识手册</p>
       <h1>AI 大模型<br>知识地图</h1>
-      <p class="lead">八个高频术语，一页一个：从"怎么问"到"怎么动手"。每一页都是单文件、零依赖、可离线阅读的独立指南——内容整理自官方文档与论文，不作任何背书。</p>
-      <p class="example">不知道从哪开始？<b>按 01 → 08 的顺序读</b>：先懂模型怎么"想"（思维链）、你怎么"问"（Prompt 工程），再看它会怎么"错"（幻觉）、怎么"补知识"（RAG），最后进入"怎么动手"（MCP、Harness）与真实产品。</p>
+      <p class="lead">十一个高频术语，一页一个：从"怎么问"到"怎么动手"。每一页都是单文件、零依赖、可离线阅读的独立指南——内容整理自官方文档与论文，不作任何背书。</p>
+      <p class="example">不知道从哪开始？<b>按 01 → 11 的顺序读</b>：先懂它是什么、怎么"想"（大模型、思维链），你怎么"问"（Prompt 工程），再看它会怎么"错"（幻觉）、知识怎么"补"（RAG），然后认识"会做"的 Agent（Skill、MCP、Harness），最后看真实产品。</p>
       <div class="hero-actions">
         <a class="btn btn-primary" href="#path">查看学习路径 ↓</a>
-        <a class="btn btn-ghost" href="什么是思维链.html">直接开始第 01 课 →</a>
+        <a class="btn btn-ghost" href="什么是大模型.html">直接开始第 01 课 →</a>
       </div>
       <div class="hero-meta">
-        <span class="chip"><i class="dot"></i>8 个专题页</span>
+        <span class="chip"><i class="dot"></i>11 个专题页</span>
         <span class="chip"><i class="dot"></i>40+ 术语速查</span>
         <span class="chip"><i class="dot"></i>单文件 · 离线可读</span>
         <span class="chip"><i class="dot"></i>更新于 2026 年 10 月</span>
@@ -291,55 +291,73 @@
   <div class="container">
     <div class="section-head reveal">
       <p class="eyebrow">学习路径</p>
-      <h2>八站，一条主线</h2>
-      <p>顺序不是随意的：先懂模型怎么"想"、你怎么"问"，再看它会怎么"错"、知识怎么"补"，最后是"动手"的能力与真实的产品。点击任意卡片进入专题页。</p>
+      <h2>十一站，一条主线</h2>
+      <p>顺序不是随意的：先懂模型是什么、怎么"想"，你怎么"问"，再看它会怎么"错"、知识怎么"补"，然后认识"会做"的 Agent，最后是"动手"的能力与真实的产品。点击任意卡片进入专题页。</p>
     </div>
 
     <div class="path-grid">
+      <a class="path-card reveal" href="什么是大模型.html" style="--pc:#475569">
+        <span class="p-top"><span class="p-no">01</span><span class="p-tag">第 0 课</span></span>
+        <h3>大模型</h3>
+        <p>它的本职只有"预测下一个词"——但规模够大后，涌现出了你现在看到的一切能力。</p>
+        <span class="p-go">开始阅读 <span class="p-time">≈ 6 min</span></span>
+      </a>
       <a class="path-card reveal" href="什么是思维链.html" style="--pc:#0E7490">
-        <span class="p-top"><span class="p-no">01</span><span class="p-tag">怎么想</span></span>
+        <span class="p-top"><span class="p-no">02</span><span class="p-tag">怎么想</span></span>
         <h3>思维链</h3>
         <p>让模型把中间步骤写出来再作答——2022 年的一篇论文，如今长成了"推理模型"整个品类。</p>
         <span class="p-go">开始阅读 <span class="p-time">≈ 6 min</span></span>
       </a>
       <a class="path-card reveal" href="什么是Prompt工程.html" style="--pc:#6E56CF">
-        <span class="p-top"><span class="p-no">02</span><span class="p-tag">怎么问</span></span>
+        <span class="p-top"><span class="p-no">03</span><span class="p-tag">怎么问</span></span>
         <h3>Prompt 工程</h3>
         <p>提示词不是咒语，是你与模型的接口规范：说清楚、给示例、定格式、配评测。</p>
         <span class="p-go">开始阅读 <span class="p-time">≈ 7 min</span></span>
       </a>
       <a class="path-card reveal" href="什么是幻觉.html" style="--pc:#E5484D">
-        <span class="p-top"><span class="p-no">03</span><span class="p-tag">怎么错</span></span>
+        <span class="p-top"><span class="p-no">04</span><span class="p-tag">怎么错</span></span>
         <h3>幻觉</h3>
         <p>流畅、自信、错误。它不是撒谎，是机制的伴生物——三个诱因、四道闸门，只能管理不能根除。</p>
         <span class="p-go">开始阅读 <span class="p-time">≈ 6 min</span></span>
       </a>
       <a class="path-card reveal" href="什么是RAG.html" style="--pc:#D6409F">
-        <span class="p-top"><span class="p-no">04</span><span class="p-tag">怎么补知识</span></span>
+        <span class="p-top"><span class="p-no">05</span><span class="p-tag">怎么补知识</span></span>
         <h3>RAG</h3>
         <p>让模型开卷考试：先从你的资料里检索，再作答——答案有出处、可更新、可授权。</p>
         <span class="p-go">开始阅读 <span class="p-time">≈ 6 min</span></span>
       </a>
+      <a class="path-card reveal" href="什么是Agent.html" style="--pc:#4F46E5">
+        <span class="p-top"><span class="p-no">06</span><span class="p-tag">从会说到会做</span></span>
+        <h3>AI Agent</h3>
+        <p>给目标不给步骤：它自己规划、调用工具、根据反馈纠错——一种新的软件形态。</p>
+        <span class="p-go">开始阅读 <span class="p-time">≈ 6 min</span></span>
+      </a>
+      <a class="path-card reveal" href="什么是Skill.html" style="--pc:#B45309">
+        <span class="p-top"><span class="p-no">07</span><span class="p-tag">教它手艺</span></span>
+        <h3>Skill</h3>
+        <p>给 Agent 的操作手册：一页 SKILL.md，让团队的手艺变成可分发的资产。</p>
+        <span class="p-go">开始阅读 <span class="p-time">≈ 6 min</span></span>
+      </a>
       <a class="path-card reveal" href="什么是MCP.html" style="--pc:#2B8A3E">
-        <span class="p-top"><span class="p-no">05</span><span class="p-tag">怎么连接</span></span>
+        <span class="p-top"><span class="p-no">08</span><span class="p-tag">怎么连接</span></span>
         <h3>MCP</h3>
         <p>AI 应用的 USB-C：一个开放协议，让工具与数据即插即用——连竞争对手都愿意共建。</p>
         <span class="p-go">开始阅读 <span class="p-time">≈ 6 min</span></span>
       </a>
       <a class="path-card reveal" href="什么是AgentHarness.html" style="--pc:#FF6B35">
-        <span class="p-top"><span class="p-no">06</span><span class="p-tag">怎么动手</span></span>
+        <span class="p-top"><span class="p-no">09</span><span class="p-tag">怎么动手</span></span>
         <h3>Agent Harness</h3>
         <p>包在模型外面的运行时骨架：循环、工具、沙盒与留痕。模型负责聪明，它负责可靠。</p>
         <span class="p-go">开始阅读 <span class="p-time">≈ 7 min</span></span>
       </a>
       <a class="path-card reveal" href="什么是DeepSeekHarness.html" style="--pc:#4D6BFE">
-        <span class="p-top"><span class="p-no">07</span><span class="p-tag">开源样本</span></span>
+        <span class="p-top"><span class="p-no">10</span><span class="p-tag">开源样本</span></span>
         <h3>DeepSeek Harness</h3>
         <p>"Everything is a Plugin"：DeepSeek 开源的 Agent 运行框架，GitHub 26 万 Star 的当代实现。</p>
         <span class="p-go">开始阅读 <span class="p-time">≈ 7 min</span></span>
       </a>
       <a class="path-card reveal" href="什么是飞书CLI.html" style="--pc:#00BFA6">
-        <span class="p-top"><span class="p-no">08</span><span class="p-tag">真实产品</span></span>
+        <span class="p-top"><span class="p-no">11</span><span class="p-tag">真实产品</span></span>
         <h3>飞书 CLI</h3>
         <p>给 Agent 装上飞书的那双手：官方开源的命令行工具，一行命令读消息、写文档、查日历。</p>
         <span class="p-go">开始阅读 <span class="p-time">≈ 6 min</span></span>
@@ -362,9 +380,9 @@
       <details class="gl-item" open>
         <summary>模型本体<span class="g-count">8 词</span><span class="plus">+</span></summary>
         <div class="gl-rows">
-          <div class="gl-row"><span class="g-term">Token 词元</span><span class="g-def">模型读文本的最小单位，一个汉字约 1–2 个 token；计费、限速、上下文上限都按它算。</span></div>
-          <div class="gl-row"><span class="g-term">上下文窗口</span><span class="g-def">模型一次能"看到"的内容上限（如 128K、1M token），超了就要靠压缩或检索。</span></div>
-          <div class="gl-row"><span class="g-term">预训练 / 微调</span><span class="g-def">先"读遍互联网"打基础（Pre-training），再用专业数据调教出特定能力（Fine-tuning / SFT）。</span></div>
+          <div class="gl-row"><span class="g-term">Token 词元</span><span class="g-def">模型读文本的最小单位，一个汉字约 1–2 个 token；计费、限速、上下文上限都按它算。<a href="什么是大模型.html">有专页 ↗</a></span></div>
+          <div class="gl-row"><span class="g-term">上下文窗口</span><span class="g-def">模型一次能"看到"的内容上限（如 128K、1M token），超了就要靠压缩或检索。<a href="什么是大模型.html">有专页 ↗</a></span></div>
+          <div class="gl-row"><span class="g-term">预训练 / 微调</span><span class="g-def">先"读遍互联网"打基础（Pre-training），再用专业数据调教出特定能力（Fine-tuning / SFT）。<a href="什么是大模型.html">有专页 ↗</a></span></div>
           <div class="gl-row"><span class="g-term">RLHF</span><span class="g-def">人类反馈强化学习：让人给回答打分，模型据此"学乖"——ChatGPT 好好说话的关键一步。</span></div>
           <div class="gl-row"><span class="g-term">MoE 混合专家</span><span class="g-def">大模型内部分成很多"专家"，每次只唤醒几个——DeepSeek V3 的标志性设计。</span></div>
           <div class="gl-row"><span class="g-term">蒸馏</span><span class="g-def">让小模型模仿大模型的输出来变强，"以师徒制降本"。</span></div>
@@ -397,9 +415,10 @@
       </details>
 
       <details class="gl-item">
-        <summary>Agent 与工具<span class="g-count">7 词</span><span class="plus">+</span></summary>
+        <summary>Agent 与工具<span class="g-count">8 词</span><span class="plus">+</span></summary>
         <div class="gl-rows">
-          <div class="gl-row"><span class="g-term">Agent</span><span class="g-def">能感知、规划并动手执行任务的 AI 系统。<a href="什么是AgentHarness.html">有专页 ↗</a></span></div>
+          <div class="gl-row"><span class="g-term">Agent</span><span class="g-def">能感知、规划并动手执行任务的 AI 系统。<a href="什么是Agent.html">有专页 ↗</a></span></div>
+          <div class="gl-row"><span class="g-term">Skill 技能</span><span class="g-def">给 Agent 的操作手册：SKILL.md 按需加载，团队手艺变成资产。<a href="什么是Skill.html">有专页 ↗</a></span></div>
           <div class="gl-row"><span class="g-term">Harness / Scaffolding</span><span class="g-def">包在模型外面的运行时骨架 / 开跑前组装的静态件。<a href="什么是AgentHarness.html">有专页 ↗</a></span></div>
           <div class="gl-row"><span class="g-term">Agent 循环</span><span class="g-def">取观察 → 出动作 → 回填，直到模型说"做完了"。</span></div>
           <div class="gl-row"><span class="g-term">Function Calling</span><span class="g-def">模型输出结构化的"调用请求"，由外部程序执行。</span></div>
@@ -447,11 +466,11 @@
     <div class="about-grid reveal">
       <div>
         <h3>这是什么</h3>
-        <p>独立学习指南：八个专题页整理自官方文档、论文与权威媒体，与所提及的各家公司没有关联。第三方说法均标注"本站未复测"。</p>
+        <p>独立学习指南：十一个专题页整理自官方文档、论文与权威媒体，与所提及的各家公司没有关联。第三方说法均标注"本站未复测"。</p>
       </div>
       <div>
         <h3>怎么读</h3>
-        <p>建议按 <code>01 → 08</code> 的学习路径推进，每页 5–10 分钟；页面之间通过页脚互链，<a href="#path">随时回到地图</a>。术语速查适合当工具书翻。</p>
+        <p>建议按 <code>01 → 11</code> 的学习路径推进，每页 5–10 分钟；页面之间通过页脚互链，<a href="#path">随时回到地图</a>。术语速查适合当工具书翻。</p>
       </div>
       <div>
         <h3>怎么维护</h3>
@@ -467,7 +486,7 @@
     <div class="foot-grid">
       <div class="foot-brand">
         <a class="brand" href="#top"><span class="brand-mark">&gt;_</span>AI 大模型知识地图</a>
-        <p>八个专题、四十多个术语，从"怎么问"到"怎么动手"——给想用好 AI 的人的一份中文地图。</p>
+        <p>十一个专题、四十多个术语，从"怎么问"到"怎么动手"——给想用好 AI 的人的一份中文地图。</p>
       </div>
       <div class="foot-col">
         <h4>本页导航</h4>
@@ -480,14 +499,17 @@
       <div class="foot-col">
         <h4>本系列</h4>
         <ul>
-          <li><a href="什么是思维链.html">01 · 什么是思维链？</a></li>
-          <li><a href="什么是Prompt工程.html">02 · 什么是 Prompt 工程？</a></li>
-          <li><a href="什么是幻觉.html">03 · 什么是幻觉？</a></li>
-          <li><a href="什么是RAG.html">04 · 什么是 RAG？</a></li>
-          <li><a href="什么是MCP.html">05 · 什么是 MCP？</a></li>
-          <li><a href="什么是AgentHarness.html">06 · 什么是 Agent Harness？</a></li>
-          <li><a href="什么是DeepSeekHarness.html">07 · 什么是 DeepSeek Harness？</a></li>
-          <li><a href="什么是飞书CLI.html">08 · 什么是飞书 CLI？</a></li>
+          <li><a href="什么是大模型.html">01 · 什么是大模型？</a></li>
+          <li><a href="什么是思维链.html">02 · 什么是思维链？</a></li>
+          <li><a href="什么是Prompt工程.html">03 · 什么是 Prompt 工程？</a></li>
+          <li><a href="什么是幻觉.html">04 · 什么是幻觉？</a></li>
+          <li><a href="什么是RAG.html">05 · 什么是 RAG？</a></li>
+          <li><a href="什么是Agent.html">06 · 什么是 AI Agent？</a></li>
+          <li><a href="什么是Skill.html">07 · 什么是 Skill？</a></li>
+          <li><a href="什么是MCP.html">08 · 什么是 MCP？</a></li>
+          <li><a href="什么是AgentHarness.html">09 · 什么是 Agent Harness？</a></li>
+          <li><a href="什么是DeepSeekHarness.html">10 · 什么是 DeepSeek Harness？</a></li>
+          <li><a href="什么是飞书CLI.html">11 · 什么是飞书 CLI？</a></li>
         </ul>
       </div>
     </div>
@@ -524,16 +546,19 @@ function typeCmd(span, text, done){
 var heroTerm = document.getElementById('hero-term');
 var tree = [
   { text: 'AI 大模型知识地图/', cls: 't-out' },
-  { text: '├── 01 思维链          —— 模型怎么想', cls: 't-out' },
-  { text: '├── 02 Prompt 工程     —— 你怎么问', cls: 't-out' },
-  { text: '├── 03 幻觉            —— 它会怎么错', cls: 't-out' },
-  { text: '├── 04 RAG             —— 知识怎么补', cls: 't-out' },
-  { text: '├── 05 MCP             —— 能力怎么接', cls: 't-out' },
-  { text: '├── 06 Agent Harness   —— 怎么有纪律地动手', cls: 't-out' },
-  { text: '├── 07 DeepSeek Harness —— 一个开源样本', cls: 't-out' },
-  { text: '└── 08 飞书 CLI        —— 一个真实产品', cls: 't-out' },
+  { text: '├── 01 大模型           —— 它是什么', cls: 't-out' },
+  { text: '├── 02 思维链           —— 模型怎么想', cls: 't-out' },
+  { text: '├── 03 Prompt 工程      —— 你怎么问', cls: 't-out' },
+  { text: '├── 04 幻觉             —— 它会怎么错', cls: 't-out' },
+  { text: '├── 05 RAG              —— 知识怎么补', cls: 't-out' },
+  { text: '├── 06 AI Agent         —— 从会说到会做', cls: 't-out' },
+  { text: '├── 07 Skill            —— 教它一门手艺', cls: 't-out' },
+  { text: '├── 08 MCP              —— 能力怎么接', cls: 't-out' },
+  { text: '├── 09 Agent Harness    —— 怎么有纪律地动手', cls: 't-out' },
+  { text: '├── 10 DeepSeek Harness —— 一个开源样本', cls: 't-out' },
+  { text: '└── 11 飞书 CLI         —— 一个真实产品', cls: 't-out' },
   { text: '', cls: 't-dim' },
-  { text: '8 个专题 · 40+ 术语 · 全部离线可读', cls: 't-ok' }
+  { text: '11 个专题 · 40+ 术语 · 全部离线可读', cls: 't-ok' }
 ];
 
 (function renderTree(){

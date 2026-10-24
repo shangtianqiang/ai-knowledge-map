@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#FBFAF7">
+<title>Skill 是什么？ | 给 Agent 的操作手册</title>
+<meta name="description" content="一页讲清楚 Agent Skill（技能）：SKILL.md 格式、渐进披露三层机制、怎么安装与分享，以及为什么说 MCP 给它工具、Skill 给它手艺。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2317151F'/%3E%3Ctext x='16' y='22' font-size='15' font-family='monospace' fill='%23D99A4E' text-anchor='middle'%3E%3E_%3C/text%3E%3C/svg%3E">
+<style>
+  :root{
+    --cream:#FBFAF7;
+    --ink:#17151F;
+    --paper:#FFFFFF;
+    --yellow:#FFD166;
+    --amber:#B45309;
+    --amber-light:#D99A4E;
+    --muted:rgba(23,21,31,.64);
+    --faint:rgba(23,21,31,.45);
+    --line:rgba(23,21,31,.14);
+    --line-strong:rgba(23,21,31,.85);
+    --cream-muted:rgba(251,250,247,.68);
+    --cream-faint:rgba(251,250,247,.42);
+    --cream-line:rgba(251,250,247,.16);
+    --mono:"SF Mono",ui-monospace,"JetBrains Mono",Menlo,Consolas,"Liberation Mono",monospace;
+    --shadow-card:0 1px 2px rgba(23,21,31,.05),0 10px 28px -14px rgba(23,21,31,.18);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    *,*::before,*::after{animation:none!important;transition:none!important}
+  }
+  body{
+    font-family:"PingFang SC","Microsoft YaHei","Inter Variable",system-ui,sans-serif;
+    background:var(--cream);
+    color:var(--ink);
+    font-size:16px;
+    line-height:1.75;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+  }
+  ::selection{background:var(--amber);color:#fff}
+  a{color:inherit}
+  .container{max-width:1128px;margin:0 auto;padding:0 24px}
+
+  html.js .reveal{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s ease}
+  html.js .reveal.in{opacity:1;transform:none}
+  @media (prefers-reduced-motion:reduce){html.js .reveal{opacity:1;transform:none}}
+  @media print{html.js .reveal{opacity:1!important;transform:none!important}}
+
+  .nav{
+    position:sticky;top:0;z-index:50;
+    background:rgba(251,250,247,.92);
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  .nav-inner{display:flex;align-items:center;justify-content:space-between;height:60px;gap:16px}
+  .brand{display:flex;align-items:center;gap:10px;text-decoration:none;font-weight:800;font-size:15px;letter-spacing:.01em}
+  .brand-mark{
+    width:26px;height:26px;background:var(--ink);color:var(--amber-light);
+    font-family:var(--mono);font-size:12px;font-weight:700;line-height:26px;text-align:center;
+    border-radius:5px;flex:none;
+  }
+  .nav-links{display:flex;align-items:center;gap:22px;list-style:none}
+  .nav-links a{text-decoration:none;font-size:13.5px;font-weight:500;color:var(--muted);transition:color .15s}
+  .nav-links a:hover{color:var(--ink)}
+  .nav-links a.nav-cta{
+    color:var(--ink);font-weight:700;border:1.5px solid var(--line-strong);
+    padding:6px 14px;border-radius:0;
+  }
+  .nav-links a.nav-cta:hover{background:var(--ink);color:var(--cream)}
+  @media (max-width:720px){.nav-links li.hide-sm{display:none}}
+
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:13px 26px;border-radius:0;border:1.5px solid transparent;
+    font-family:inherit;font-size:15px;font-weight:700;letter-spacing:.02em;
+    text-decoration:none;cursor:pointer;transition:transform .15s ease,background .15s ease,color .15s ease,box-shadow .15s ease;
+  }
+  .btn:active{transform:translateY(1px)}
+  .btn-primary{background:var(--amber);color:#fff}
+  .btn-primary:hover{box-shadow:0 6px 0 -2px rgba(23,21,31,.9)}
+  .btn-ghost{border-color:var(--line-strong);color:var(--ink);background:transparent}
+  .btn-ghost:hover{background:var(--ink);color:var(--cream)}
+  .btn-sm{padding:9px 18px;font-size:13.5px}
+
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:9px;
+    font-size:12.5px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;
+  }
+  .eyebrow::before{content:"";width:9px;height:9px;background:currentColor;flex:none}
+  h1{font-size:clamp(42px,6.6vw,74px);line-height:1.08;font-weight:800;letter-spacing:-.015em}
+  h2{font-size:clamp(30px,4.4vw,44px);line-height:1.18;font-weight:800;letter-spacing:-.01em}
+  h3{font-size:20px;font-weight:800;line-height:1.4}
+  .lead{font-size:clamp(17px,2vw,19.5px);line-height:1.8}
+
+  .hero{padding:76px 0 88px}
+  .hero-grid{display:grid;grid-template-columns:1.02fr .98fr;gap:56px;align-items:center}
+  @media (max-width:980px){.hero-grid{grid-template-columns:1fr;gap:44px}}
+  .hero .eyebrow{color:var(--ink);margin-bottom:26px}
+  .hero h1{margin-bottom:24px}
+  .hero .lead{color:var(--ink);margin-bottom:16px;max-width:34em}
+  .hero .example{color:var(--muted);font-size:15.5px;max-width:36em;margin-bottom:32px}
+  .hero .example b{color:var(--ink);font-weight:700}
+  .hero-actions{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:30px}
+  .hero-meta{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{
+    font-size:12px;font-weight:600;color:var(--muted);
+    border:1px solid var(--line);padding:5px 11px;border-radius:999px;
+    display:inline-flex;align-items:center;gap:6px;background:var(--paper);
+  }
+  .chip .dot{width:6px;height:6px;border-radius:50%;background:var(--amber)}
+
+  .terminal{
+    background:var(--ink);border-radius:14px;overflow:hidden;
+    box-shadow:0 2px 4px rgba(23,21,31,.12),0 30px 60px -22px rgba(23,21,31,.45);
+    border:1px solid rgba(23,21,31,.9);
+  }
+  .terminal-bar{
+    display:flex;align-items:center;gap:7px;
+    padding:13px 16px;border-bottom:1px solid var(--cream-line);
+  }
+  .terminal-bar i{width:11px;height:11px;border-radius:50%;background:rgba(251,250,247,.22)}
+  .terminal-bar i:first-child{background:#FF5F57}
+  .terminal-bar i:nth-child(2){background:#FEBC2E}
+  .terminal-bar i:nth-child(3){background:#28C840}
+  .terminal-bar .terminal-title{
+    margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--cream-faint);letter-spacing:.08em;
+  }
+  .terminal-steps{display:flex;gap:6px;padding:12px 14px 0;flex-wrap:wrap}
+  .terminal-steps button{
+    font-family:inherit;font-size:12.5px;font-weight:700;letter-spacing:.04em;
+    background:transparent;color:var(--cream-faint);
+    border:1px solid var(--cream-line);border-radius:999px;
+    padding:5px 13px;cursor:pointer;transition:all .18s;
+  }
+  .terminal-steps button:hover{color:var(--cream);border-color:var(--cream-faint)}
+  .terminal-steps button.active{background:var(--amber);border-color:var(--amber);color:#fff}
+  .terminal-body{padding:18px 20px 22px;min-height:238px;font-family:var(--mono);font-size:13.5px;line-height:1.9}
+  .t-line{white-space:pre-wrap;word-break:break-all}
+  .t-prompt{color:var(--amber-light);font-weight:700;margin-right:9px}
+  .t-cmd{color:var(--cream)}
+  .t-out{color:var(--cream-faint)}
+  .t-ok{color:#3EE8C6}
+  .t-dim{color:rgba(251,250,247,.35)}
+  .t-user{color:var(--yellow)}
+  .t-note{color:var(--cream-faint);font-family:"PingFang SC","Microsoft YaHei",sans-serif;font-size:12px;margin-top:12px;padding-top:10px;border-top:1px dashed var(--cream-line)}
+  .cursor{display:inline-block;width:8px;height:15px;background:var(--amber-light);vertical-align:-2px;animation:blink 1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+  @media (prefers-reduced-motion:reduce){.cursor{animation:none}}
+
+  .section{padding:96px 0}
+  .section-head{max-width:680px;margin-bottom:52px}
+  .section-head .eyebrow{margin-bottom:20px}
+  .section-head p{color:var(--muted);margin-top:16px;font-size:16.5px}
+
+  .section-yellow{background:var(--yellow)}
+  .section-yellow .section-head p{color:rgba(23,21,31,.72)}
+
+  .section-dark{background:var(--ink);color:var(--cream)}
+  .section-dark .eyebrow{color:var(--amber-light)}
+
+  .parts-layout{display:grid;grid-template-columns:.9fr 1.1fr;gap:36px;align-items:start}
+  @media (max-width:900px){.parts-layout{grid-template-columns:1fr}}
+  .parts-list{display:flex;flex-direction:column;gap:10px}
+  .part-btn{
+    display:flex;align-items:center;gap:14px;text-align:left;width:100%;
+    background:var(--paper);border:1.5px solid transparent;border-radius:10px;
+    padding:15px 18px;font-family:inherit;cursor:pointer;
+    transition:transform .16s ease,box-shadow .16s ease,border-color .16s;
+    box-shadow:var(--shadow-card);
+  }
+  .part-btn:hover{transform:translateY(-2px)}
+  .part-btn .num{
+    font-family:var(--mono);font-size:12px;font-weight:700;color:var(--muted);
+    width:30px;height:30px;border:1.5px solid var(--line);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;flex:none;transition:all .16s;
+  }
+  .part-btn .t-name{font-size:15.5px;font-weight:700}
+  .part-btn .t-desc{font-size:13px;color:var(--muted);margin-top:2px}
+  .part-btn.active{border-color:var(--ink);transform:translateY(-2px)}
+  .part-btn.active .num{background:var(--ink);border-color:var(--ink);color:var(--amber-light)}
+  .parts-terminal{position:sticky;top:84px}
+  @media (max-width:900px){.parts-terminal{position:static}}
+
+  .layers{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(23,21,31,.22);border:1.5px solid var(--ink);border-radius:12px;overflow:hidden;margin-top:56px}
+  @media (max-width:820px){.layers{grid-template-columns:1fr}}
+  .layer{background:var(--yellow);padding:26px 26px 24px}
+  .layer .lv{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.14em;color:rgba(23,21,31,.55);display:block;margin-bottom:12px}
+  .layer h3{font-size:17px;margin-bottom:8px}
+  .layer p{font-size:13.5px;color:rgba(23,21,31,.72);line-height:1.7}
+  .layer code{font-family:var(--mono);font-size:12.5px;background:rgba(23,21,31,.1);padding:2px 6px;border-radius:4px}
+
+  .cards-3{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+  @media (max-width:900px){.cards-3{grid-template-columns:1fr}}
+  .card{
+    background:var(--paper);border:1px solid var(--line);border-radius:12px;
+    padding:30px 28px 26px;box-shadow:var(--shadow-card);
+    display:flex;flex-direction:column;
+  }
+  .card .tag-row{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:20px}
+  .tag{
+    font-size:10.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+    padding:4px 9px;border:1px solid var(--line);border-radius:4px;color:var(--muted);
+  }
+  .tag.tag-accent{background:var(--ink);color:var(--amber-light);border-color:var(--ink)}
+  .card h3{margin-bottom:12px}
+  .card p{font-size:14.5px;color:var(--muted);flex:1}
+  .card .seed{
+    margin-top:20px;padding-top:16px;border-top:1px dashed var(--line);
+    font-family:var(--mono);font-size:12px;color:var(--faint);word-break:break-all;
+  }
+  .card .seed b{color:var(--ink);font-weight:700}
+  .cards-note{margin-top:30px;font-size:13px;color:var(--faint);display:flex;align-items:center;gap:8px}
+  .cards-note::before{content:"※";color:var(--muted)}
+
+  .statement{max-width:820px}
+  .statement h2{margin-bottom:28px}
+  .statement .quote{
+    font-size:clamp(17px,2vw,19px);line-height:1.85;color:var(--cream-muted);
+    border-left:3px solid var(--amber-light);padding-left:22px;margin-bottom:52px;max-width:36em;
+  }
+  .statement .quote b{color:var(--cream)}
+  .statement .quote code{font-family:var(--mono);font-size:14px;background:rgba(251,250,247,.12);padding:2px 7px;border-radius:4px;color:var(--cream)}
+  .pillars{display:grid;grid-template-columns:repeat(3,1fr);gap:34px}
+  @media (max-width:820px){.pillars{grid-template-columns:1fr}}
+  .pillar .p-no{font-family:var(--mono);font-size:13px;color:var(--amber-light);font-weight:700;letter-spacing:.12em;display:block;margin-bottom:14px}
+  .pillar h3{color:var(--cream);margin-bottom:10px;font-size:17.5px}
+  .pillar p{font-size:14.5px;color:var(--cream-muted);line-height:1.8}
+  .pillar code{font-family:var(--mono);font-size:12.5px;background:rgba(251,250,247,.12);padding:2px 6px;border-radius:4px;color:var(--cream)}
+
+  .facts{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  @media (max-width:820px){.facts{grid-template-columns:1fr}}
+  .fact{background:var(--paper);padding:26px 26px 22px}
+  .fact .f-k{font-size:12px;font-weight:800;letter-spacing:.14em;color:var(--faint);text-transform:uppercase;display:block;margin-bottom:10px}
+  .fact .f-v{font-size:15.5px;font-weight:600;line-height:1.65}
+  .fact .f-v small{display:block;font-weight:400;font-size:13px;color:var(--muted);margin-top:4px}
+
+  .deep-block{margin-top:76px}
+  .deep-block>h3{margin-bottom:26px;font-size:clamp(21px,2.6vw,25px)}
+
+  .timeline{list-style:none;border-left:2px solid var(--ink);margin-left:6px}
+  .timeline li{position:relative;padding:0 0 26px 28px}
+  .timeline li:last-child{padding-bottom:0}
+  .timeline li::before{
+    content:"";position:absolute;left:-7px;top:9px;width:12px;height:12px;
+    background:var(--amber);border:2px solid var(--ink);border-radius:50%;
+  }
+  .timeline .tl-year{font-family:var(--mono);font-size:12.5px;font-weight:700;letter-spacing:.1em;color:var(--faint);display:block;margin-bottom:4px}
+  .timeline .tl-t{font-weight:800;font-size:16.5px}
+  .timeline p{font-size:14px;color:var(--muted);margin-top:4px;max-width:40em}
+  .timeline code{font-family:var(--mono);font-size:12.5px;background:rgba(23,21,31,.07);padding:2px 6px;border-radius:4px;color:var(--ink)}
+
+  .tensions{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:14px 28px}
+  @media (max-width:820px){.tensions{grid-template-columns:1fr}}
+  .tensions li{
+    display:flex;gap:12px;font-size:14.5px;color:var(--muted);line-height:1.7;
+    padding:14px 0;border-bottom:1px solid var(--line);
+  }
+  .tensions li b{color:var(--ink)}
+  .tensions li::before{content:"◆";color:var(--amber);font-weight:800;flex:none;font-size:12px;padding-top:5px}
+  .tensions-warn{
+    margin-top:26px;padding:18px 22px;border-radius:10px;
+    background:rgba(180,83,9,.08);border:1px solid rgba(180,83,9,.4);
+    font-size:14px;color:var(--muted);
+  }
+  .tensions-warn b{color:var(--ink)}
+
+  .faq-list{max-width:780px}
+  .faq-item{background:var(--paper);border:1.5px solid var(--ink);border-radius:10px;margin-bottom:14px;overflow:hidden;box-shadow:var(--shadow-card)}
+  .faq-item summary{
+    list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:18px;
+    padding:20px 24px;font-weight:700;font-size:16px;
+  }
+  .faq-item summary::-webkit-details-marker{display:none}
+  .faq-item summary .plus{
+    flex:none;width:26px;height:26px;border:1.5px solid var(--ink);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:400;font-size:16px;line-height:1;transition:transform .2s ease,background .2s,color .2s;
+  }
+  .faq-item[open] summary .plus{background:var(--ink);color:var(--yellow);transform:rotate(45deg)}
+  .faq-item .faq-body{padding:0 24px 22px;font-size:14.5px;color:var(--muted);line-height:1.85}
+  .faq-item .faq-body b{color:var(--ink)}
+  .faq-item .faq-body code{font-family:var(--mono);font-size:12.5px;background:rgba(23,21,31,.07);padding:2px 6px;border-radius:4px;color:var(--ink)}
+
+  .aud-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+  @media (max-width:1000px){.aud-grid{grid-template-columns:1fr 1fr}}
+  @media (max-width:640px){.aud-grid{grid-template-columns:1fr}}
+  .aud-card{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:26px 24px;box-shadow:var(--shadow-card);display:flex;flex-direction:column}
+  .aud-card .a-who{font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin-bottom:12px}
+  .aud-card h3{font-size:16.5px;margin-bottom:10px}
+  .aud-card p{font-size:13.5px;color:var(--muted);flex:1;line-height:1.75}
+  .aud-card .start{
+    margin-top:16px;font-family:var(--mono);font-size:11.5px;color:#fff;
+    background:var(--amber);padding:7px 11px;border-radius:6px;word-break:break-all;
+  }
+
+  .sources-card{background:var(--ink);color:var(--cream);border-radius:16px;padding:52px 54px;max-width:860px}
+  @media (max-width:720px){.sources-card{padding:36px 26px}}
+  .sources-card .eyebrow{color:var(--yellow);margin-bottom:28px}
+  .source-item{display:flex;gap:18px;padding:16px 0;border-bottom:1px solid var(--cream-line);text-decoration:none;transition:padding-left .18s}
+  .source-item:hover{padding-left:8px}
+  .source-item:last-of-type{border-bottom:none}
+  .source-item .s-no{font-family:var(--mono);font-size:12.5px;color:var(--amber-light);font-weight:700;flex:none;padding-top:2px}
+  .source-item .s-t{font-weight:700;font-size:15.5px;color:var(--cream)}
+  .source-item .s-d{font-size:13px;color:var(--cream-faint);margin-top:3px}
+  .source-item .s-arrow{margin-left:auto;color:var(--cream-faint);flex:none;padding-top:2px}
+  .sources-note{margin-top:26px;font-size:12.5px;color:var(--cream-faint)}
+
+  .section-cta{background:var(--amber)}
+  .cta-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:48px;align-items:center}
+  @media (max-width:820px){.cta-grid{grid-template-columns:1fr}}
+  .section-cta .eyebrow{color:rgba(255,255,255,.72);margin-bottom:22px}
+  .section-cta h2{margin-bottom:18px;color:#fff}
+  .section-cta p{color:rgba(255,255,255,.85);max-width:30em;margin-bottom:30px}
+  .cta-cmd{
+    display:flex;align-items:flex-start;gap:12px;background:var(--ink);border-radius:10px;
+    padding:16px 18px;font-family:var(--mono);font-size:13px;line-height:1.9;color:var(--cream);
+    max-width:540px;box-shadow:0 14px 30px -12px rgba(23,21,31,.5);
+  }
+  .cta-cmd pre{font-family:inherit;white-space:pre-wrap;word-break:break-all;flex:1;margin:0}
+  .cta-cmd .t-cm{color:var(--amber-light)}
+  .copy-btn{
+    flex:none;font-family:inherit;font-size:11px;font-weight:700;letter-spacing:.08em;
+    background:transparent;color:var(--cream-faint);border:1px solid var(--cream-line);
+    border-radius:4px;padding:4px 9px;cursor:pointer;transition:all .15s;
+  }
+  .cta-cmd .copy-btn{color:var(--cream-muted);border-color:var(--cream-line)}
+  .cta-cmd .copy-btn:hover{color:var(--yellow);border-color:var(--yellow)}
+  .cta-art{display:flex;align-items:center;justify-content:center;gap:22px;font-family:var(--mono);font-weight:700}
+  .cta-art .q,.cta-art .v{font-size:clamp(56px,7vw,88px);line-height:1}
+  .cta-art .q{color:rgba(255,255,255,.32)}
+  .cta-art .v{color:#fff}
+  .cta-art .arrow{font-size:34px;color:rgba(255,255,255,.55)}
+  @media (max-width:820px){.cta-art{display:none}}
+
+  footer{background:var(--ink);color:var(--cream);padding:64px 0 36px}
+  .foot-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:44px;margin-bottom:52px}
+  @media (max-width:820px){.foot-grid{grid-template-columns:1fr}}
+  .foot-brand .brand{color:var(--cream);margin-bottom:16px}
+  .foot-brand .brand-mark{background:var(--amber);color:#fff}
+  .foot-brand p{font-size:13.5px;color:var(--cream-faint);max-width:26em}
+  .foot-col h4{font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--cream-faint);margin-bottom:18px}
+  .foot-col ul{list-style:none}
+  .foot-col li{margin-bottom:11px}
+  .foot-col a{font-size:14px;color:var(--cream-muted);text-decoration:none;transition:color .15s}
+  .foot-col a:hover{color:var(--cream)}
+  .foot-bottom{border-top:1px solid var(--cream-line);padding-top:26px;font-size:12.5px;color:var(--cream-faint);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+  [id]{scroll-margin-top:76px}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="container nav-inner">
+    <a class="brand" href="#top"><span class="brand-mark">&gt;_</span>Skill 是什么？</a>
+    <ul class="nav-links">
+      <li class="hide-sm"><a href="#parts">拆一个 Skill</a></li>
+      <li class="hide-sm"><a href="#timeline">编年史</a></li>
+      <li class="hide-sm"><a href="#makers">谁在用</a></li>
+      <li class="hide-sm"><a href="#faq">常见问题</a></li>
+      <li><a class="nav-cta" href="index.html">🏠 知识地图</a></li>
+    </ul>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="container hero-grid">
+    <div>
+      <p class="eyebrow">给想教会 AI 干活的人的实用指南</p>
+      <h1>Skill<br>是什么？</h1>
+      <p class="lead">Skill（技能）是打包给 Agent 的"操作手册"：一个带 <strong>SKILL.md</strong> 说明文件的文件夹，写清这类任务该怎么做、有什么坑、附哪些脚本和资料——Agent 遇到相关任务时才按需加载。一句话：<b>MCP 给它工具，Skill 给它手艺。</b></p>
+      <p class="example">比如团队有一套"周报怎么写"的固定格式。每次让 AI 重新解释一遍？不如做成一个 Skill：任务一相关，Agent 自动翻出这份手册——格式、禁忌、范文全在里面。你本地装的那二十多个 lark skill（读文档、发消息、查日历），就是这套机制的真实样例。</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#parts">拆一个 Skill ↓</a>
+        <a class="btn btn-ghost" href="index.html">🏠 知识地图</a>
+      </div>
+      <div class="hero-meta">
+        <span class="chip"><i class="dot"></i>2025 · Agent Skills 发布</span>
+        <span class="chip"><i class="dot"></i>SKILL.md 格式</span>
+        <span class="chip"><i class="dot"></i>渐进披露</span>
+        <span class="chip"><i class="dot"></i>你机器上就有</span>
+      </div>
+    </div>
+
+    <div class="terminal" aria-label="Skill 机制演示">
+      <div class="terminal-bar"><i></i><i></i><i></i><span class="terminal-title">skill — 对比演示</span></div>
+      <div class="terminal-steps" role="tablist" aria-label="演示步骤">
+        <button type="button" role="tab" data-step="0" aria-selected="true">① 没有技能的 Agent</button>
+        <button type="button" role="tab" data-step="1" aria-selected="false">② 装上技能</button>
+        <button type="button" role="tab" data-step="2" aria-selected="false">③ 渐进披露</button>
+      </div>
+      <div class="terminal-body" id="hero-term" aria-live="polite"></div>
+    </div>
+  </div>
+</header>
+
+<section class="section section-yellow" id="parts">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">拆一个 Skill</p>
+      <h2>六个零件，一门手艺</h2>
+      <p>一个技能文件夹的所有构件。点击左侧零件，右侧看它的样子——写一个技能真的只需要会写文档。</p>
+    </div>
+
+    <div class="parts-layout">
+      <div class="parts-list" id="parts-list" role="tablist" aria-label="零件列表"></div>
+      <div class="parts-terminal">
+        <div class="terminal">
+          <div class="terminal-bar"><i></i><i></i><i></i><span class="terminal-title">skill — 内部视角</span></div>
+          <div class="terminal-body" id="parts-term" aria-live="polite"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="layers reveal">
+      <div class="layer">
+        <span class="lv">2024 · 前身</span>
+        <h3>散落的指令文件</h3>
+        <p>提示词模板、"项目说明书"（如 CLAUDE.md 约定）各自为政——大家已经发现"喂手册"有效，但没有统一格式。</p>
+      </div>
+      <div class="layer">
+        <span class="lv">2025 · 标准化</span>
+        <h3>Agent Skills 发布</h3>
+        <p>Anthropic 发布 Agent Skills（10 月），SKILL.md 成为事实格式；12 月进一步开放为跨平台标准——像 MCP 一样不锁厂商。</p>
+      </div>
+      <div class="layer">
+        <span class="lv">2026 · 生态繁荣</span>
+        <h3>技能成为资产</h3>
+        <p>各家 Agent 均支持技能机制，企业与社区建起技能库——"会写 Skill"成了组织沉淀知识的新方式。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="makers">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">谁在用</p>
+      <h2>从官方仓库到你电脑</h2>
+      <p>技能生态的三层结构：官方定义格式，社区分发共享，个人与团队沉淀自己的手艺。</p>
+    </div>
+    <div class="cards-3">
+      <article class="card reveal">
+        <div class="tag-row"><span class="tag tag-accent">Anthropic</span><span class="tag">定义者 · 2025</span></div>
+        <h3>Agent Skills 官方实现</h3>
+        <p>Claude 应用与 Claude Code 内置技能机制，开源 anthropics/skills 仓库提供官方示例（文档处理、测试、设计等），并推动其成为开放标准。</p>
+        <div class="seed">入口 → <b>github.com/anthropics/skills</b></div>
+      </article>
+      <article class="card reveal">
+        <div class="tag-row"><span class="tag tag-accent">生态</span><span class="tag">分发 · 共享</span></div>
+        <h3>技能目录与安装器</h3>
+        <p>一行 <b style="font-family:var(--mono)">npx skills add …</b> 就能把别人发布的技能装进本地 Agent；社区目录站收录了从代码审查到 PPT 生成的成百上千门手艺。</p>
+        <div class="seed">入口 → <b>skills CLI · 社区目录</b></div>
+      </article>
+      <article class="card reveal">
+        <div class="tag-row"><span class="tag tag-accent">你</span><span class="tag">沉淀 · 私有</span></div>
+        <h3>你自己的技能库</h3>
+        <p>本系列最好的例子：你机器上装的 lark-cli 官方技能（lark-doc、lark-im、lark-base……）——读文档、发消息、查日历，各自是一门手艺，本站这批页面也是被技能驱动的 Agent 写的。</p>
+        <div class="seed">入口 → <b>本地 skills 目录</b></div>
+      </article>
+    </div>
+    <p class="cards-note reveal">生态规模增长很快 · 安装第三方技能前先读它的内容（见安全提醒）。</p>
+  </div>
+</section>
+
+<section class="section section-dark" id="why">
+  <div class="container">
+    <div class="statement reveal">
+      <p class="eyebrow">为什么重要</p>
+      <h2>工具决定它能不能做，<br>技能决定它做得像不像样。</h2>
+      <p class="quote">同一个 Agent，装不装技能是两种东西：没有技能，它每次都要你从头教，做得"对但难看"；装上技能，它带着团队的沉淀上岗，<b>第一次出手就像老师傅</b>。官方把这叫"给智能体装备真实世界的能力"——本质是把流程知识从人脑和散落的文档里，搬进机器可执行、可分发的手册。</p>
+      <div class="pillars">
+        <div class="pillar reveal">
+          <span class="p-no">01</span>
+          <h3>一次沉淀，处处生效</h3>
+          <p>"周报怎么写"从老师傅的脑子里、散落的文档里，变成团队人人可装的技能——知识第一次成为可分发、可版本化的资产。</p>
+        </div>
+        <div class="pillar reveal">
+          <span class="p-no">02</span>
+          <h3>按需加载</h3>
+          <p>渐进披露保住上下文窗口：不用的技能几乎零成本，相关的才展开细节——Agent 的"书架"，不是"书山"。</p>
+        </div>
+        <div class="pillar reveal">
+          <span class="p-no">03</span>
+          <h3>人人可写</h3>
+          <p>SKILL.md 就是 Markdown：会写文档就会写技能。不需要 SDK、不需要部署，一个文件夹就是一门手艺。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="what">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">依据与事实</p>
+      <h2>先说清楚这个机制</h2>
+    </div>
+    <div class="facts reveal">
+      <div class="fact"><span class="f-k">全称</span><div class="f-v">Agent Skills（智能体技能）<small>官方称"给智能体装备真实世界的能力"</small></div></div>
+      <div class="fact"><span class="f-k">形态</span><div class="f-v">文件夹 + SKILL.md<small>Markdown 写成，可捆绑脚本与参考资料</small></div></div>
+      <div class="fact"><span class="f-k">出生</span><div class="f-v">2025 · Anthropic<small>10 月 16 日发布；12 月开放为跨平台标准</small></div></div>
+      <div class="fact"><span class="f-k">机制</span><div class="f-v">渐进披露 · 三层<small>元数据 → SKILL.md 全文 → 附属文件，按需加载</small></div></div>
+      <div class="fact"><span class="f-k">分发</span><div class="f-v">skills CLI 与目录<small>npx skills add 一行安装，git 仓库即可分享</small></div></div>
+      <div class="fact"><span class="f-k">实例</span><div class="f-v">lark-cli 的官方技能<small>26 个 skills 驱动本系列：读文档、发消息、查日历…</small></div></div>
+    </div>
+
+    <div class="deep-block reveal" id="timeline">
+      <h3>一门手艺的编年史</h3>
+      <ul class="timeline">
+        <li>
+          <span class="tl-year">2024</span>
+          <span class="tl-t">前身散落</span>
+          <p>提示词模板与"项目说明书"约定（如 CLAUDE.md）在各工具里各自出现——"给 AI 喂手册"已被证明有效，缺的是统一格式。</p>
+        </li>
+        <li>
+          <span class="tl-year">2025 · 10</span>
+          <span class="tl-t">Agent Skills 发布</span>
+          <p>Anthropic 正式发布 Agent Skills：SKILL.md 定义格式，Claude 应用、Claude Code 与 API 全面支持。</p>
+        </li>
+        <li>
+          <span class="tl-year">2025 · 12</span>
+          <span class="tl-t">开放标准</span>
+          <p>Anthropic 将 Agent Skills 开放为跨平台标准——技能不再绑定 Claude 一家，像 MCP 一样走向通用。</p>
+        </li>
+        <li>
+          <span class="tl-year">2026</span>
+          <span class="tl-t">生态繁荣</span>
+          <p>各家 Agent 产品支持技能机制；skills CLI 与目录站让"装技能"像装插件一样简单；企业开始建内部技能库。</p>
+        </li>
+      </ul>
+    </div>
+
+    <div class="deep-block reveal">
+      <h3>设计张力与常见误解</h3>
+      <ul class="tensions">
+        <li><span><b>通用 vs 私有</b>——公开技能普惠生态，私有技能沉淀手艺；敏感流程建议留在内部仓库。</span></li>
+        <li><span><b>手写 vs 生成</b>——可以让 AI 帮你起草技能，但流程里的"坑"只有真做过的人知道。</span></li>
+        <li><span><b>多 vs 精</b>——技能装太多、命名含糊，触发就会互相干扰；单一职责、描述清楚。</span></li>
+        <li><span><b>静态 vs 进化</b>——技能像代码一样要维护：流程变了不改 SKILL.md，它就教错下一代。</span></li>
+        <li><span><b>便利 vs 安全</b>——第三方技能的内容会进入 Agent 上下文，提示注入是真实风险；装前先读。</span></li>
+        <li><span><b>知识 vs 脚本</b>——纯说明就能解决的手艺不必硬塞脚本；脚本用于"必须精确执行"的步骤。</span></li>
+      </ul>
+      <p class="tensions-warn"><b>三个常见误解：</b>① "Skill = 插件/工具"——工具让它"能做"（MCP），技能让它"做得对"（流程知识），两者常搭配；② "写 Skill 要会编程"——SKILL.md 就是 Markdown，会写文档就会写；③ "装得越多越强"——技能也要单一职责、描述精准，堆数量只会互相干扰。</p>
+    </div>
+  </div>
+</section>
+
+<section class="section section-yellow" id="faq">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">接下来继续了解</p>
+      <h2>常见问题</h2>
+    </div>
+    <div class="faq-list">
+      <details class="faq-item reveal">
+        <summary>Skill 和 MCP 有什么区别？<span class="plus">+</span></summary>
+        <div class="faq-body">分工不同：<b>MCP 管连接</b>——把日历、文档、数据库这些"能力"插给 Agent；<b>Skill 管方法</b>——把"这类活儿怎么做"的流程知识教给 Agent。经典组合是两者都用：Skill 里的步骤指引 Agent 去调 MCP 提供的工具。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>它和提示词工程是什么关系？<span class="plus">+</span></summary>
+        <div class="faq-body">技能就是<b>沉淀下来的提示工程</b>：你在对话里反复解释的那套要求，写成 SKILL.md 固化下来，以后不用再解释。姊妹篇 Prompt 工程里的六行骨架，正是技能正文的写作基础。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>需要会编程吗？<span class="plus">+</span></summary>
+        <div class="faq-body">不需要。<b>SKILL.md 就是 Markdown 文档</b>——一个名字、一段"什么时候用"、一组步骤与禁忌，就是一门合格的技能。只有当流程需要精确执行（如批量处理）时，才值得捆绑脚本。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>怎么写我的第一个 Skill？<span class="plus">+</span></summary>
+        <div class="faq-body">三行起步（见页尾模板）：给它起个清晰的名字；<b>description 写清楚"什么任务该用它"</b>——这是 Agent 决定是否加载的唯一依据；正文写步骤、禁忌和一份范文。放进技能目录即可生效。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>团队怎么共享技能？<span class="plus">+</span></summary>
+        <div class="faq-body">把技能文件夹放进 <b>git 仓库</b>：版本可追溯、评审走 PR、新人一行命令安装。企业内部流程（报销怎么审、周报怎么写、发布怎么检查）都适合做成内部技能库——这是 2026 年很流行的"知识资产化"。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>装别人的技能安全吗？<span class="plus">+</span></summary>
+        <div class="faq-body">技能内容会进入 Agent 上下文，恶意技能可以夹带提示注入——风险是真的。装前三步：<b>读一遍 SKILL.md 全文</b>、看发布方与使用量、优先官方与高可信来源；捆绑了脚本的更要逐行看。</div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="who">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">它适合谁</p>
+      <h2>四类读者，四个入口</h2>
+    </div>
+    <div class="aud-grid">
+      <div class="aud-card reveal">
+        <span class="a-who">For Teams</span>
+        <h3>团队与组织</h3>
+        <p>把 SOP 从文档里唤醒：报销、周报、发布检查……流程变成技能，新人上手即老师傅。</p>
+        <div class="start">起点 → 六个零件 ↓</div>
+      </div>
+      <div class="aud-card reveal">
+        <span class="a-who">For Devs</span>
+        <h3>开发者</h3>
+        <p>给复杂流程捆绑脚本，让技能不只是"说明书"，还是"可执行的包"。</p>
+        <div class="start">起点 → 官方示例仓库 ↗</div>
+      </div>
+      <div class="aud-card reveal">
+        <span class="a-who">For Writers</span>
+        <h3>内容工作者</h3>
+        <p>你的写作流程、风格禁忌、范文——都是现成的技能素材，不需要任何编程。</p>
+        <div class="start">起点 → 构件 ① SKILL.md</div>
+      </div>
+      <div class="aud-card reveal">
+        <span class="a-who">For Curious</span>
+        <h3>好奇者</h3>
+        <p>看看你机器上已经装了什么：本系列这些页面，就是被一群 lark 技能驱动的 Agent 写的。</p>
+        <div class="start">起点 → 构件 ⑤ 安装与分享</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="sources" style="padding-top:24px">
+  <div class="container">
+    <div class="sources-card reveal">
+      <p class="eyebrow">来源与延伸阅读</p>
+      <a class="source-item" href="https://www.anthropic.com/news/agent-skills" target="_blank" rel="noopener">
+        <span class="s-no">01</span>
+        <span><span class="s-t">Anthropic · Equipping agents for the real world with Agent Skills</span><br><span class="s-d">2025-10-16 官方发布公告</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview" target="_blank" rel="noopener">
+        <span class="s-no">02</span>
+        <span><span class="s-t">Anthropic Docs · Agent Skills 官方文档</span><br><span class="s-d">SKILL.md 格式、渐进披露与最佳实践</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="https://github.com/anthropics/skills" target="_blank" rel="noopener">
+        <span class="s-no">03</span>
+        <span><span class="s-t">GitHub · anthropics/skills</span><br><span class="s-d">官方示例技能仓库：文档处理、测试、设计等</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="什么是MCP.html">
+        <span class="s-no">04</span>
+        <span><span class="s-t">姊妹篇 · 什么是 MCP？</span><br><span class="s-d">Skill 的黄金搭档：MCP 给工具，Skill 给手艺（本系列）</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <p class="sources-note">本页内容整理自以上公开资料，更新于 2026 年 10 月。生态与格式仍在演化，以官方文档为准。</p>
+    </div>
+  </div>
+</section>
+
+<section class="section section-cta">
+  <div class="container cta-grid">
+    <div class="reveal">
+      <p class="eyebrow">开始动手</p>
+      <h2>写你的第一个 Skill</h2>
+      <p>三个问题写成一页 Markdown，就是一门技能的雏形。</p>
+      <div class="cta-cmd">
+        <pre>---
+<span class="t-cm">name:</span> my-first-skill
+<span class="t-cm">description:</span> 什么任务用它（Agent 靠它决定是否加载）
+---
+# 步骤：这项任务分几步做
+# 禁忌：哪些坑不要踩
+# 参考：范文 / 脚本放这里</pre>
+        <button class="copy-btn" data-copy="---&#10;name: my-first-skill&#10;description: 什么任务用它（Agent 靠它决定是否加载）&#10;---&#10;# 步骤：这项任务分几步做&#10;# 禁忌：哪些坑不要踩&#10;# 参考：范文 / 脚本放这里">复制</button>
+      </div>
+    </div>
+    <div class="cta-art" aria-hidden="true">
+      <span class="q">?</span><span class="arrow">→</span><span class="v">✓</span>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <a class="brand" href="#top"><span class="brand-mark">&gt;_</span>Skill 是什么？</a>
+        <p>第 07 课：给 Agent 的操作手册——SKILL.md、渐进披露，以及把团队手艺变成可分发资产的新方式。</p>
+      </div>
+      <div class="foot-col">
+        <h4>本页导航</h4>
+        <ul>
+          <li><a href="#parts">拆一个 Skill</a></li>
+          <li><a href="#timeline">编年史</a></li>
+          <li><a href="#makers">谁在用</a></li>
+          <li><a href="#faq">常见问题</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h4>本系列</h4>
+        <ul>
+          <li><a href="index.html">🏠 知识地图（主页）</a></li>
+          <li><a href="什么是大模型.html">什么是大模型？</a></li>
+          <li><a href="什么是思维链.html">什么是思维链？</a></li>
+          <li><a href="什么是Prompt工程.html">什么是 Prompt 工程？</a></li>
+          <li><a href="什么是幻觉.html">什么是幻觉？</a></li>
+          <li><a href="什么是RAG.html">什么是 RAG？</a></li>
+          <li><a href="什么是Agent.html">什么是 AI Agent？</a></li>
+          <li><a href="#top">什么是 Skill？（本页）</a></li>
+          <li><a href="什么是MCP.html">什么是 MCP？</a></li>
+          <li><a href="什么是AgentHarness.html">什么是 Agent Harness？</a></li>
+          <li><a href="什么是DeepSeekHarness.html">什么是 DeepSeek Harness？</a></li>
+          <li><a href="什么是飞书CLI.html">什么是飞书 CLI？</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>本页为独立学习指南，与所提及的各家公司没有关联 · 内容整理自公开资料</span>
+      <span>更新于 2026 年 10 月</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+document.documentElement.classList.add('js');
+
+var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function el(tag, cls, text){
+  var n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text !== undefined) n.textContent = text;
+  return n;
+}
+
+function typeCmd(span, text, done){
+  if (reduceMotion){ span.textContent = text; done && done(); return; }
+  var i = 0;
+  (function tick(){
+    span.textContent = text.slice(0, ++i);
+    if (i < text.length){ setTimeout(tick, text[i-1] === ' ' ? 34 : 18); }
+    else { done && done(); }
+  })();
+}
+
+function renderTerm(container, spec){
+  container.innerHTML = '';
+  var line = el('div','t-line');
+  var prompt = el('span','t-prompt', spec.prompt || '❯');
+  var cmd = el('span','t-cmd');
+  var cur = el('span','cursor');
+  line.appendChild(prompt); line.appendChild(cmd); line.appendChild(cur);
+  container.appendChild(line);
+  typeCmd(cmd, spec.cmd, function(){
+    cur.remove();
+    (spec.out || []).forEach(function(o){
+      container.appendChild(el('div','t-line ' + (o.cls || 't-out'), o.text));
+    });
+    if (spec.note) container.appendChild(el('div','t-note', spec.note));
+  });
+}
+
+var heroSteps = [
+  {
+    cmd: '"按我们团队的格式写周报"',
+    prompt: '你',
+    out: [
+      { text: '→ Agent 按通用格式猜了一个', cls: 't-out' },
+      { text: '✗ 你第 5 次重复解释格式与禁忌', cls: 't-out' },
+      { text: '✗ 流程里的坑，它不知道', cls: 't-dim' }
+    ],
+    note: '聪明 ≠ 懂你的规矩——经验还留在你脑子里和散落的文档里。'
+  },
+  {
+    cmd: 'skill: team-weekly-report',
+    prompt: '⚙',
+    out: [
+      { text: '→ 任务与"周报"相关 → 自动加载技能', cls: 't-out' },
+      { text: '→ 照手册办：格式 · 禁忌 · 范文 · 脚本', cls: 't-out' },
+      { text: '✓ 第一次出手就像老师傅', cls: 't-ok' }
+    ],
+    note: '一次沉淀，处处生效——技能是可分享的组织资产。'
+  },
+  {
+    cmd: 'SKILL.md → references/ → scripts/',
+    out: [
+      { text: '第 1 层：只有名字与描述（几十字）', cls: 't-out' },
+      { text: '第 2 层：任务相关，才读 SKILL.md 全文', cls: 't-out' },
+      { text: '第 3 层：需要时，才打开脚本与资料', cls: 't-out' },
+      { text: '✓ 上下文窗口不被撑爆', cls: 't-ok' }
+    ],
+    note: '渐进披露：Agent 的"书架"，不是"书山"——不用的技能几乎零成本。'
+  }
+];
+
+var heroTerm = document.getElementById('hero-term');
+var heroBtns = document.querySelectorAll('.terminal-steps button');
+var heroStopped = false;
+
+function showHeroStep(i){
+  heroBtns.forEach(function(b, j){
+    b.classList.toggle('active', i === j);
+    b.setAttribute('aria-selected', i === j ? 'true' : 'false');
+  });
+  renderTerm(heroTerm, heroSteps[i]);
+}
+heroBtns.forEach(function(b){
+  b.addEventListener('click', function(){
+    heroStopped = true;
+    showHeroStep(+b.dataset.step);
+  });
+});
+showHeroStep(0);
+(function autoAdvance(){
+  if (reduceMotion) return;
+  var idx = 0;
+  setInterval(function(){
+    if (heroStopped) return;
+    idx = (idx + 1) % heroSteps.length;
+    showHeroStep(idx);
+  }, 7000);
+})();
+
+var parts = [
+  {
+    name: 'SKILL.md', desc: '一门手艺的核心文件',
+    spec: {
+      cmd: '---\\nname: weekly-report\\ndescription: …\\n---',
+      out: [
+        { text: '→ YAML 头：name + description', cls: 't-out' },
+        { text: '→ 正文：步骤 · 禁忌 · 范例', cls: 't-out' },
+        { text: '✓ 纯 Markdown，会写文档就会写', cls: 't-ok' }
+      ],
+      note: '一个文件夹 + 一个 SKILL.md，就是一门完整的技能。'
+    }
+  },
+  {
+    name: '触发与发现', desc: 'description 决定命中率',
+    spec: {
+      cmd: 'Agent: 这个任务该用哪个技能？',
+      out: [
+        { text: '→ 常驻上下文的只有各技能的描述', cls: 't-out' },
+        { text: '→ 任务与描述相关 → 才加载全文', cls: 't-out' },
+        { text: '✗ 描述含糊 → 该触发时不触发', cls: 't-dim' }
+      ],
+      note: 'description 是技能的"门牌"——写清什么任务用它，比正文还重要。'
+    }
+  },
+  {
+    name: '渐进披露', desc: '三层加载 · 省上下文',
+    spec: {
+      cmd: 'meta → SKILL.md → resources',
+      out: [
+        { text: '① 元数据常驻（几十字）', cls: 't-out' },
+        { text: '② 命中才读 SKILL.md 全文', cls: 't-out' },
+        { text: '③ 需要时再开附属文件', cls: 't-out' },
+        { text: '✓ 不用的技能几乎零成本', cls: 't-ok' }
+      ],
+      note: '这是技能设计的精髓：装 50 个技能也不撑爆窗口。'
+    }
+  },
+  {
+    name: '捆绑资源', desc: 'scripts / references / assets',
+    spec: {
+      cmd: 'skill-folder/',
+      out: [
+        { text: '├── SKILL.md        # 手册', cls: 't-out' },
+        { text: '├── scripts/        # 精确执行的脚本', cls: 't-out' },
+        { text: '└── references/     # 范文与资料', cls: 't-out' },
+        { text: '✓ 手册管流程，脚本管精度', cls: 't-ok' }
+      ],
+      note: '需要严格一致的步骤（批量处理、格式转换）才值得写脚本。'
+    }
+  },
+  {
+    name: '安装与分享', desc: '一行命令 · git 即市场',
+    spec: {
+      cmd: 'npx skills add <repo>',
+      out: [
+        { text: '→ 装到本地技能目录即可生效', cls: 't-out' },
+        { text: '→ 团队放 git 仓库：版本 · 评审 · 共享', cls: 't-out' },
+        { text: '✓ 官方示例：github.com/anthropics/skills', cls: 't-ok' }
+      ],
+      note: '技能像代码一样分发与维护——流程知识的"包管理器"时刻。'
+    }
+  },
+  {
+    name: '写好一门技能', desc: '来自实战的写法原则',
+    spec: {
+      cmd: '写技能的四个要点',
+      out: [
+        { text: '① 描述精准：什么任务用它', cls: 't-out' },
+        { text: '② 步骤具体：可执行，别写口号', cls: 't-out' },
+        { text: '③ 禁忌明确：把踩过的坑写进去', cls: 't-out' },
+        { text: '④ 附上范文：示例胜过十句形容词', cls: 't-ok' }
+      ],
+      note: '它本质是沉淀下来的提示工程——姊妹篇的骨架直接用。'
+    }
+  }
+];
+
+var partsList = document.getElementById('parts-list');
+var partsTerm = document.getElementById('parts-term');
+parts.forEach(function(t, i){
+  var b = el('button', 'part-btn' + (i === 0 ? ' active' : ''));
+  b.type = 'button';
+  b.setAttribute('role', 'tab');
+  b.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
+  b.appendChild(el('span', 'num', String(i + 1)));
+  var wrap = el('span');
+  wrap.appendChild(el('span', 't-name', t.name));
+  wrap.appendChild(document.createElement('br'));
+  wrap.appendChild(el('span', 't-desc', t.desc));
+  b.appendChild(wrap);
+  b.addEventListener('click', function(){
+    partsList.querySelectorAll('.part-btn').forEach(function(x){
+      x.classList.remove('active'); x.setAttribute('aria-selected', 'false');
+    });
+    b.classList.add('active'); b.setAttribute('aria-selected', 'true');
+    renderTerm(partsTerm, t.spec);
+  });
+  partsList.appendChild(b);
+});
+renderTerm(partsTerm, parts[0].spec);
+
+document.querySelectorAll('.copy-btn').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    var text = btn.dataset.copy || '';
+    var done = function(){
+      var old = btn.textContent;
+      btn.textContent = '已复制 ✓';
+      setTimeout(function(){ btn.textContent = old; }, 1600);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done, function(){ fallbackCopy(text); done(); });
+    } else { fallbackCopy(text); done(); }
+  });
+});
+function fallbackCopy(text){
+  var ta = document.createElement('textarea');
+  ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); } catch(e){}
+  ta.remove();
+}
+
+var revealEls = document.querySelectorAll('.reveal');
+if ('IntersectionObserver' in window && !reduceMotion){
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if (en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); }
+    });
+  }, { threshold: 0.12 });
+  revealEls.forEach(function(n){ io.observe(n); });
+} else {
+  revealEls.forEach(function(n){ n.classList.add('in'); });
+}
+</script>
+</body>
+</html>
