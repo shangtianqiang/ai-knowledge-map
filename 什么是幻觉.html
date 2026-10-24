@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#FBFAF7">
+<title>幻觉是什么？ | 给想放心用 AI 的人</title>
+<meta name="description" content="一页讲清楚大模型幻觉：它为什么发生、哪些场景高发、四道工程闸门如何缓解，以及为什么它无法被根除、只能被管理。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2317151F'/%3E%3Ctext x='16' y='22' font-size='15' font-family='monospace' fill='%23F0888B' text-anchor='middle'%3E%3E_%3C/text%3E%3C/svg%3E">
+<style>
+  :root{
+    --cream:#FBFAF7;
+    --ink:#17151F;
+    --paper:#FFFFFF;
+    --yellow:#FFD166;
+    --coral:#E5484D;
+    --coral-light:#F0888B;
+    --muted:rgba(23,21,31,.64);
+    --faint:rgba(23,21,31,.45);
+    --line:rgba(23,21,31,.14);
+    --line-strong:rgba(23,21,31,.85);
+    --cream-muted:rgba(251,250,247,.68);
+    --cream-faint:rgba(251,250,247,.42);
+    --cream-line:rgba(251,250,247,.16);
+    --mono:"SF Mono",ui-monospace,"JetBrains Mono",Menlo,Consolas,"Liberation Mono",monospace;
+    --shadow-card:0 1px 2px rgba(23,21,31,.05),0 10px 28px -14px rgba(23,21,31,.18);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    *,*::before,*::after{animation:none!important;transition:none!important}
+  }
+  body{
+    font-family:"PingFang SC","Microsoft YaHei","Inter Variable",system-ui,sans-serif;
+    background:var(--cream);
+    color:var(--ink);
+    font-size:16px;
+    line-height:1.75;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+  }
+  ::selection{background:var(--coral);color:#fff}
+  a{color:inherit}
+  .container{max-width:1128px;margin:0 auto;padding:0 24px}
+
+  html.js .reveal{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s ease}
+  html.js .reveal.in{opacity:1;transform:none}
+  @media (prefers-reduced-motion:reduce){html.js .reveal{opacity:1;transform:none}}
+  @media print{html.js .reveal{opacity:1!important;transform:none!important}}
+
+  .nav{
+    position:sticky;top:0;z-index:50;
+    background:rgba(251,250,247,.92);
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  .nav-inner{display:flex;align-items:center;justify-content:space-between;height:60px;gap:16px}
+  .brand{display:flex;align-items:center;gap:10px;text-decoration:none;font-weight:800;font-size:15px;letter-spacing:.01em}
+  .brand-mark{
+    width:26px;height:26px;background:var(--ink);color:var(--coral-light);
+    font-family:var(--mono);font-size:12px;font-weight:700;line-height:26px;text-align:center;
+    border-radius:5px;flex:none;
+  }
+  .nav-links{display:flex;align-items:center;gap:22px;list-style:none}
+  .nav-links a{text-decoration:none;font-size:13.5px;font-weight:500;color:var(--muted);transition:color .15s}
+  .nav-links a:hover{color:var(--ink)}
+  .nav-links a.nav-cta{
+    color:var(--ink);font-weight:700;border:1.5px solid var(--line-strong);
+    padding:6px 14px;border-radius:0;
+  }
+  .nav-links a.nav-cta:hover{background:var(--ink);color:var(--cream)}
+  @media (max-width:720px){.nav-links li.hide-sm{display:none}}
+
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:13px 26px;border-radius:0;border:1.5px solid transparent;
+    font-family:inherit;font-size:15px;font-weight:700;letter-spacing:.02em;
+    text-decoration:none;cursor:pointer;transition:transform .15s ease,background .15s ease,color .15s ease,box-shadow .15s ease;
+  }
+  .btn:active{transform:translateY(1px)}
+  .btn-primary{background:var(--coral);color:#fff}
+  .btn-primary:hover{box-shadow:0 6px 0 -2px rgba(23,21,31,.9)}
+  .btn-ghost{border-color:var(--line-strong);color:var(--ink);background:transparent}
+  .btn-ghost:hover{background:var(--ink);color:var(--cream)}
+  .btn-sm{padding:9px 18px;font-size:13.5px}
+
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:9px;
+    font-size:12.5px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;
+  }
+  .eyebrow::before{content:"";width:9px;height:9px;background:currentColor;flex:none}
+  h1{font-size:clamp(42px,6.6vw,74px);line-height:1.08;font-weight:800;letter-spacing:-.015em}
+  h2{font-size:clamp(30px,4.4vw,44px);line-height:1.18;font-weight:800;letter-spacing:-.01em}
+  h3{font-size:20px;font-weight:800;line-height:1.4}
+  .lead{font-size:clamp(17px,2vw,19.5px);line-height:1.8}
+
+  .hero{padding:76px 0 88px}
+  .hero-grid{display:grid;grid-template-columns:1.02fr .98fr;gap:56px;align-items:center}
+  @media (max-width:980px){.hero-grid{grid-template-columns:1fr;gap:44px}}
+  .hero .eyebrow{color:var(--ink);margin-bottom:26px}
+  .hero h1{margin-bottom:24px}
+  .hero .lead{color:var(--ink);margin-bottom:16px;max-width:34em}
+  .hero .example{color:var(--muted);font-size:15.5px;max-width:36em;margin-bottom:32px}
+  .hero .example b{color:var(--ink);font-weight:700}
+  .hero-actions{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:30px}
+  .hero-meta{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{
+    font-size:12px;font-weight:600;color:var(--muted);
+    border:1px solid var(--line);padding:5px 11px;border-radius:999px;
+    display:inline-flex;align-items:center;gap:6px;background:var(--paper);
+  }
+  .chip .dot{width:6px;height:6px;border-radius:50%;background:var(--coral)}
+
+  .terminal{
+    background:var(--ink);border-radius:14px;overflow:hidden;
+    box-shadow:0 2px 4px rgba(23,21,31,.12),0 30px 60px -22px rgba(23,21,31,.45);
+    border:1px solid rgba(23,21,31,.9);
+  }
+  .terminal-bar{
+    display:flex;align-items:center;gap:7px;
+    padding:13px 16px;border-bottom:1px solid var(--cream-line);
+  }
+  .terminal-bar i{width:11px;height:11px;border-radius:50%;background:rgba(251,250,247,.22)}
+  .terminal-bar i:first-child{background:#FF5F57}
+  .terminal-bar i:nth-child(2){background:#FEBC2E}
+  .terminal-bar i:nth-child(3){background:#28C840}
+  .terminal-bar .terminal-title{
+    margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--cream-faint);letter-spacing:.08em;
+  }
+  .terminal-steps{display:flex;gap:6px;padding:12px 14px 0;flex-wrap:wrap}
+  .terminal-steps button{
+    font-family:inherit;font-size:12.5px;font-weight:700;letter-spacing:.04em;
+    background:transparent;color:var(--cream-faint);
+    border:1px solid var(--cream-line);border-radius:999px;
+    padding:5px 13px;cursor:pointer;transition:all .18s;
+  }
+  .terminal-steps button:hover{color:var(--cream);border-color:var(--cream-faint)}
+  .terminal-steps button.active{background:var(--coral);border-color:var(--coral);color:#fff}
+  .terminal-body{padding:18px 20px 22px;min-height:238px;font-family:var(--mono);font-size:13.5px;line-height:1.9}
+  .t-line{white-space:pre-wrap;word-break:break-all}
+  .t-prompt{color:var(--coral-light);font-weight:700;margin-right:9px}
+  .t-cmd{color:var(--cream)}
+  .t-out{color:var(--cream-faint)}
+  .t-ok{color:#3EE8C6}
+  .t-dim{color:rgba(251,250,247,.35)}
+  .t-user{color:var(--yellow)}
+  .t-note{color:var(--cream-faint);font-family:"PingFang SC","Microsoft YaHei",sans-serif;font-size:12px;margin-top:12px;padding-top:10px;border-top:1px dashed var(--cream-line)}
+  .cursor{display:inline-block;width:8px;height:15px;background:var(--coral-light);vertical-align:-2px;animation:blink 1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+  @media (prefers-reduced-motion:reduce){.cursor{animation:none}}
+
+  .section{padding:96px 0}
+  .section-head{max-width:680px;margin-bottom:52px}
+  .section-head .eyebrow{margin-bottom:20px}
+  .section-head p{color:var(--muted);margin-top:16px;font-size:16.5px}
+
+  .section-yellow{background:var(--yellow)}
+  .section-yellow .section-head p{color:rgba(23,21,31,.72)}
+
+  .section-dark{background:var(--ink);color:var(--cream)}
+  .section-dark .eyebrow{color:var(--coral-light)}
+
+  .parts-layout{display:grid;grid-template-columns:.9fr 1.1fr;gap:36px;align-items:start}
+  @media (max-width:900px){.parts-layout{grid-template-columns:1fr}}
+  .parts-list{display:flex;flex-direction:column;gap:10px}
+  .part-btn{
+    display:flex;align-items:center;gap:14px;text-align:left;width:100%;
+    background:var(--paper);border:1.5px solid transparent;border-radius:10px;
+    padding:15px 18px;font-family:inherit;cursor:pointer;
+    transition:transform .16s ease,box-shadow .16s ease,border-color .16s;
+    box-shadow:var(--shadow-card);
+  }
+  .part-btn:hover{transform:translateY(-2px)}
+  .part-btn .num{
+    font-family:var(--mono);font-size:12px;font-weight:700;color:var(--muted);
+    width:30px;height:30px;border:1.5px solid var(--line);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;flex:none;transition:all .16s;
+  }
+  .part-btn .t-name{font-size:15.5px;font-weight:700}
+  .part-btn .t-desc{font-size:13px;color:var(--muted);margin-top:2px}
+  .part-btn.active{border-color:var(--ink);transform:translateY(-2px)}
+  .part-btn.active .num{background:var(--ink);border-color:var(--ink);color:var(--coral-light)}
+  .parts-terminal{position:sticky;top:84px}
+  @media (max-width:900px){.parts-terminal{position:static}}
+
+  .layers{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(23,21,31,.22);border:1.5px solid var(--ink);border-radius:12px;overflow:hidden;margin-top:56px}
+  @media (max-width:820px){.layers{grid-template-columns:1fr}}
+  .layer{background:var(--yellow);padding:26px 26px 24px}
+  .layer .lv{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.14em;color:rgba(23,21,31,.55);display:block;margin-bottom:12px}
+  .layer h3{font-size:17px;margin-bottom:8px}
+  .layer p{font-size:13.5px;color:rgba(23,21,31,.72);line-height:1.7}
+  .layer code{font-family:var(--mono);font-size:12.5px;background:rgba(23,21,31,.1);padding:2px 6px;border-radius:4px}
+
+  .cards-3{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+  @media (max-width:900px){.cards-3{grid-template-columns:1fr}}
+  .card{
+    background:var(--paper);border:1px solid var(--line);border-radius:12px;
+    padding:30px 28px 26px;box-shadow:var(--shadow-card);
+    display:flex;flex-direction:column;
+  }
+  .card .tag-row{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:20px}
+  .tag{
+    font-size:10.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+    padding:4px 9px;border:1px solid var(--line);border-radius:4px;color:var(--muted);
+  }
+  .tag.tag-accent{background:var(--ink);color:var(--coral-light);border-color:var(--ink)}
+  .card h3{margin-bottom:12px}
+  .card p{font-size:14.5px;color:var(--muted);flex:1}
+  .card .seed{
+    margin-top:20px;padding-top:16px;border-top:1px dashed var(--line);
+    font-family:var(--mono);font-size:12px;color:var(--faint);word-break:break-all;
+  }
+  .card .seed b{color:var(--ink);font-weight:700}
+  .cards-note{margin-top:30px;font-size:13px;color:var(--faint);display:flex;align-items:center;gap:8px}
+  .cards-note::before{content:"※";color:var(--muted)}
+
+  .statement{max-width:820px}
+  .statement h2{margin-bottom:28px}
+  .statement .quote{
+    font-size:clamp(17px,2vw,19px);line-height:1.85;color:var(--cream-muted);
+    border-left:3px solid var(--coral-light);padding-left:22px;margin-bottom:52px;max-width:36em;
+  }
+  .statement .quote b{color:var(--cream)}
+  .statement .quote code{font-family:var(--mono);font-size:14px;background:rgba(251,250,247,.12);padding:2px 7px;border-radius:4px;color:var(--cream)}
+  .pillars{display:grid;grid-template-columns:repeat(3,1fr);gap:34px}
+  @media (max-width:820px){.pillars{grid-template-columns:1fr}}
+  .pillar .p-no{font-family:var(--mono);font-size:13px;color:var(--coral-light);font-weight:700;letter-spacing:.12em;display:block;margin-bottom:14px}
+  .pillar h3{color:var(--cream);margin-bottom:10px;font-size:17.5px}
+  .pillar p{font-size:14.5px;color:var(--cream-muted);line-height:1.8}
+  .pillar code{font-family:var(--mono);font-size:12.5px;background:rgba(251,250,247,.12);padding:2px 6px;border-radius:4px;color:var(--cream)}
+
+  .facts{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  @media (max-width:820px){.facts{grid-template-columns:1fr}}
+  .fact{background:var(--paper);padding:26px 26px 22px}
+  .fact .f-k{font-size:12px;font-weight:800;letter-spacing:.14em;color:var(--faint);text-transform:uppercase;display:block;margin-bottom:10px}
+  .fact .f-v{font-size:15.5px;font-weight:600;line-height:1.65}
+  .fact .f-v small{display:block;font-weight:400;font-size:13px;color:var(--muted);margin-top:4px}
+
+  .deep-block{margin-top:76px}
+  .deep-block>h3{margin-bottom:26px;font-size:clamp(21px,2.6vw,25px)}
+
+  .timeline{list-style:none;border-left:2px solid var(--ink);margin-left:6px}
+  .timeline li{position:relative;padding:0 0 26px 28px}
+  .timeline li:last-child{padding-bottom:0}
+  .timeline li::before{
+    content:"";position:absolute;left:-7px;top:9px;width:12px;height:12px;
+    background:var(--coral);border:2px solid var(--ink);border-radius:50%;
+  }
+  .timeline .tl-year{font-family:var(--mono);font-size:12.5px;font-weight:700;letter-spacing:.1em;color:var(--faint);display:block;margin-bottom:4px}
+  .timeline .tl-t{font-weight:800;font-size:16.5px}
+  .timeline p{font-size:14px;color:var(--muted);margin-top:4px;max-width:40em}
+  .timeline code{font-family:var(--mono);font-size:12.5px;background:rgba(23,21,31,.07);padding:2px 6px;border-radius:4px;color:var(--ink)}
+
+  .tensions{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:14px 28px}
+  @media (max-width:820px){.tensions{grid-template-columns:1fr}}
+  .tensions li{
+    display:flex;gap:12px;font-size:14.5px;color:var(--muted);line-height:1.7;
+    padding:14px 0;border-bottom:1px solid var(--line);
+  }
+  .tensions li b{color:var(--ink)}
+  .tensions li::before{content:"◆";color:var(--coral);font-weight:800;flex:none;font-size:12px;padding-top:5px}
+  .tensions-warn{
+    margin-top:26px;padding:18px 22px;border-radius:10px;
+    background:rgba(229,72,77,.08);border:1px solid rgba(229,72,77,.4);
+    font-size:14px;color:var(--muted);
+  }
+  .tensions-warn b{color:var(--ink)}
+
+  .faq-list{max-width:780px}
+  .faq-item{background:var(--paper);border:1.5px solid var(--ink);border-radius:10px;margin-bottom:14px;overflow:hidden;box-shadow:var(--shadow-card)}
+  .faq-item summary{
+    list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:18px;
+    padding:20px 24px;font-weight:700;font-size:16px;
+  }
+  .faq-item summary::-webkit-details-marker{display:none}
+  .faq-item summary .plus{
+    flex:none;width:26px;height:26px;border:1.5px solid var(--ink);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:400;font-size:16px;line-height:1;transition:transform .2s ease,background .2s,color .2s;
+  }
+  .faq-item[open] summary .plus{background:var(--ink);color:var(--yellow);transform:rotate(45deg)}
+  .faq-item .faq-body{padding:0 24px 22px;font-size:14.5px;color:var(--muted);line-height:1.85}
+  .faq-item .faq-body b{color:var(--ink)}
+  .faq-item .faq-body code{font-family:var(--mono);font-size:12.5px;background:rgba(23,21,31,.07);padding:2px 6px;border-radius:4px;color:var(--ink)}
+
+  .aud-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+  @media (max-width:1000px){.aud-grid{grid-template-columns:1fr 1fr}}
+  @media (max-width:640px){.aud-grid{grid-template-columns:1fr}}
+  .aud-card{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:26px 24px;box-shadow:var(--shadow-card);display:flex;flex-direction:column}
+  .aud-card .a-who{font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin-bottom:12px}
+  .aud-card h3{font-size:16.5px;margin-bottom:10px}
+  .aud-card p{font-size:13.5px;color:var(--muted);flex:1;line-height:1.75}
+  .aud-card .start{
+    margin-top:16px;font-family:var(--mono);font-size:11.5px;color:#fff;
+    background:var(--coral);padding:7px 11px;border-radius:6px;word-break:break-all;
+  }
+
+  .sources-card{background:var(--ink);color:var(--cream);border-radius:16px;padding:52px 54px;max-width:860px}
+  @media (max-width:720px){.sources-card{padding:36px 26px}}
+  .sources-card .eyebrow{color:var(--yellow);margin-bottom:28px}
+  .source-item{display:flex;gap:18px;padding:16px 0;border-bottom:1px solid var(--cream-line);text-decoration:none;transition:padding-left .18s}
+  .source-item:hover{padding-left:8px}
+  .source-item:last-of-type{border-bottom:none}
+  .source-item .s-no{font-family:var(--mono);font-size:12.5px;color:var(--coral-light);font-weight:700;flex:none;padding-top:2px}
+  .source-item .s-t{font-weight:700;font-size:15.5px;color:var(--cream)}
+  .source-item .s-d{font-size:13px;color:var(--cream-faint);margin-top:3px}
+  .source-item .s-arrow{margin-left:auto;color:var(--cream-faint);flex:none;padding-top:2px}
+  .sources-note{margin-top:26px;font-size:12.5px;color:var(--cream-faint)}
+
+  .section-cta{background:var(--coral)}
+  .cta-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:48px;align-items:center}
+  @media (max-width:820px){.cta-grid{grid-template-columns:1fr}}
+  .section-cta .eyebrow{color:rgba(255,255,255,.72);margin-bottom:22px}
+  .section-cta h2{margin-bottom:18px;color:#fff}
+  .section-cta p{color:rgba(255,255,255,.85);max-width:30em;margin-bottom:30px}
+  .cta-cmd{
+    display:flex;align-items:flex-start;gap:12px;background:var(--ink);border-radius:10px;
+    padding:16px 18px;font-family:var(--mono);font-size:13px;line-height:1.9;color:var(--cream);
+    max-width:520px;box-shadow:0 14px 30px -12px rgba(23,21,31,.5);
+  }
+  .cta-cmd pre{font-family:inherit;white-space:pre-wrap;word-break:break-all;flex:1;margin:0}
+  .cta-cmd .t-cm{color:var(--coral-light)}
+  .copy-btn{
+    flex:none;font-family:inherit;font-size:11px;font-weight:700;letter-spacing:.08em;
+    background:transparent;color:var(--cream-faint);border:1px solid var(--cream-line);
+    border-radius:4px;padding:4px 9px;cursor:pointer;transition:all .15s;
+  }
+  .cta-cmd .copy-btn{color:var(--cream-muted);border-color:var(--cream-line)}
+  .cta-cmd .copy-btn:hover{color:var(--yellow);border-color:var(--yellow)}
+  .cta-art{display:flex;align-items:center;justify-content:center;gap:22px;font-family:var(--mono);font-weight:700}
+  .cta-art .q,.cta-art .v{font-size:clamp(56px,7vw,88px);line-height:1}
+  .cta-art .q{color:rgba(255,255,255,.32)}
+  .cta-art .v{color:#fff}
+  .cta-art .arrow{font-size:34px;color:rgba(255,255,255,.55)}
+  @media (max-width:820px){.cta-art{display:none}}
+
+  footer{background:var(--ink);color:var(--cream);padding:64px 0 36px}
+  .foot-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:44px;margin-bottom:52px}
+  @media (max-width:820px){.foot-grid{grid-template-columns:1fr}}
+  .foot-brand .brand{color:var(--cream);margin-bottom:16px}
+  .foot-brand .brand-mark{background:var(--coral);color:#fff}
+  .foot-brand p{font-size:13.5px;color:var(--cream-faint);max-width:26em}
+  .foot-col h4{font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--cream-faint);margin-bottom:18px}
+  .foot-col ul{list-style:none}
+  .foot-col li{margin-bottom:11px}
+  .foot-col a{font-size:14px;color:var(--cream-muted);text-decoration:none;transition:color .15s}
+  .foot-col a:hover{color:var(--cream)}
+  .foot-bottom{border-top:1px solid var(--cream-line);padding-top:26px;font-size:12.5px;color:var(--cream-faint);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+  [id]{scroll-margin-top:76px}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="container nav-inner">
+    <a class="brand" href="#top"><span class="brand-mark">&gt;_</span>幻觉是什么？</a>
+    <ul class="nav-links">
+      <li class="hide-sm"><a href="#parts">成因与缓解</a></li>
+      <li class="hide-sm"><a href="#timeline">编年史</a></li>
+      <li class="hide-sm"><a href="#makers">谁在治</a></li>
+      <li class="hide-sm"><a href="#faq">常见问题</a></li>
+      <li><a class="nav-cta" href="什么是RAG.html">姊妹篇 ↗</a></li>
+    </ul>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="container hero-grid">
+    <div>
+      <p class="eyebrow">给想放心用 AI 的人的实用指南</p>
+      <h1>幻觉<br>是什么？</h1>
+      <p class="lead">幻觉（Hallucination）指模型输出<b>流畅、自信，但错误或毫无依据</b>的内容。它不是撒谎——模型的职责是预测"下一个最合理的词"，而不是核对事实；"最合理"和"最真实"之间的落差，就是幻觉的温床。</p>
+      <p class="example">比如问它一篇冷门论文的页码，它会给出一个<b>精确到个位</b>的数字——语气笃定、格式工整，唯独是编的。2025 年 OpenAI 的论文点破了根源：<b>训练与评测体系一直在奖励"猜一个"，惩罚"说不知道"</b>。</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#parts">看成因与缓解 ↓</a>
+        <a class="btn btn-ghost" href="什么是RAG.html">姊妹篇：RAG ↗</a>
+      </div>
+      <div class="hero-meta">
+        <span class="chip"><i class="dot"></i>不是撒谎 · 是机制</span>
+        <span class="chip"><i class="dot"></i>激励走偏 · 奖励猜测</span>
+        <span class="chip"><i class="dot"></i>Agent 时代危害放大</span>
+        <span class="chip"><i class="dot"></i>可管理 · 难根除</span>
+      </div>
+    </div>
+
+    <div class="terminal" aria-label="幻觉演示">
+      <div class="terminal-bar"><i></i><i></i><i></i><span class="terminal-title">hallucination — 演示</span></div>
+      <div class="terminal-steps" role="tablist" aria-label="演示步骤">
+        <button type="button" role="tab" data-step="0" aria-selected="true">① 它长什么样</button>
+        <button type="button" role="tab" data-step="1" aria-selected="false">② 为什么发生</button>
+        <button type="button" role="tab" data-step="2" aria-selected="false">③ 怎么缓解</button>
+      </div>
+      <div class="terminal-body" id="hero-term" aria-live="polite"></div>
+    </div>
+  </div>
+</header>
+
+<section class="section section-yellow" id="parts">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">成因与缓解</p>
+      <h2>三个诱因，三道闸门</h2>
+      <p>幻觉无法根除，但可以被工程化管理。前三个是它发生的原因，后三个是可落地的缓解手段——点击切换查看。</p>
+    </div>
+
+    <div class="parts-layout">
+      <div class="parts-list" id="parts-list" role="tablist" aria-label="条目列表"></div>
+      <div class="parts-terminal">
+        <div class="terminal">
+          <div class="terminal-bar"><i></i><i></i><i></i><span class="terminal-title">幻觉 — 成因与缓解</span></div>
+          <div class="terminal-body" id="parts-term" aria-live="polite"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="layers reveal">
+      <div class="layer">
+        <span class="lv">为什么危险</span>
+        <h3>Agent 时代被放大</h3>
+        <p>聊天时幻觉只是"说错话"；Agent 动手后，一个编造的参数就是一次真实的删除或转账。错误从文本级升级为行动级。</p>
+      </div>
+      <div class="layer">
+        <span class="lv">哪里高发</span>
+        <h3>长尾与精确</h3>
+        <p>冷门事实、精确数字、引用文献、外语长尾——训练数据里稀疏的地方最容易"编"，而且编得像模像样。</p>
+      </div>
+      <div class="layer">
+        <span class="lv">谁的责任</span>
+        <h3>模型 + 使用方式</h3>
+        <p>别全甩给模型：不给资料硬要答案、不允许说不知道、不建评测，等于把系统调到最容易幻觉的状态。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="makers">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">谁在治</p>
+      <h2>三个战场，同一场仗</h2>
+      <p>幻觉研究正在从"现象描述"走向"工程学科"。三条战线，各有进展。</p>
+    </div>
+    <div class="cards-3">
+      <article class="card reveal">
+        <div class="tag-row"><span class="tag tag-accent">OpenAI</span><span class="tag">机制研究 · 2025</span></div>
+        <h3>指认激励的错</h3>
+        <p>2025 年 9 月论文《Why language models hallucinate》提出：标准训练与评测流程奖励大胆猜测、惩罚诚实弃权——幻觉是整个体系的"理性策略"，要从激励改起。</p>
+        <div class="seed">入口 → <b>openai.com/index/why-language-models-hallucinate</b></div>
+      </article>
+      <article class="card reveal">
+        <div class="tag-row"><span class="tag tag-accent">学术界</span><span class="tag">综述 · 分类</span></div>
+        <h3>给幻觉建分类学</h3>
+        <p>2025 年的系统综述（arXiv:2510.06265）把幻觉按类型、成因与生命周期（数据→架构→推理）整理成谱系，检测与缓解成为独立研究方向。</p>
+        <div class="seed">入口 → <b>arXiv:2510.06265</b></div>
+      </article>
+      <article class="card reveal">
+        <div class="tag-row"><span class="tag tag-accent">工程界</span><span class="tag">缓解 · 落地</span></div>
+        <h3>四道闸门的工具箱</h3>
+        <p>RAG 与引用、允许拒答、置信度校准、评测集回归——各家把"防幻觉"拆成可落地的工程件，而不是一句提示词的祈祷。</p>
+        <div class="seed">衔接 → <b>姊妹篇 · RAG / Harness</b></div>
+      </article>
+    </div>
+    <p class="cards-note reveal">各家定义与指标略有差异 · 核心共识：幻觉无法根除，只能管理。</p>
+  </div>
+</section>
+
+<section class="section section-dark" id="why">
+  <div class="container">
+    <div class="statement reveal">
+      <p class="eyebrow">为什么重要</p>
+      <h2>它不是撒谎，<br>是诚实地说出了最像答案的话。</h2>
+      <p class="quote">模型的本职是预测"下一个最合理的词"，<b>不是核对事实</b>。OpenAI 2025 年论文的判断更进一步：训练与评测流程奖励"猜一个"、惩罚"说不知道"——幻觉于是成了系统的理性策略。要减少它，得改激励：给模型查资料的机会（RAG）、给说不知道的空间（拒答）、给被检验的流程（评测）。</p>
+      <div class="pillars">
+        <div class="pillar reveal">
+          <span class="p-no">01</span>
+          <h3>机制使然</h3>
+          <p>下一词预测的选项里，天生没有"我不知道"。事实性不是模型的出厂目标，连贯性才是。</p>
+        </div>
+        <div class="pillar reveal">
+          <span class="p-no">02</span>
+          <h3>激励走偏</h3>
+          <p>考核永远只加分不扣分时，"猜"就是最优解。幻觉不只是模型的毛病，也是我们出卷方式的毛病。</p>
+        </div>
+        <div class="pillar reveal">
+          <span class="p-no">03</span>
+          <h3>工程可管</h3>
+          <p>检索、引用、拒答、评测四道闸门，每一道都是可落地的工程件——幻觉率是可优化的指标。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="what">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">依据与事实</p>
+      <h2>先说清楚这个现象</h2>
+    </div>
+    <div class="facts reveal">
+      <div class="fact"><span class="f-k">定义</span><div class="f-v">流畅 · 自信 · 错误<small>或无来源依据——最麻烦的是它看起来不像错的</small></div></div>
+      <div class="fact"><span class="f-k">词源</span><div class="f-v">hallucination<small>从图像生成领域借来的词，原指"看到不存在的东西"</small></div></div>
+      <div class="fact"><span class="f-k">机制</span><div class="f-v">下一词预测<small>模型的职责是"最合理"，不是"最真实"</small></div></div>
+      <div class="fact"><span class="f-k">激励</span><div class="f-v">评测奖励猜测<small>OpenAI 2025 论文核心论点：说不知道被判零分</small></div></div>
+      <div class="fact"><span class="f-k">高发</span><div class="f-v">长尾与精确<small>冷门事实、精确数字、引用文献、外语长尾</small></div></div>
+      <div class="fact"><span class="f-k">缓解</span><div class="f-v">四道闸门<small>RAG 引用 · 允许拒答 · 置信度校准 · 评测拦截</small></div></div>
+    </div>
+
+    <div class="deep-block reveal" id="timeline">
+      <h3>一部"编术史"</h3>
+      <ul class="timeline">
+        <li>
+          <span class="tl-year">2018 前</span>
+          <span class="tl-t">老问题，新名字</span>
+          <p>幻觉一词在神经机器翻译时代已经出现，指生成内容与源文本不符——它不是 ChatGPT 时代才有的病。</p>
+        </li>
+        <li>
+          <span class="tl-year">2022–2023</span>
+          <span class="tl-t">走进大众</span>
+          <p>ChatGPT 让"AI 一本正经胡说"成为全民体验；2023 年律师引用假判例被法院处罚（Mata v. Avianca）成为标志性案例。</p>
+        </li>
+        <li>
+          <span class="tl-year">2024</span>
+          <span class="tl-t">Agent 放大器</span>
+          <p>模型开始动手干活：一个编造的参数会变成一次真实的删除或转账。幻觉从"说错话"升级为"做错事"。</p>
+        </li>
+        <li>
+          <span class="tl-year">2025</span>
+          <span class="tl-t">指认激励</span>
+          <p>OpenAI 发布《Why language models hallucinate》，把矛头指向评测体系；学界发布系统综述——缓解幻觉正式成为工程学科。</p>
+        </li>
+      </ul>
+    </div>
+
+    <div class="deep-block reveal">
+      <h3>设计张力与常见误解</h3>
+      <ul class="tensions">
+        <li><span><b>能力 vs 诚实</b>——模型越被要求"总有答案"，越不敢说不知道；弃权空间要主动设计。</span></li>
+        <li><span><b>拒答 vs 体验</b>——说"不知道"更可信，但产品指标上难看；激励要重新设计。</span></li>
+        <li><span><b>检索 vs 生成</b>——RAG 收窄幻觉空间，但检索不中时模型仍可能硬编，两道闸要一起装。</span></li>
+        <li><span><b>自动 vs 审计</b>——Agent 全自动执行时没人核对；高风险动作必须留人工闸口。</span></li>
+        <li><span><b>榜单 vs 现实</b>——公开基准的幻觉率与你的业务分布无关，自己的评测集才算数。</span></li>
+        <li><span><b>惩罚 vs 校准</b>——一味惩罚错误会催生更多瞎猜；让模型学会"带着置信度说话"才是目标。</span></li>
+      </ul>
+      <p class="tensions-warn"><b>三个常见误解：</b>① "幻觉 = 模型在撒谎"——它没有欺骗意图，只是没有"事实"概念；② "上了 RAG 就不会幻觉"——检索不中或模型不忠实时仍会编，只是空间更小；③ "提示里写'不要编造'就够"——口头禁令有用但有限，检索、拒答选项与评测才是结构解法。</p>
+    </div>
+  </div>
+</section>
+
+<section class="section section-yellow" id="faq">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">接下来继续了解</p>
+      <h2>常见问题</h2>
+    </div>
+    <div class="faq-list">
+      <details class="faq-item reveal">
+        <summary>为什么模型不直接说"不知道"？<span class="plus">+</span></summary>
+        <div class="faq-body">因为它被训练成"给最可能的答案"，而多数评测只奖励答对、不奖励诚实弃权。OpenAI 2025 年论文把这一点称为幻觉的<b>系统性根源</b>——不是模型不会认错，是我们的考卷从不奖励认错。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>幻觉和"胡说"是一回事吗？<span class="plus">+</span></summary>
+        <div class="faq-body">日常说"胡说"包含故意欺骗；幻觉是<b>无意图的错误输出</b>——模型没有"真相"开关，只有概率分布。理解这一点很重要：它决定了缓解手段是工程性的，而不是道德性的。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>哪类内容最容易幻觉？<span class="plus">+</span></summary>
+        <div class="faq-body">精确数字、引用文献、冷门人名与事件、外语长尾，以及"你资料里的私有事实"——训练数据里<b>没有或很稀疏</b>的内容都危险。规律：越具体越危险，越笼统越安全。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>普通用户怎么防？<span class="plus">+</span></summary>
+        <div class="faq-body">三招：<b>要来源</b>（重要事实让它给出处，自己点开核对）、<b>给退路</b>（明确说"不确定就告诉我"）、<b>交叉验证</b>（关键结论用第二个来源对一遍）。习惯比工具更重要。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>企业接入怎么防？<span class="plus">+</span></summary>
+        <div class="faq-body">知识走 RAG 并强制引用、建立评测集持续回归、高风险动作加人工审批与日志——三件套缺一不可。见姊妹篇 RAG（第一道闸）与 Harness（审批与日志）。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>幻觉能被彻底消灭吗？<span class="plus">+</span></summary>
+        <div class="faq-body">目前不能。它是概率生成机制的伴生物——只要模型在"预测最合理的词"，幻觉就会存在。现实目标是把它压到<b>可管理、可检测、可审计</b>的水平，就像人类专家也会犯错，但要有纠错机制。</div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="who">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">它适合谁</p>
+      <h2>四类读者，四个入口</h2>
+    </div>
+    <div class="aud-grid">
+      <div class="aud-card reveal">
+        <span class="a-who">For Everyone</span>
+        <h3>普通用户</h3>
+        <p>学会三个反幻觉习惯：要出处、允许它说不知道、交叉验证——比任何工具都管用。</p>
+        <div class="start">起点 → 构件 ⑥ 缓解三件套</div>
+      </div>
+      <div class="aud-card reveal">
+        <span class="a-who">For Devs</span>
+        <h3>开发者</h3>
+        <p>检索、拒答、校准、评测四道闸，每一道都是可以写进代码的工程件。</p>
+        <div class="start">起点 → 来源卡 01 ↗</div>
+      </div>
+      <div class="aud-card reveal">
+        <span class="a-who">For Leads</span>
+        <h3>管理者</h3>
+        <p>把"幻觉率"写进验收指标，高风险场景必须留人工闸口与审计日志。</p>
+        <div class="start">起点 → 构件 ⑥ 缓解三件套</div>
+      </div>
+      <div class="aud-card reveal">
+        <span class="a-who">For Curious</span>
+        <h3>好奇者</h3>
+        <p>理解"它不是撒谎"，才能既不神化也不妖魔化 AI——这是用好它的第一步。</p>
+        <div class="start">起点 → 深色理念区 ↑</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="sources" style="padding-top:24px">
+  <div class="container">
+    <div class="sources-card reveal">
+      <p class="eyebrow">来源与延伸阅读</p>
+      <a class="source-item" href="https://openai.com/index/why-language-models-hallucinate/" target="_blank" rel="noopener">
+        <span class="s-no">01</span>
+        <span><span class="s-t">OpenAI · Why language models hallucinate（2025）</span><br><span class="s-d">指认"评测奖励猜测"是幻觉的系统性根源</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="https://arxiv.org/abs/2510.06265" target="_blank" rel="noopener">
+        <span class="s-no">02</span>
+        <span><span class="s-t">arXiv:2510.06265 · 幻觉全面综述（2025）</span><br><span class="s-d">类型、成因、检测与缓解的系统分类</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="https://www.ultralytics.com/zh/glossary/hallucination-in-llms" target="_blank" rel="noopener">
+        <span class="s-no">03</span>
+        <span><span class="s-t">Ultralytics · Hallucination in LLMs 术语条目</span><br><span class="s-d">简明定义与缓解思路</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="https://www.anquanke.com/post/id/309642" target="_blank" rel="noopener">
+        <span class="s-no">04</span>
+        <span><span class="s-t">安全客 · 大模型为什么出现幻觉（2025-07）</span><br><span class="s-d">中文视角：全生命周期成因与缓解方案</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="什么是RAG.html">
+        <span class="s-no">05</span>
+        <span><span class="s-t">姊妹篇 · 什么是 RAG？</span><br><span class="s-d">治幻觉第一味药：检索、引用与权限（本系列）</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <p class="sources-note">本页内容整理自以上公开资料，更新于 2026 年 10 月。研究进展很快，以最新论文与官方文档为准。</p>
+    </div>
+  </div>
+</section>
+
+<section class="section section-cta">
+  <div class="container cta-grid">
+    <div class="reveal">
+      <p class="eyebrow">开始动手</p>
+      <h2>给模型一个说不知道的空间</h2>
+      <p>把这三句加进你的提示词——不酷，但有效。</p>
+      <div class="cta-cmd">
+        <pre><span class="t-cm">·</span> 只依据我提供的材料作答
+<span class="t-cm">·</span> 材料里没有的，回答"材料中未提及"
+<span class="t-cm">·</span> 结论后标注来源段落</pre>
+        <button class="copy-btn" data-copy="只依据我提供的材料作答&#10;材料里没有的，回答'材料中未提及'&#10;结论后标注来源段落">复制</button>
+      </div>
+    </div>
+    <div class="cta-art" aria-hidden="true">
+      <span class="q">?</span><span class="arrow">→</span><span class="v">✓</span>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <a class="brand" href="#top"><span class="brand-mark">&gt;_</span>幻觉是什么？</a>
+        <p>一页讲清楚大模型幻觉：它为什么发生、为什么被激励放大、四道工程闸门如何缓解，以及为什么它只能被管理。</p>
+      </div>
+      <div class="foot-col">
+        <h4>本页导航</h4>
+        <ul>
+          <li><a href="#parts">成因与缓解</a></li>
+          <li><a href="#timeline">编年史</a></li>
+          <li><a href="#makers">谁在治</a></li>
+          <li><a href="#faq">常见问题</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h4>本系列</h4>
+        <ul>
+          <li><a href="什么是飞书CLI.html">什么是飞书 CLI？</a></li>
+          <li><a href="什么是DeepSeekHarness.html">什么是 DeepSeek Harness？</a></li>
+          <li><a href="什么是AgentHarness.html">什么是 Agent Harness？</a></li>
+          <li><a href="什么是Prompt工程.html">什么是 Prompt 工程？</a></li>
+          <li><a href="什么是RAG.html">什么是 RAG？</a></li>
+          <li><a href="什么是MCP.html">什么是 MCP？</a></li>
+          <li><a href="index.html">🏠 知识地图（主页）</a></li>
+          <li><a href="#top">什么是幻觉？（本页）</a></li>
+          <li><a href="什么是思维链.html">什么是思维链？</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>本页为独立学习指南，与所提及的各家公司没有关联 · 内容整理自公开资料</span>
+      <span>更新于 2026 年 10 月</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+document.documentElement.classList.add('js');
+
+var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function el(tag, cls, text){
+  var n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text !== undefined) n.textContent = text;
+  return n;
+}
+
+function typeCmd(span, text, done){
+  if (reduceMotion){ span.textContent = text; done && done(); return; }
+  var i = 0;
+  (function tick(){
+    span.textContent = text.slice(0, ++i);
+    if (i < text.length){ setTimeout(tick, text[i-1] === ' ' ? 34 : 18); }
+    else { done && done(); }
+  })();
+}
+
+function renderTerm(container, spec){
+  container.innerHTML = '';
+  var line = el('div','t-line');
+  var prompt = el('span','t-prompt', spec.prompt || '❯');
+  var cmd = el('span','t-cmd');
+  var cur = el('span','cursor');
+  line.appendChild(prompt); line.appendChild(cmd); line.appendChild(cur);
+  container.appendChild(line);
+  typeCmd(cmd, spec.cmd, function(){
+    cur.remove();
+    (spec.out || []).forEach(function(o){
+      container.appendChild(el('div','t-line ' + (o.cls || 't-out'), o.text));
+    });
+    if (spec.note) container.appendChild(el('div','t-note', spec.note));
+  });
+}
+
+var heroSteps = [
+  {
+    cmd: '"那篇冷门论文在第几页？"',
+    prompt: '你',
+    out: [
+      { text: '← 模型：第 47 页，第 3 段。（笃定）', cls: 't-out' },
+      { text: '→ 你翻遍全文：根本没有这篇的这段', cls: 't-out' },
+      { text: '✗ 流畅 · 具体 · 编造——这就是幻觉', cls: 't-dim' }
+    ],
+    note: '最麻烦的不是它错了，而是它错得毫无破绽。'
+  },
+  {
+    cmd: 'P(下一个词 | 上下文)',
+    out: [
+      { text: '→ 模型的本职：预测最合理的下一个词', cls: 't-out' },
+      { text: '→ 没有"事实核查"这一步，也没有"不知道"按钮', cls: 't-out' },
+      { text: '+ 评测体系奖励猜测、惩罚弃权（OpenAI 2025）', cls: 't-out' },
+      { text: '✗ 幻觉成了系统的"理性策略"', cls: 't-dim' }
+    ],
+    note: '它不是撒谎——是机制的伴生物。要减少它，先改激励。'
+  },
+  {
+    cmd: '缓解：四道闸门',
+    prompt: '⚙',
+    out: [
+      { text: '① RAG + 引用：答案限定在材料内', cls: 't-ok' },
+      { text: '② 允许拒答：给"说不知道"的空间', cls: 't-ok' },
+      { text: '③ 置信度校准：不确定就说不确定', cls: 't-ok' },
+      { text: '④ 评测拦截：建测试集持续回归', cls: 't-ok' }
+    ],
+    note: '目标不是零幻觉，而是可管理、可检测、可审计。'
+  }
+];
+
+var heroTerm = document.getElementById('hero-term');
+var heroBtns = document.querySelectorAll('.terminal-steps button');
+var heroStopped = false;
+
+function showHeroStep(i){
+  heroBtns.forEach(function(b, j){
+    b.classList.toggle('active', i === j);
+    b.setAttribute('aria-selected', i === j ? 'true' : 'false');
+  });
+  renderTerm(heroTerm, heroSteps[i]);
+}
+heroBtns.forEach(function(b){
+  b.addEventListener('click', function(){
+    heroStopped = true;
+    showHeroStep(+b.dataset.step);
+  });
+});
+showHeroStep(0);
+(function autoAdvance(){
+  if (reduceMotion) return;
+  var idx = 0;
+  setInterval(function(){
+    if (heroStopped) return;
+    idx = (idx + 1) % heroSteps.length;
+    showHeroStep(idx);
+  }, 7000);
+})();
+
+var parts = [
+  {
+    name: '诱因① 机制', desc: '下一词预测没有"不知道"',
+    spec: {
+      cmd: 'P(下一个词 | 上下文)',
+      out: [
+        { text: '→ 每个词都是"最合理的续写"', cls: 't-out' },
+        { text: '→ 连贯性是目标，事实性不是', cls: 't-out' },
+        { text: '✗ 冷门话题 = 约束不足 = 自由发挥', cls: 't-dim' }
+      ],
+      note: '编出来的引用之所以像模像样，因为它符合"引用该有的样子"。'
+    }
+  },
+  {
+    name: '诱因② 激励', desc: '评测奖励猜测',
+    spec: {
+      cmd: '评分：答对 1 分 · 弃权 0 分',
+      out: [
+        { text: '→ 猜错几乎零成本，弃权必得零分', cls: 't-out' },
+        { text: '→ 训练与评测都在奖励"大胆"', cls: 't-out' },
+        { text: '✗ OpenAI 2025：这是系统性根源', cls: 't-ok' }
+      ],
+      note: '换个评分方式（奖励校准的不确定性），幻觉会立刻变少。'
+    }
+  },
+  {
+    name: '诱因③ 数据', desc: '知识截止与盲区',
+    spec: {
+      cmd: '训练数据 = 截止于某天',
+      out: [
+        { text: '→ 你的私有资料不在其中', cls: 't-out' },
+        { text: '→ 长尾事实出现次数寥寥', cls: 't-out' },
+        { text: '→ 过时信息与新事实冲突', cls: 't-out' },
+        { text: '✗ 缺口处最容易"脑补"', cls: 't-dim' }
+      ],
+      note: '知识冻结日期之后的世界，对模型来说全是"需要编的题"。'
+    }
+  },
+  {
+    name: '缓解① RAG 与引用', desc: '先查资料，标注出处',
+    spec: {
+      cmd: '答案 := f(检索到的材料)',
+      out: [
+        { text: '→ 回答限定在材料范围内', cls: 't-out' },
+        { text: '→ 结论后标注来源文档与段落', cls: 't-out' },
+        { text: '✓ "信我"变成"自己验证"', cls: 't-ok' }
+      ],
+      note: '治幻觉第一味药——但检索不到时模型仍可能硬编，闸门要组合使用。'
+    }
+  },
+  {
+    name: '缓解② 允许拒答', desc: '给"说不知道"加分',
+    spec: {
+      cmd: '不确定时 → "材料中未提及"',
+      out: [
+        { text: '→ 提示词里明确允许说不知道', cls: 't-out' },
+        { text: '→ 评测给诚实弃权部分分数', cls: 't-out' },
+        { text: '✓ 改激励，比加禁令管用', cls: 't-ok' }
+      ],
+      note: '一句"材料中未提及"，比三段自信的编造有价值得多。'
+    }
+  },
+  {
+    name: '缓解③ 评测拦截', desc: '幻觉率是可测指标',
+    spec: {
+      cmd: 'eval set → 抽检 · 回归',
+      out: [
+        { text: '→ 建一套已知答案的测试用例', cls: 't-out' },
+        { text: '→ 每次改提示/换模型跑一遍', cls: 't-out' },
+        { text: '→ LLM-as-a-judge 辅助批量审', cls: 't-out' },
+        { text: '✓ 感觉变好不算数，测出来才算', cls: 't-ok' }
+      ],
+      note: '把幻觉率当成和延迟、成本一样的产品指标来经营。'
+    }
+  }
+];
+
+var partsList = document.getElementById('parts-list');
+var partsTerm = document.getElementById('parts-term');
+parts.forEach(function(t, i){
+  var b = el('button', 'part-btn' + (i === 0 ? ' active' : ''));
+  b.type = 'button';
+  b.setAttribute('role', 'tab');
+  b.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
+  b.appendChild(el('span', 'num', String(i + 1)));
+  var wrap = el('span');
+  wrap.appendChild(el('span', 't-name', t.name));
+  wrap.appendChild(document.createElement('br'));
+  wrap.appendChild(el('span', 't-desc', t.desc));
+  b.appendChild(wrap);
+  b.addEventListener('click', function(){
+    partsList.querySelectorAll('.part-btn').forEach(function(x){
+      x.classList.remove('active'); x.setAttribute('aria-selected', 'false');
+    });
+    b.classList.add('active'); b.setAttribute('aria-selected', 'true');
+    renderTerm(partsTerm, t.spec);
+  });
+  partsList.appendChild(b);
+});
+renderTerm(partsTerm, parts[0].spec);
+
+document.querySelectorAll('.copy-btn').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    var text = btn.dataset.copy || '';
+    var done = function(){
+      var old = btn.textContent;
+      btn.textContent = '已复制 ✓';
+      setTimeout(function(){ btn.textContent = old; }, 1600);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done, function(){ fallbackCopy(text); done(); });
+    } else { fallbackCopy(text); done(); }
+  });
+});
+function fallbackCopy(text){
+  var ta = document.createElement('textarea');
+  ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); } catch(e){}
+  ta.remove();
+}
+
+var revealEls = document.querySelectorAll('.reveal');
+if ('IntersectionObserver' in window && !reduceMotion){
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if (en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); }
+    });
+  }, { threshold: 0.12 });
+  revealEls.forEach(function(n){ io.observe(n); });
+} else {
+  revealEls.forEach(function(n){ n.classList.add('in'); });
+}
+</script>
+</body>
+</html>

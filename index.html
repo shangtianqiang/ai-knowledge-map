@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#FBFAF7">
+<title>AI 大模型知识地图 | 八个专题，从怎么问到怎么动手</title>
+<meta name="description" content="一套中文 AI 知识手册：思维链、Prompt 工程、幻觉、RAG、MCP、Agent Harness、DeepSeek Harness、飞书 CLI——八个专题页与 30+ 术语速查，全部整理自公开资料。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2317151F'/%3E%3Ctext x='16' y='22' font-size='15' font-family='monospace' fill='%23FFD166' text-anchor='middle'%3E%3E_%3C/text%3E%3C/svg%3E">
+<style>
+  :root{
+    --cream:#FBFAF7;
+    --ink:#17151F;
+    --paper:#FFFFFF;
+    --yellow:#FFD166;
+    --teal:#00BFA6;
+    --blue:#4D6BFE;
+    --orange:#FF6B35;
+    --purple:#6E56CF;
+    --rose:#D6409F;
+    --green:#2B8A3E;
+    --coral:#E5484D;
+    --cyan:#0E7490;
+    --muted:rgba(23,21,31,.64);
+    --faint:rgba(23,21,31,.45);
+    --line:rgba(23,21,31,.14);
+    --line-strong:rgba(23,21,31,.85);
+    --cream-muted:rgba(251,250,247,.68);
+    --cream-faint:rgba(251,250,247,.42);
+    --cream-line:rgba(251,250,247,.16);
+    --mono:"SF Mono",ui-monospace,"JetBrains Mono",Menlo,Consolas,"Liberation Mono",monospace;
+    --shadow-card:0 1px 2px rgba(23,21,31,.05),0 10px 28px -14px rgba(23,21,31,.18);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    *,*::before,*::after{animation:none!important;transition:none!important}
+  }
+  body{
+    font-family:"PingFang SC","Microsoft YaHei","Inter Variable",system-ui,sans-serif;
+    background:var(--cream);
+    color:var(--ink);
+    font-size:16px;
+    line-height:1.75;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+  }
+  ::selection{background:var(--yellow);color:var(--ink)}
+  a{color:inherit}
+  .container{max-width:1128px;margin:0 auto;padding:0 24px}
+
+  html.js .reveal{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s ease}
+  html.js .reveal.in{opacity:1;transform:none}
+  @media (prefers-reduced-motion:reduce){html.js .reveal{opacity:1;transform:none}}
+  @media print{html.js .reveal{opacity:1!important;transform:none!important}}
+
+  /* ---------- nav ---------- */
+  .nav{
+    position:sticky;top:0;z-index:50;
+    background:rgba(251,250,247,.92);
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  .nav-inner{display:flex;align-items:center;justify-content:space-between;height:60px;gap:16px}
+  .brand{display:flex;align-items:center;gap:10px;text-decoration:none;font-weight:800;font-size:15px;letter-spacing:.01em}
+  .brand-mark{
+    width:26px;height:26px;background:var(--ink);color:var(--yellow);
+    font-family:var(--mono);font-size:12px;font-weight:700;line-height:26px;text-align:center;
+    border-radius:5px;flex:none;
+  }
+  .nav-links{display:flex;align-items:center;gap:22px;list-style:none}
+  .nav-links a{text-decoration:none;font-size:13.5px;font-weight:500;color:var(--muted);transition:color .15s}
+  .nav-links a:hover{color:var(--ink)}
+  .nav-links a.nav-cta{
+    color:var(--ink);font-weight:700;border:1.5px solid var(--line-strong);
+    padding:6px 14px;border-radius:0;
+  }
+  .nav-links a.nav-cta:hover{background:var(--ink);color:var(--cream)}
+  @media (max-width:720px){.nav-links li.hide-sm{display:none}}
+
+  /* ---------- buttons ---------- */
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:13px 26px;border-radius:0;border:1.5px solid transparent;
+    font-family:inherit;font-size:15px;font-weight:700;letter-spacing:.02em;
+    text-decoration:none;cursor:pointer;transition:transform .15s ease,background .15s ease,color .15s ease,box-shadow .15s ease;
+  }
+  .btn:active{transform:translateY(1px)}
+  .btn-primary{background:var(--ink);color:var(--cream)}
+  .btn-primary:hover{box-shadow:0 6px 0 -2px var(--yellow)}
+  .btn-ghost{border-color:var(--line-strong);color:var(--ink);background:transparent}
+  .btn-ghost:hover{background:var(--ink);color:var(--cream)}
+  .btn-sm{padding:9px 18px;font-size:13.5px}
+
+  /* ---------- eyebrow / headings ---------- */
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:9px;
+    font-size:12.5px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;
+  }
+  .eyebrow::before{content:"";width:9px;height:9px;background:currentColor;flex:none}
+  h1{font-size:clamp(42px,6.6vw,74px);line-height:1.08;font-weight:800;letter-spacing:-.015em}
+  h2{font-size:clamp(30px,4.4vw,44px);line-height:1.18;font-weight:800;letter-spacing:-.01em}
+  h3{font-size:20px;font-weight:800;line-height:1.4}
+  .lead{font-size:clamp(17px,2vw,19.5px);line-height:1.8}
+
+  /* ---------- hero ---------- */
+  .hero{padding:76px 0 88px}
+  .hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:center}
+  @media (max-width:980px){.hero-grid{grid-template-columns:1fr;gap:44px}}
+  .hero .eyebrow{color:var(--ink);margin-bottom:26px}
+  .hero h1{margin-bottom:24px}
+  .hero .lead{color:var(--ink);margin-bottom:16px;max-width:34em}
+  .hero .example{color:var(--muted);font-size:15.5px;max-width:36em;margin-bottom:32px}
+  .hero .example b{color:var(--ink);font-weight:700}
+  .hero-actions{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:30px}
+  .hero-meta{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{
+    font-size:12px;font-weight:600;color:var(--muted);
+    border:1px solid var(--line);padding:5px 11px;border-radius:999px;
+    display:inline-flex;align-items:center;gap:6px;background:var(--paper);
+  }
+  .chip .dot{width:6px;height:6px;border-radius:50%;background:var(--yellow)}
+
+  /* ---------- terminal ---------- */
+  .terminal{
+    background:var(--ink);border-radius:14px;overflow:hidden;
+    box-shadow:0 2px 4px rgba(23,21,31,.12),0 30px 60px -22px rgba(23,21,31,.45);
+    border:1px solid rgba(23,21,31,.9);
+  }
+  .terminal-bar{
+    display:flex;align-items:center;gap:7px;
+    padding:13px 16px;border-bottom:1px solid var(--cream-line);
+  }
+  .terminal-bar i{width:11px;height:11px;border-radius:50%;background:rgba(251,250,247,.22)}
+  .terminal-bar i:first-child{background:#FF5F57}
+  .terminal-bar i:nth-child(2){background:#FEBC2E}
+  .terminal-bar i:nth-child(3){background:#28C840}
+  .terminal-bar .terminal-title{
+    margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--cream-faint);letter-spacing:.08em;
+  }
+  .terminal-body{padding:18px 20px 22px;min-height:238px;font-family:var(--mono);font-size:13px;line-height:1.95}
+  .t-line{white-space:pre-wrap;word-break:break-all}
+  .t-prompt{color:var(--yellow);font-weight:700;margin-right:9px}
+  .t-cmd{color:var(--cream)}
+  .t-out{color:var(--cream-faint)}
+  .t-ok{color:#3EE8C6}
+  .t-dim{color:rgba(251,250,247,.35)}
+  .t-note{color:var(--cream-faint);font-family:"PingFang SC","Microsoft YaHei",sans-serif;font-size:12px;margin-top:12px;padding-top:10px;border-top:1px dashed var(--cream-line)}
+  .cursor{display:inline-block;width:8px;height:15px;background:var(--yellow);vertical-align:-2px;animation:blink 1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+  @media (prefers-reduced-motion:reduce){.cursor{animation:none}}
+
+  /* ---------- sections ---------- */
+  .section{padding:96px 0}
+  .section-head{max-width:680px;margin-bottom:52px}
+  .section-head .eyebrow{margin-bottom:20px}
+  .section-head p{color:var(--muted);margin-top:16px;font-size:16.5px}
+
+  .section-yellow{background:var(--yellow)}
+  .section-yellow .section-head p{color:rgba(23,21,31,.72)}
+
+  .section-dark{background:var(--ink);color:var(--cream)}
+  .section-dark .eyebrow{color:var(--yellow)}
+
+  /* ---------- path cards ---------- */
+  .path-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+  @media (max-width:980px){.path-grid{grid-template-columns:1fr 1fr}}
+  @media (max-width:640px){.path-grid{grid-template-columns:1fr}}
+  .path-card{
+    background:var(--paper);border:1px solid var(--line);border-top:4px solid var(--pc,var(--ink));
+    border-radius:12px;padding:28px 26px 24px;box-shadow:var(--shadow-card);
+    display:flex;flex-direction:column;text-decoration:none;color:inherit;
+    transition:transform .16s ease,box-shadow .16s ease;
+  }
+  .path-card:hover{transform:translateY(-4px);box-shadow:0 2px 4px rgba(23,21,31,.06),0 18px 40px -16px rgba(23,21,31,.28)}
+  .path-card .p-top{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+  .path-card .p-no{
+    font-family:var(--mono);font-size:13px;font-weight:700;color:var(--pc);
+  }
+  .path-card .p-tag{
+    font-size:10.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+    padding:4px 9px;border:1px solid var(--line);border-radius:4px;color:var(--faint);
+  }
+  .path-card h3{margin-bottom:10px}
+  .path-card p{font-size:14px;color:var(--muted);flex:1;line-height:1.75}
+  .path-card .p-go{
+    margin-top:20px;padding-top:14px;border-top:1px dashed var(--line);
+    font-size:13.5px;font-weight:700;color:var(--ink);
+    display:flex;align-items:center;justify-content:space-between;
+  }
+  .path-card .p-go .p-time{font-family:var(--mono);font-size:11.5px;font-weight:400;color:var(--faint)}
+  .path-note{margin-top:30px;font-size:13px;color:rgba(23,21,31,.55);display:flex;align-items:center;gap:8px}
+  .path-note::before{content:"※";color:rgba(23,21,31,.45)}
+
+  /* ---------- glossary ---------- */
+  .gl-list{max-width:860px}
+  .gl-item{background:var(--paper);border:1.5px solid var(--ink);border-radius:10px;margin-bottom:14px;overflow:hidden;box-shadow:var(--shadow-card)}
+  .gl-item summary{
+    list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:18px;
+    padding:18px 24px;font-weight:700;font-size:16px;
+  }
+  .gl-item summary::-webkit-details-marker{display:none}
+  .gl-item summary .g-count{font-family:var(--mono);font-size:12px;color:var(--faint);font-weight:700}
+  .gl-item summary .plus{
+    flex:none;width:26px;height:26px;border:1.5px solid var(--ink);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:400;font-size:16px;line-height:1;transition:transform .2s ease,background .2s,color .2s;
+  }
+  .gl-item[open] summary .plus{background:var(--ink);color:var(--yellow);transform:rotate(45deg)}
+  .gl-rows{padding:4px 24px 20px}
+  .gl-row{
+    display:flex;gap:16px;align-items:baseline;
+    padding:11px 0;border-bottom:1px solid var(--line);font-size:14px;
+  }
+  .gl-row:last-child{border-bottom:none}
+  .gl-row .g-term{flex:none;width:170px;font-weight:800;color:var(--ink)}
+  .gl-row .g-def{color:var(--muted);flex:1;line-height:1.7}
+  .gl-row .g-def a{color:var(--ink);font-weight:700;text-decoration:underline;text-decoration-color:var(--yellow);text-underline-offset:3px;white-space:nowrap}
+  .gl-row .g-def a:hover{background:var(--yellow);text-decoration-color:transparent}
+  @media (max-width:640px){.gl-row{flex-direction:column;gap:2px}.gl-row .g-term{width:auto}}
+
+  /* ---------- about ---------- */
+  .about-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:34px}
+  @media (max-width:820px){.about-grid{grid-template-columns:1fr}}
+  .about-grid h3{color:var(--cream);margin-bottom:12px;font-size:17.5px}
+  .about-grid p{font-size:14.5px;color:var(--cream-muted);line-height:1.85}
+  .about-grid a{color:var(--cream);font-weight:700;text-decoration:underline;text-decoration-color:var(--yellow);text-underline-offset:3px}
+  .about-grid a:hover{background:var(--yellow);color:var(--ink);text-decoration-color:transparent}
+  .about-grid code{font-family:var(--mono);font-size:12.5px;background:rgba(251,250,247,.12);padding:2px 6px;border-radius:4px;color:var(--cream)}
+
+  /* ---------- footer ---------- */
+  footer{background:var(--ink);color:var(--cream);padding:64px 0 36px}
+  .foot-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:44px;margin-bottom:52px}
+  @media (max-width:820px){.foot-grid{grid-template-columns:1fr}}
+  .foot-brand .brand{color:var(--cream);margin-bottom:16px}
+  .foot-brand .brand-mark{background:var(--yellow);color:var(--ink)}
+  .foot-brand p{font-size:13.5px;color:var(--cream-faint);max-width:26em}
+  .foot-col h4{font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--cream-faint);margin-bottom:18px}
+  .foot-col ul{list-style:none}
+  .foot-col li{margin-bottom:11px}
+  .foot-col a{font-size:14px;color:var(--cream-muted);text-decoration:none;transition:color .15s}
+  .foot-col a:hover{color:var(--cream)}
+  .foot-bottom{border-top:1px solid var(--cream-line);padding-top:26px;font-size:12.5px;color:var(--cream-faint);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+  [id]{scroll-margin-top:76px}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="container nav-inner">
+    <a class="brand" href="#top"><span class="brand-mark">&gt;_</span>AI 大模型知识地图</a>
+    <ul class="nav-links">
+      <li class="hide-sm"><a href="#path">学习路径</a></li>
+      <li class="hide-sm"><a href="#glossary">术语速查</a></li>
+      <li class="hide-sm"><a href="#about">关于本站</a></li>
+      <li><a class="nav-cta" href="https://github.com/shangtianqiang/ai-knowledge-map" target="_blank" rel="noopener">GitHub ↗</a></li>
+    </ul>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="container hero-grid">
+    <div>
+      <p class="eyebrow">一套正在生长的中文知识手册</p>
+      <h1>AI 大模型<br>知识地图</h1>
+      <p class="lead">八个高频术语，一页一个：从"怎么问"到"怎么动手"。每一页都是单文件、零依赖、可离线阅读的独立指南——内容整理自官方文档与论文，不作任何背书。</p>
+      <p class="example">不知道从哪开始？<b>按 01 → 08 的顺序读</b>：先懂模型怎么"想"（思维链）、你怎么"问"（Prompt 工程），再看它会怎么"错"（幻觉）、怎么"补知识"（RAG），最后进入"怎么动手"（MCP、Harness）与真实产品。</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#path">查看学习路径 ↓</a>
+        <a class="btn btn-ghost" href="什么是思维链.html">直接开始第 01 课 →</a>
+      </div>
+      <div class="hero-meta">
+        <span class="chip"><i class="dot"></i>8 个专题页</span>
+        <span class="chip"><i class="dot"></i>40+ 术语速查</span>
+        <span class="chip"><i class="dot"></i>单文件 · 离线可读</span>
+        <span class="chip"><i class="dot"></i>更新于 2026 年 10 月</span>
+      </div>
+    </div>
+
+    <div class="terminal" aria-label="知识地图目录">
+      <div class="terminal-bar"><i></i><i></i><i></i><span class="terminal-title">knowledge-map — 目录</span></div>
+      <div class="terminal-body" id="hero-term" aria-live="polite"></div>
+    </div>
+  </div>
+</header>
+
+<!-- ================= PATH (YELLOW) ================= -->
+<section class="section section-yellow" id="path">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">学习路径</p>
+      <h2>八站，一条主线</h2>
+      <p>顺序不是随意的：先懂模型怎么"想"、你怎么"问"，再看它会怎么"错"、知识怎么"补"，最后是"动手"的能力与真实的产品。点击任意卡片进入专题页。</p>
+    </div>
+
+    <div class="path-grid">
+      <a class="path-card reveal" href="什么是思维链.html" style="--pc:#0E7490">
+        <span class="p-top"><span class="p-no">01</span><span class="p-tag">怎么想</span></span>
+        <h3>思维链</h3>
+        <p>让模型把中间步骤写出来再作答——2022 年的一篇论文，如今长成了"推理模型"整个品类。</p>
+        <span class="p-go">开始阅读 <span class="p-time">≈ 6 min</span></span>
+      </a>
+      <a class="path-card reveal" href="什么是Prompt工程.html" style="--pc:#6E56CF">
+        <span class="p-top"><span class="p-no">02</span><span class="p-tag">怎么问</span></span>
+        <h3>Prompt 工程</h3>
+        <p>提示词不是咒语，是你与模型的接口规范：说清楚、给示例、定格式、配评测。</p>
+        <span class="p-go">开始阅读 <span class="p-time">≈ 7 min</span></span>
+      </a>
+      <a class="path-card reveal" href="什么是幻觉.html" style="--pc:#E5484D">
+        <span class="p-top"><span class="p-no">03</span><span class="p-tag">怎么错</span></span>
+        <h3>幻觉</h3>
+        <p>流畅、自信、错误。它不是撒谎，是机制的伴生物——三个诱因、四道闸门，只能管理不能根除。</p>
+        <span class="p-go">开始阅读 <span class="p-time">≈ 6 min</span></span>
+      </a>
+      <a class="path-card reveal" href="什么是RAG.html" style="--pc:#D6409F">
+        <span class="p-top"><span class="p-no">04</span><span class="p-tag">怎么补知识</span></span>
+        <h3>RAG</h3>
+        <p>让模型开卷考试：先从你的资料里检索，再作答——答案有出处、可更新、可授权。</p>
+        <span class="p-go">开始阅读 <span class="p-time">≈ 6 min</span></span>
+      </a>
+      <a class="path-card reveal" href="什么是MCP.html" style="--pc:#2B8A3E">
+        <span class="p-top"><span class="p-no">05</span><span class="p-tag">怎么连接</span></span>
+        <h3>MCP</h3>
+        <p>AI 应用的 USB-C：一个开放协议，让工具与数据即插即用——连竞争对手都愿意共建。</p>
+        <span class="p-go">开始阅读 <span class="p-time">≈ 6 min</span></span>
+      </a>
+      <a class="path-card reveal" href="什么是AgentHarness.html" style="--pc:#FF6B35">
+        <span class="p-top"><span class="p-no">06</span><span class="p-tag">怎么动手</span></span>
+        <h3>Agent Harness</h3>
+        <p>包在模型外面的运行时骨架：循环、工具、沙盒与留痕。模型负责聪明，它负责可靠。</p>
+        <span class="p-go">开始阅读 <span class="p-time">≈ 7 min</span></span>
+      </a>
+      <a class="path-card reveal" href="什么是DeepSeekHarness.html" style="--pc:#4D6BFE">
+        <span class="p-top"><span class="p-no">07</span><span class="p-tag">开源样本</span></span>
+        <h3>DeepSeek Harness</h3>
+        <p>"Everything is a Plugin"：DeepSeek 开源的 Agent 运行框架，GitHub 26 万 Star 的当代实现。</p>
+        <span class="p-go">开始阅读 <span class="p-time">≈ 7 min</span></span>
+      </a>
+      <a class="path-card reveal" href="什么是飞书CLI.html" style="--pc:#00BFA6">
+        <span class="p-top"><span class="p-no">08</span><span class="p-tag">真实产品</span></span>
+        <h3>飞书 CLI</h3>
+        <p>给 Agent 装上飞书的那双手：官方开源的命令行工具，一行命令读消息、写文档、查日历。</p>
+        <span class="p-go">开始阅读 <span class="p-time">≈ 6 min</span></span>
+      </a>
+    </div>
+    <p class="path-note reveal">阅读时长为估算 · 每个专题页的页脚都能返回本地图，或跳到相邻专题。</p>
+  </div>
+</section>
+
+<!-- ================= GLOSSARY (WHITE) ================= -->
+<section class="section" id="glossary">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">术语速查</p>
+      <h2>40+ 个词，看懂 AI 新闻</h2>
+      <p>读公众号、看发布会时最常见的那些词，按主题分组。带下划线的词已有专题页，点击可直接深入。</p>
+    </div>
+
+    <div class="gl-list reveal">
+      <details class="gl-item" open>
+        <summary>模型本体<span class="g-count">8 词</span><span class="plus">+</span></summary>
+        <div class="gl-rows">
+          <div class="gl-row"><span class="g-term">Token 词元</span><span class="g-def">模型读文本的最小单位，一个汉字约 1–2 个 token；计费、限速、上下文上限都按它算。</span></div>
+          <div class="gl-row"><span class="g-term">上下文窗口</span><span class="g-def">模型一次能"看到"的内容上限（如 128K、1M token），超了就要靠压缩或检索。</span></div>
+          <div class="gl-row"><span class="g-term">预训练 / 微调</span><span class="g-def">先"读遍互联网"打基础（Pre-training），再用专业数据调教出特定能力（Fine-tuning / SFT）。</span></div>
+          <div class="gl-row"><span class="g-term">RLHF</span><span class="g-def">人类反馈强化学习：让人给回答打分，模型据此"学乖"——ChatGPT 好好说话的关键一步。</span></div>
+          <div class="gl-row"><span class="g-term">MoE 混合专家</span><span class="g-def">大模型内部分成很多"专家"，每次只唤醒几个——DeepSeek V3 的标志性设计。</span></div>
+          <div class="gl-row"><span class="g-term">蒸馏</span><span class="g-def">让小模型模仿大模型的输出来变强，"以师徒制降本"。</span></div>
+          <div class="gl-row"><span class="g-term">量化</span><span class="g-def">把模型参数从高精度压成低精度，换更小内存与更快速度，牺牲一点智商。</span></div>
+          <div class="gl-row"><span class="g-term">多模态</span><span class="g-def">能同时处理文字、图片、音频、视频的模型。</span></div>
+        </div>
+      </details>
+
+      <details class="gl-item">
+        <summary>模型行为<span class="g-count">6 词</span><span class="plus">+</span></summary>
+        <div class="gl-rows">
+          <div class="gl-row"><span class="g-term">幻觉</span><span class="g-def">流畅、自信，但错误或无依据的输出。<a href="什么是幻觉.html">有专页 ↗</a></span></div>
+          <div class="gl-row"><span class="g-term">温度 Temperature</span><span class="g-def">随机性旋钮：调低稳定保守，调高有创意也易跑偏。</span></div>
+          <div class="gl-row"><span class="g-term">对齐 Alignment</span><span class="g-def">让模型行为符合人类意图与价值观的总称。</span></div>
+          <div class="gl-row"><span class="g-term">越狱 Jailbreak</span><span class="g-def">绕过安全限制，骗模型输出违禁内容的攻击手法。</span></div>
+          <div class="gl-row"><span class="g-term">提示注入</span><span class="g-def">把恶意指令藏进网页、文档里等 AI 去读——Agent 时代最著名的安全威胁。</span></div>
+          <div class="gl-row"><span class="g-term">拒答 Refusal</span><span class="g-def">安全边界触发后，模型回复"我不能帮你做这个"。</span></div>
+        </div>
+      </details>
+
+      <details class="gl-item">
+        <summary>知识接入<span class="g-count">5 词</span><span class="plus">+</span></summary>
+        <div class="gl-rows">
+          <div class="gl-row"><span class="g-term">RAG</span><span class="g-def">检索增强生成：先搜资料再作答，答案有出处。<a href="什么是RAG.html">有专页 ↗</a></span></div>
+          <div class="gl-row"><span class="g-term">Embedding 嵌入</span><span class="g-def">把文字变成向量，意思越近的文本向量越接近。</span></div>
+          <div class="gl-row"><span class="g-term">向量数据库</span><span class="g-def">存向量、按"意思"搜索的数据库（FAISS、pgvector、Milvus 等）。</span></div>
+          <div class="gl-row"><span class="g-term">重排 Rerank</span><span class="g-def">初筛之后用小模型精细排序，提升检索质量。</span></div>
+          <div class="gl-row"><span class="g-term">长上下文 vs RAG</span><span class="g-def">整本塞进窗口 vs 只检索相关几页——实践中常混用。</span></div>
+        </div>
+      </details>
+
+      <details class="gl-item">
+        <summary>Agent 与工具<span class="g-count">7 词</span><span class="plus">+</span></summary>
+        <div class="gl-rows">
+          <div class="gl-row"><span class="g-term">Agent</span><span class="g-def">能感知、规划并动手执行任务的 AI 系统。<a href="什么是AgentHarness.html">有专页 ↗</a></span></div>
+          <div class="gl-row"><span class="g-term">Harness / Scaffolding</span><span class="g-def">包在模型外面的运行时骨架 / 开跑前组装的静态件。<a href="什么是AgentHarness.html">有专页 ↗</a></span></div>
+          <div class="gl-row"><span class="g-term">Agent 循环</span><span class="g-def">取观察 → 出动作 → 回填，直到模型说"做完了"。</span></div>
+          <div class="gl-row"><span class="g-term">Function Calling</span><span class="g-def">模型输出结构化的"调用请求"，由外部程序执行。</span></div>
+          <div class="gl-row"><span class="g-term">MCP</span><span class="g-def">Anthropic 开源的连接标准，"AI 的 USB-C"。<a href="什么是MCP.html">有专页 ↗</a></span></div>
+          <div class="gl-row"><span class="g-term">子智能体</span><span class="g-def">主 Agent 派出去干专项任务的分身，各带独立上下文。</span></div>
+          <div class="gl-row"><span class="g-term">Human-in-the-loop</span><span class="g-def">关键动作先弹审批等人拍板——自治程度的反面刻度。</span></div>
+        </div>
+      </details>
+
+      <details class="gl-item">
+        <summary>推理与评测<span class="g-count">8 词</span><span class="plus">+</span></summary>
+        <div class="gl-rows">
+          <div class="gl-row"><span class="g-term">思维链 CoT</span><span class="g-def">把中间步骤写出来再作答，最著名的提示技法。<a href="什么是思维链.html">有专页 ↗</a></span></div>
+          <div class="gl-row"><span class="g-term">推理模型</span><span class="g-def">回答前先内部"打草稿"的模型（o 系列、DeepSeek-R1）。<a href="什么是思维链.html">有专页 ↗</a></span></div>
+          <div class="gl-row"><span class="g-term">测试时算力</span><span class="g-def">推理阶段多花算力换质量——"想得更久"也算变强。<a href="什么是思维链.html">有专页 ↗</a></span></div>
+          <div class="gl-row"><span class="g-term">ReAct</span><span class="g-def">推理与行动交替的循环，Agent 的思想模板。<a href="什么是思维链.html">有专页 ↗</a></span></div>
+          <div class="gl-row"><span class="g-term">Benchmark 基准</span><span class="g-def">标准化考卷：MMLU（知识）、SWE-bench（修 bug）等。</span></div>
+          <div class="gl-row"><span class="g-term">Eval 评测工程</span><span class="g-def">自己出卷子持续测模型与提示词的效果——好提示是测出来的。</span></div>
+          <div class="gl-row"><span class="g-term">LLM-as-a-judge</span><span class="g-def">用一个模型给另一个模型的输出打分，规模化自动评审。</span></div>
+          <div class="gl-row"><span class="g-term">红队测试</span><span class="g-def">专职攻击自家模型找漏洞的安全实践。</span></div>
+        </div>
+      </details>
+
+      <details class="gl-item">
+        <summary>产品与运行<span class="g-count">5 词</span><span class="plus">+</span></summary>
+        <div class="gl-rows">
+          <div class="gl-row"><span class="g-term">系统提示词</span><span class="g-def">产品出厂自带、常驻生效的隐形指令——产品的"性格"。<a href="什么是Prompt工程.html">有专页 ↗</a></span></div>
+          <div class="gl-row"><span class="g-term">上下文工程</span><span class="g-def">提示词工程的升级版：管理模型看到的全部上下文。<a href="什么是Prompt工程.html">有专页 ↗</a></span></div>
+          <div class="gl-row"><span class="g-term">流式输出</span><span class="g-def">一个字一个字往外蹦的输出方式，体验更快。</span></div>
+          <div class="gl-row"><span class="g-term">模型路由</span><span class="g-def">简单问题给小模型、难题给大模型——省钱又保速度。</span></div>
+          <div class="gl-row"><span class="g-term">速率限制</span><span class="g-def">API 每分钟允许的调用量，TPM / RPM 缩写的来源。</span></div>
+        </div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ================= ABOUT (DARK) ================= -->
+<section class="section section-dark" id="about">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">关于本站</p>
+      <h2>一套单文件的知识手册</h2>
+    </div>
+    <div class="about-grid reveal">
+      <div>
+        <h3>这是什么</h3>
+        <p>独立学习指南：八个专题页整理自官方文档、论文与权威媒体，与所提及的各家公司没有关联。第三方说法均标注"本站未复测"。</p>
+      </div>
+      <div>
+        <h3>怎么读</h3>
+        <p>建议按 <code>01 → 08</code> 的学习路径推进，每页 5–10 分钟；页面之间通过页脚互链，<a href="#path">随时回到地图</a>。术语速查适合当工具书翻。</p>
+      </div>
+      <div>
+        <h3>怎么维护</h3>
+        <p>全部页面为单文件 HTML、零外部依赖、可离线阅读。源码与更新在 <a href="https://github.com/shangtianqiang/ai-knowledge-map" target="_blank" rel="noopener">GitHub 仓库</a>，本站由 <a href="https://shangtianqiang.github.io/ai-knowledge-map/" target="_blank" rel="noopener">GitHub Pages</a> 发布。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FOOTER ================= -->
+<footer>
+  <div class="container">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <a class="brand" href="#top"><span class="brand-mark">&gt;_</span>AI 大模型知识地图</a>
+        <p>八个专题、四十多个术语，从"怎么问"到"怎么动手"——给想用好 AI 的人的一份中文地图。</p>
+      </div>
+      <div class="foot-col">
+        <h4>本页导航</h4>
+        <ul>
+          <li><a href="#path">学习路径</a></li>
+          <li><a href="#glossary">术语速查</a></li>
+          <li><a href="#about">关于本站</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h4>本系列</h4>
+        <ul>
+          <li><a href="什么是思维链.html">01 · 什么是思维链？</a></li>
+          <li><a href="什么是Prompt工程.html">02 · 什么是 Prompt 工程？</a></li>
+          <li><a href="什么是幻觉.html">03 · 什么是幻觉？</a></li>
+          <li><a href="什么是RAG.html">04 · 什么是 RAG？</a></li>
+          <li><a href="什么是MCP.html">05 · 什么是 MCP？</a></li>
+          <li><a href="什么是AgentHarness.html">06 · 什么是 Agent Harness？</a></li>
+          <li><a href="什么是DeepSeekHarness.html">07 · 什么是 DeepSeek Harness？</a></li>
+          <li><a href="什么是飞书CLI.html">08 · 什么是飞书 CLI？</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>独立学习指南，与所提及的各家公司没有关联 · 内容整理自公开资料</span>
+      <span>更新于 2026 年 10 月</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+document.documentElement.classList.add('js');
+
+var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function el(tag, cls, text){
+  var n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text !== undefined) n.textContent = text;
+  return n;
+}
+
+function typeCmd(span, text, done){
+  if (reduceMotion){ span.textContent = text; done && done(); return; }
+  var i = 0;
+  (function tick(){
+    span.textContent = text.slice(0, ++i);
+    if (i < text.length){ setTimeout(tick, text[i-1] === ' ' ? 30 : 16); }
+    else { done && done(); }
+  })();
+}
+
+/* hero terminal: type the tree */
+var heroTerm = document.getElementById('hero-term');
+var tree = [
+  { text: 'AI 大模型知识地图/', cls: 't-out' },
+  { text: '├── 01 思维链          —— 模型怎么想', cls: 't-out' },
+  { text: '├── 02 Prompt 工程     —— 你怎么问', cls: 't-out' },
+  { text: '├── 03 幻觉            —— 它会怎么错', cls: 't-out' },
+  { text: '├── 04 RAG             —— 知识怎么补', cls: 't-out' },
+  { text: '├── 05 MCP             —— 能力怎么接', cls: 't-out' },
+  { text: '├── 06 Agent Harness   —— 怎么有纪律地动手', cls: 't-out' },
+  { text: '├── 07 DeepSeek Harness —— 一个开源样本', cls: 't-out' },
+  { text: '└── 08 飞书 CLI        —— 一个真实产品', cls: 't-out' },
+  { text: '', cls: 't-dim' },
+  { text: '8 个专题 · 40+ 术语 · 全部离线可读', cls: 't-ok' }
+];
+
+(function renderTree(){
+  var line = el('div','t-line');
+  var prompt = el('span','t-prompt','❯');
+  var cmd = el('span','t-cmd');
+  var cur = el('span','cursor');
+  line.appendChild(prompt); line.appendChild(cmd); line.appendChild(cur);
+  heroTerm.appendChild(line);
+  typeCmd(cmd, 'tree ./知识地图', function(){
+    cur.remove();
+    var i = 0;
+    (function next(){
+      if (i >= tree.length) return;
+      heroTerm.appendChild(el('div','t-line ' + tree[i].cls, tree[i].text));
+      i++;
+      if (reduceMotion){ next(); }
+      else { setTimeout(next, 130); }
+    })();
+    heroTerm.appendChild(el('div','t-note','每行都是一个可点击的专题 —— 见下方学习路径卡片。'));
+  });
+})();
+
+/* reveal on scroll */
+var revealEls = document.querySelectorAll('.reveal');
+if ('IntersectionObserver' in window && !reduceMotion){
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if (en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); }
+    });
+  }, { threshold: 0.12 });
+  revealEls.forEach(function(n){ io.observe(n); });
+} else {
+  revealEls.forEach(function(n){ n.classList.add('in'); });
+}
+</script>
+</body>
+</html>

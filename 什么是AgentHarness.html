@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#FBFAF7">
+<title>Agent Harness 是什么？ | 给想弄懂 AI 工程的人</title>
+<meta name="description" content="一页讲清楚 Agent Harness：包在大模型外面的运行时骨架。它由哪些构件组成、从评测走到的今天、各家实现有何不同，以及怎么开始搭一个。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2317151F'/%3E%3Ctext x='16' y='22' font-size='15' font-family='monospace' fill='%23FF9A66' text-anchor='middle'%3E%3E_%3C/text%3E%3C/svg%3E">
+<style>
+  :root{
+    --cream:#FBFAF7;
+    --ink:#17151F;
+    --paper:#FFFFFF;
+    --yellow:#FFD166;
+    --orange:#FF6B35;
+    --orange-light:#FF9A66;
+    --muted:rgba(23,21,31,.64);
+    --faint:rgba(23,21,31,.45);
+    --line:rgba(23,21,31,.14);
+    --line-strong:rgba(23,21,31,.85);
+    --cream-muted:rgba(251,250,247,.68);
+    --cream-faint:rgba(251,250,247,.42);
+    --cream-line:rgba(251,250,247,.16);
+    --mono:"SF Mono",ui-monospace,"JetBrains Mono",Menlo,Consolas,"Liberation Mono",monospace;
+    --shadow-card:0 1px 2px rgba(23,21,31,.05),0 10px 28px -14px rgba(23,21,31,.18);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    *,*::before,*::after{animation:none!important;transition:none!important}
+  }
+  body{
+    font-family:"PingFang SC","Microsoft YaHei","Inter Variable",system-ui,sans-serif;
+    background:var(--cream);
+    color:var(--ink);
+    font-size:16px;
+    line-height:1.75;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+  }
+  ::selection{background:var(--orange);color:var(--ink)}
+  a{color:inherit}
+  .container{max-width:1128px;margin:0 auto;padding:0 24px}
+
+  /* ---------- reveal on scroll ---------- */
+  html.js .reveal{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s ease}
+  html.js .reveal.in{opacity:1;transform:none}
+  @media (prefers-reduced-motion:reduce){html.js .reveal{opacity:1;transform:none}}
+  @media print{html.js .reveal{opacity:1!important;transform:none!important}}
+
+  /* ---------- nav ---------- */
+  .nav{
+    position:sticky;top:0;z-index:50;
+    background:rgba(251,250,247,.92);
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  .nav-inner{display:flex;align-items:center;justify-content:space-between;height:60px;gap:16px}
+  .brand{display:flex;align-items:center;gap:10px;text-decoration:none;font-weight:800;font-size:15px;letter-spacing:.01em}
+  .brand-mark{
+    width:26px;height:26px;background:var(--ink);color:var(--orange-light);
+    font-family:var(--mono);font-size:12px;font-weight:700;line-height:26px;text-align:center;
+    border-radius:5px;flex:none;
+  }
+  .nav-links{display:flex;align-items:center;gap:22px;list-style:none}
+  .nav-links a{text-decoration:none;font-size:13.5px;font-weight:500;color:var(--muted);transition:color .15s}
+  .nav-links a:hover{color:var(--ink)}
+  .nav-links a.nav-cta{
+    color:var(--ink);font-weight:700;border:1.5px solid var(--line-strong);
+    padding:6px 14px;border-radius:0;
+  }
+  .nav-links a.nav-cta:hover{background:var(--ink);color:var(--cream)}
+  @media (max-width:720px){.nav-links li.hide-sm{display:none}}
+
+  /* ---------- buttons ---------- */
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:13px 26px;border-radius:0;border:1.5px solid transparent;
+    font-family:inherit;font-size:15px;font-weight:700;letter-spacing:.02em;
+    text-decoration:none;cursor:pointer;transition:transform .15s ease,background .15s ease,color .15s ease,box-shadow .15s ease;
+  }
+  .btn:active{transform:translateY(1px)}
+  .btn-primary{background:var(--orange);color:var(--ink)}
+  .btn-primary:hover{box-shadow:0 6px 0 -2px rgba(23,21,31,.9)}
+  .btn-ghost{border-color:var(--line-strong);color:var(--ink);background:transparent}
+  .btn-ghost:hover{background:var(--ink);color:var(--cream)}
+  .btn-sm{padding:9px 18px;font-size:13.5px}
+
+  /* ---------- eyebrow / headings ---------- */
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:9px;
+    font-size:12.5px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;
+  }
+  .eyebrow::before{content:"";width:9px;height:9px;background:currentColor;flex:none}
+  h1{font-size:clamp(42px,6.6vw,74px);line-height:1.08;font-weight:800;letter-spacing:-.015em}
+  h2{font-size:clamp(30px,4.4vw,44px);line-height:1.18;font-weight:800;letter-spacing:-.01em}
+  h3{font-size:20px;font-weight:800;line-height:1.4}
+  .lead{font-size:clamp(17px,2vw,19.5px);line-height:1.8}
+
+  /* ---------- hero ---------- */
+  .hero{padding:76px 0 88px}
+  .hero-grid{display:grid;grid-template-columns:1.02fr .98fr;gap:56px;align-items:center}
+  @media (max-width:980px){.hero-grid{grid-template-columns:1fr;gap:44px}}
+  .hero .eyebrow{color:var(--ink);margin-bottom:26px}
+  .hero h1{margin-bottom:24px}
+  .hero .lead{color:var(--ink);margin-bottom:16px;max-width:34em}
+  .hero .example{color:var(--muted);font-size:15.5px;max-width:36em;margin-bottom:32px}
+  .hero .example b{color:var(--ink);font-weight:700}
+  .hero-actions{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:30px}
+  .hero-meta{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{
+    font-size:12px;font-weight:600;color:var(--muted);
+    border:1px solid var(--line);padding:5px 11px;border-radius:999px;
+    display:inline-flex;align-items:center;gap:6px;background:var(--paper);
+  }
+  .chip .dot{width:6px;height:6px;border-radius:50%;background:var(--orange)}
+
+  /* ---------- terminal ---------- */
+  .terminal{
+    background:var(--ink);border-radius:14px;overflow:hidden;
+    box-shadow:0 2px 4px rgba(23,21,31,.12),0 30px 60px -22px rgba(23,21,31,.45);
+    border:1px solid rgba(23,21,31,.9);
+  }
+  .terminal-bar{
+    display:flex;align-items:center;gap:7px;
+    padding:13px 16px;border-bottom:1px solid var(--cream-line);
+  }
+  .terminal-bar i{width:11px;height:11px;border-radius:50%;background:rgba(251,250,247,.22)}
+  .terminal-bar i:first-child{background:#FF5F57}
+  .terminal-bar i:nth-child(2){background:#FEBC2E}
+  .terminal-bar i:nth-child(3){background:#28C840}
+  .terminal-bar .terminal-title{
+    margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--cream-faint);letter-spacing:.08em;
+  }
+  .terminal-steps{display:flex;gap:6px;padding:12px 14px 0;flex-wrap:wrap}
+  .terminal-steps button{
+    font-family:inherit;font-size:12.5px;font-weight:700;letter-spacing:.04em;
+    background:transparent;color:var(--cream-faint);
+    border:1px solid var(--cream-line);border-radius:999px;
+    padding:5px 13px;cursor:pointer;transition:all .18s;
+  }
+  .terminal-steps button:hover{color:var(--cream);border-color:var(--cream-faint)}
+  .terminal-steps button.active{background:var(--orange);border-color:var(--orange);color:var(--ink)}
+  .terminal-body{padding:18px 20px 22px;min-height:238px;font-family:var(--mono);font-size:13.5px;line-height:1.9}
+  .t-line{white-space:pre-wrap;word-break:break-all}
+  .t-prompt{color:var(--orange-light);font-weight:700;margin-right:9px}
+  .t-cmd{color:var(--cream)}
+  .t-out{color:var(--cream-faint)}
+  .t-ok{color:#3EE8C6}
+  .t-dim{color:rgba(251,250,247,.35)}
+  .t-user{color:var(--yellow)}
+  .t-note{color:var(--cream-faint);font-family:"PingFang SC","Microsoft YaHei",sans-serif;font-size:12px;margin-top:12px;padding-top:10px;border-top:1px dashed var(--cream-line)}
+  .cursor{display:inline-block;width:8px;height:15px;background:var(--orange-light);vertical-align:-2px;animation:blink 1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+  @media (prefers-reduced-motion:reduce){.cursor{animation:none}}
+
+  /* ---------- sections ---------- */
+  .section{padding:96px 0}
+  .section-head{max-width:680px;margin-bottom:52px}
+  .section-head .eyebrow{margin-bottom:20px}
+  .section-head p{color:var(--muted);margin-top:16px;font-size:16.5px}
+
+  /* yellow */
+  .section-yellow{background:var(--yellow)}
+  .section-yellow .section-head p{color:rgba(23,21,31,.72)}
+
+  /* dark */
+  .section-dark{background:var(--ink);color:var(--cream)}
+  .section-dark .eyebrow{color:var(--orange-light)}
+
+  /* ---------- parts switcher ---------- */
+  .parts-layout{display:grid;grid-template-columns:.9fr 1.1fr;gap:36px;align-items:start}
+  @media (max-width:900px){.parts-layout{grid-template-columns:1fr}}
+  .parts-list{display:flex;flex-direction:column;gap:10px}
+  .part-btn{
+    display:flex;align-items:center;gap:14px;text-align:left;width:100%;
+    background:var(--paper);border:1.5px solid transparent;border-radius:10px;
+    padding:15px 18px;font-family:inherit;cursor:pointer;
+    transition:transform .16s ease,box-shadow .16s ease,border-color .16s;
+    box-shadow:var(--shadow-card);
+  }
+  .part-btn:hover{transform:translateY(-2px)}
+  .part-btn .num{
+    font-family:var(--mono);font-size:12px;font-weight:700;color:var(--muted);
+    width:30px;height:30px;border:1.5px solid var(--line);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;flex:none;transition:all .16s;
+  }
+  .part-btn .t-name{font-size:15.5px;font-weight:700}
+  .part-btn .t-desc{font-size:13px;color:var(--muted);margin-top:2px}
+  .part-btn.active{border-color:var(--ink);transform:translateY(-2px)}
+  .part-btn.active .num{background:var(--ink);border-color:var(--ink);color:var(--orange)}
+  .parts-terminal{position:sticky;top:84px}
+  @media (max-width:900px){.parts-terminal{position:static}}
+
+  .layers{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(23,21,31,.22);border:1.5px solid var(--ink);border-radius:12px;overflow:hidden;margin-top:56px}
+  @media (max-width:820px){.layers{grid-template-columns:1fr}}
+  .layer{background:var(--yellow);padding:26px 26px 24px}
+  .layer .lv{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.14em;color:rgba(23,21,31,.55);display:block;margin-bottom:12px}
+  .layer h3{font-size:17px;margin-bottom:8px}
+  .layer p{font-size:13.5px;color:rgba(23,21,31,.72);line-height:1.7}
+  .layer code{font-family:var(--mono);font-size:12.5px;background:rgba(23,21,31,.1);padding:2px 6px;border-radius:4px}
+
+  /* ---------- scenarios ---------- */
+  .cards-3{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+  @media (max-width:900px){.cards-3{grid-template-columns:1fr}}
+  .card{
+    background:var(--paper);border:1px solid var(--line);border-radius:12px;
+    padding:30px 28px 26px;box-shadow:var(--shadow-card);
+    display:flex;flex-direction:column;
+  }
+  .card .tag-row{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:20px}
+  .tag{
+    font-size:10.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+    padding:4px 9px;border:1px solid var(--line);border-radius:4px;color:var(--muted);
+  }
+  .tag.tag-accent{background:var(--ink);color:var(--orange-light);border-color:var(--ink)}
+  .card h3{margin-bottom:12px}
+  .card p{font-size:14.5px;color:var(--muted);flex:1}
+  .card .seed{
+    margin-top:20px;padding-top:16px;border-top:1px dashed var(--line);
+    font-family:var(--mono);font-size:12px;color:var(--faint);word-break:break-all;
+  }
+  .card .seed b{color:var(--ink);font-weight:700}
+  .cards-note{margin-top:30px;font-size:13px;color:var(--faint);display:flex;align-items:center;gap:8px}
+  .cards-note::before{content:"※";color:var(--muted)}
+
+  /* ---------- statement (dark) ---------- */
+  .statement{max-width:820px}
+  .statement h2{margin-bottom:28px}
+  .statement .quote{
+    font-size:clamp(17px,2vw,19px);line-height:1.85;color:var(--cream-muted);
+    border-left:3px solid var(--orange-light);padding-left:22px;margin-bottom:52px;max-width:36em;
+  }
+  .statement .quote b{color:var(--cream)}
+  .statement .quote code{font-family:var(--mono);font-size:14px;background:rgba(251,250,247,.12);padding:2px 7px;border-radius:4px;color:var(--cream)}
+  .pillars{display:grid;grid-template-columns:repeat(3,1fr);gap:34px}
+  @media (max-width:820px){.pillars{grid-template-columns:1fr}}
+  .pillar .p-no{font-family:var(--mono);font-size:13px;color:var(--orange-light);font-weight:700;letter-spacing:.12em;display:block;margin-bottom:14px}
+  .pillar h3{color:var(--cream);margin-bottom:10px;font-size:17.5px}
+  .pillar p{font-size:14.5px;color:var(--cream-muted);line-height:1.8}
+  .pillar code{font-family:var(--mono);font-size:12.5px;background:rgba(251,250,247,.12);padding:2px 6px;border-radius:4px;color:var(--cream)}
+
+  /* ---------- facts (deep dive) ---------- */
+  .facts{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  @media (max-width:820px){.facts{grid-template-columns:1fr}}
+  .fact{background:var(--paper);padding:26px 26px 22px}
+  .fact .f-k{font-size:12px;font-weight:800;letter-spacing:.14em;color:var(--faint);text-transform:uppercase;display:block;margin-bottom:10px}
+  .fact .f-v{font-size:15.5px;font-weight:600;line-height:1.65}
+  .fact .f-v small{display:block;font-weight:400;font-size:13px;color:var(--muted);margin-top:4px}
+
+  .deep-block{margin-top:76px}
+  .deep-block>h3{margin-bottom:26px;font-size:clamp(21px,2.6vw,25px)}
+
+  .timeline{list-style:none;border-left:2px solid var(--ink);margin-left:6px}
+  .timeline li{position:relative;padding:0 0 26px 28px}
+  .timeline li:last-child{padding-bottom:0}
+  .timeline li::before{
+    content:"";position:absolute;left:-7px;top:9px;width:12px;height:12px;
+    background:var(--orange);border:2px solid var(--ink);border-radius:50%;
+  }
+  .timeline .tl-year{font-family:var(--mono);font-size:12.5px;font-weight:700;letter-spacing:.1em;color:var(--faint);display:block;margin-bottom:4px}
+  .timeline .tl-t{font-weight:800;font-size:16.5px}
+  .timeline p{font-size:14px;color:var(--muted);margin-top:4px;max-width:40em}
+  .timeline code{font-family:var(--mono);font-size:12.5px;background:rgba(23,21,31,.07);padding:2px 6px;border-radius:4px;color:var(--ink)}
+
+  .tensions{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:14px 28px}
+  @media (max-width:820px){.tensions{grid-template-columns:1fr}}
+  .tensions li{
+    display:flex;gap:12px;font-size:14.5px;color:var(--muted);line-height:1.7;
+    padding:14px 0;border-bottom:1px solid var(--line);
+  }
+  .tensions li b{color:var(--ink)}
+  .tensions li::before{content:"◆";color:var(--orange);font-weight:800;flex:none;font-size:12px;padding-top:5px}
+  .tensions-warn{
+    margin-top:26px;padding:18px 22px;border-radius:10px;
+    background:rgba(255,107,53,.08);border:1px solid rgba(255,107,53,.4);
+    font-size:14px;color:var(--muted);
+  }
+  .tensions-warn b{color:var(--ink)}
+
+  /* ---------- FAQ ---------- */
+  .faq-list{max-width:780px}
+  .faq-item{background:var(--paper);border:1.5px solid var(--ink);border-radius:10px;margin-bottom:14px;overflow:hidden;box-shadow:var(--shadow-card)}
+  .faq-item summary{
+    list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:18px;
+    padding:20px 24px;font-weight:700;font-size:16px;
+  }
+  .faq-item summary::-webkit-details-marker{display:none}
+  .faq-item summary .plus{
+    flex:none;width:26px;height:26px;border:1.5px solid var(--ink);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:400;font-size:16px;line-height:1;transition:transform .2s ease,background .2s,color .2s;
+  }
+  .faq-item[open] summary .plus{background:var(--ink);color:var(--orange);transform:rotate(45deg)}
+  .faq-item .faq-body{padding:0 24px 22px;font-size:14.5px;color:var(--muted);line-height:1.85}
+  .faq-item .faq-body b{color:var(--ink)}
+  .faq-item .faq-body code{font-family:var(--mono);font-size:12.5px;background:rgba(23,21,31,.07);padding:2px 6px;border-radius:4px;color:var(--ink)}
+
+  /* ---------- audience ---------- */
+  .aud-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+  @media (max-width:1000px){.aud-grid{grid-template-columns:1fr 1fr}}
+  @media (max-width:640px){.aud-grid{grid-template-columns:1fr}}
+  .aud-card{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:26px 24px;box-shadow:var(--shadow-card);display:flex;flex-direction:column}
+  .aud-card .a-who{font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin-bottom:12px}
+  .aud-card h3{font-size:16.5px;margin-bottom:10px}
+  .aud-card p{font-size:13.5px;color:var(--muted);flex:1;line-height:1.75}
+  .aud-card .start{
+    margin-top:16px;font-family:var(--mono);font-size:11.5px;color:var(--ink);
+    background:var(--orange);padding:7px 11px;border-radius:6px;word-break:break-all;
+  }
+
+  /* ---------- sources ---------- */
+  .sources-card{background:var(--ink);color:var(--cream);border-radius:16px;padding:52px 54px;max-width:860px}
+  @media (max-width:720px){.sources-card{padding:36px 26px}}
+  .sources-card .eyebrow{color:var(--yellow);margin-bottom:28px}
+  .source-item{display:flex;gap:18px;padding:16px 0;border-bottom:1px solid var(--cream-line);text-decoration:none;transition:padding-left .18s}
+  .source-item:hover{padding-left:8px}
+  .source-item:last-of-type{border-bottom:none}
+  .source-item .s-no{font-family:var(--mono);font-size:12.5px;color:var(--orange-light);font-weight:700;flex:none;padding-top:2px}
+  .source-item .s-t{font-weight:700;font-size:15.5px;color:var(--cream)}
+  .source-item .s-d{font-size:13px;color:var(--cream-faint);margin-top:3px}
+  .source-item .s-arrow{margin-left:auto;color:var(--cream-faint);flex:none;padding-top:2px}
+  .sources-note{margin-top:26px;font-size:12.5px;color:var(--cream-faint)}
+
+  /* ---------- CTA ---------- */
+  .section-cta{background:var(--orange)}
+  .cta-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:48px;align-items:center}
+  @media (max-width:820px){.cta-grid{grid-template-columns:1fr}}
+  .section-cta .eyebrow{color:rgba(23,21,31,.62);margin-bottom:22px}
+  .section-cta h2{margin-bottom:18px;color:var(--ink)}
+  .section-cta p{color:rgba(23,21,31,.8);max-width:30em;margin-bottom:30px}
+  .cta-cmd{
+    display:flex;align-items:flex-start;gap:12px;background:var(--ink);border-radius:10px;
+    padding:16px 18px;font-family:var(--mono);font-size:13px;line-height:1.9;color:var(--cream);
+    max-width:520px;box-shadow:0 14px 30px -12px rgba(23,21,31,.5);
+  }
+  .cta-cmd pre{font-family:inherit;white-space:pre-wrap;word-break:break-all;flex:1;margin:0}
+  .cta-cmd .t-cm{color:#3EE8C6}
+  .cta-cmd .copy-btn{color:var(--cream-muted);border-color:var(--cream-line)}
+  .cta-cmd .copy-btn:hover{color:var(--yellow);border-color:var(--yellow)}
+  .cta-art{display:flex;align-items:center;justify-content:center;gap:22px;font-family:var(--mono);font-weight:700}
+  .cta-art .q,.cta-art .v{font-size:clamp(56px,7vw,88px);line-height:1}
+  .cta-art .q{color:rgba(23,21,31,.32)}
+  .cta-art .v{color:var(--ink)}
+  .cta-art .arrow{font-size:34px;color:rgba(23,21,31,.55)}
+  @media (max-width:820px){.cta-art{display:none}}
+
+  /* ---------- footer ---------- */
+  footer{background:var(--ink);color:var(--cream);padding:64px 0 36px}
+  .foot-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:44px;margin-bottom:52px}
+  @media (max-width:820px){.foot-grid{grid-template-columns:1fr}}
+  .foot-brand .brand{color:var(--cream);margin-bottom:16px}
+  .foot-brand .brand-mark{background:var(--orange);color:var(--ink)}
+  .foot-brand p{font-size:13.5px;color:var(--cream-faint);max-width:26em}
+  .foot-col h4{font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--cream-faint);margin-bottom:18px}
+  .foot-col ul{list-style:none}
+  .foot-col li{margin-bottom:11px}
+  .foot-col a{font-size:14px;color:var(--cream-muted);text-decoration:none;transition:color .15s}
+  .foot-col a:hover{color:var(--cream)}
+  .foot-bottom{border-top:1px solid var(--cream-line);padding-top:26px;font-size:12.5px;color:var(--cream-faint);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+  [id]{scroll-margin-top:76px}
+</style>
+</head>
+<body>
+
+<!-- ================= NAV ================= -->
+<nav class="nav">
+  <div class="container nav-inner">
+    <a class="brand" href="#top"><span class="brand-mark">&gt;_</span>Agent Harness 是什么？</a>
+    <ul class="nav-links">
+      <li class="hide-sm"><a href="#parts">拆一个 Harness</a></li>
+      <li class="hide-sm"><a href="#timeline">一个词的谱系</a></li>
+      <li class="hide-sm"><a href="#makers">谁在做</a></li>
+      <li class="hide-sm"><a href="#faq">常见问题</a></li>
+      <li><a class="nav-cta" href="什么是DeepSeekHarness.html">姊妹篇 ↗</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- ================= HERO ================= -->
+<header class="hero" id="top">
+  <div class="container hero-grid">
+    <div>
+      <p class="eyebrow">给想弄懂 AI 工程的人的实用指南</p>
+      <h1>Agent Harness<br>是什么？</h1>
+      <p class="lead">Agent Harness 是包在大模型外面的<strong>运行时骨架</strong>：调用模型、路由工具调用、编排上下文、决定何时停止、用沙盒和审批兜住安全——模型负责思考下一步，Harness 负责让这一步真实发生。</p>
+      <p class="example">社区常用一个公式：<b>Agent = Model + Harness</b>。同一颗模型，套上 Claude Code 是终端里的程序员，套上 DeepSeek Harness 是能定时整理文档的助手——模型没变，变的是挽具。业内还有句玩笑话："If you're not the model, you're the harness."</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#parts">拆一个 Harness ↓</a>
+        <a class="btn btn-ghost" href="什么是DeepSeekHarness.html">姊妹篇：DeepSeek Harness ↗</a>
+      </div>
+      <div class="hero-meta">
+        <span class="chip"><i class="dot"></i>概念 · 从评测走向产品</span>
+        <span class="chip"><i class="dot"></i>三层心智模型</span>
+        <span class="chip"><i class="dot"></i>Claude Code · Codex · dsh</span>
+        <span class="chip"><i class="dot"></i>2026：一门显学</span>
+      </div>
+    </div>
+
+    <div class="terminal" aria-label="Agent Harness 概念演示">
+      <div class="terminal-bar"><i></i><i></i><i></i><span class="terminal-title">harness — 心智模型</span></div>
+      <div class="terminal-steps" role="tablist" aria-label="演示步骤">
+        <button type="button" role="tab" data-step="0" aria-selected="true">① 三层模型</button>
+        <button type="button" role="tab" data-step="1" aria-selected="false">② 一次循环</button>
+        <button type="button" role="tab" data-step="2" aria-selected="false">③ 决定停止</button>
+      </div>
+      <div class="terminal-body" id="hero-term" aria-live="polite"></div>
+    </div>
+  </div>
+</header>
+
+<!-- ================= PARTS (YELLOW) ================= -->
+<section class="section section-yellow" id="parts">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">拆一个 Harness</p>
+      <h2>六个构件，构成整台机器</h2>
+      <p>不同产品的实现各异，但骨架高度一致。点击左侧构件，右侧用伪代码展示它的职责——都综合自 Hugging Face 术语指南与各家架构文档。</p>
+    </div>
+
+    <div class="parts-layout">
+      <div class="parts-list" id="parts-list" role="tablist" aria-label="构件列表"></div>
+      <div class="parts-terminal">
+        <div class="terminal">
+          <div class="terminal-bar"><i></i><i></i><i></i><span class="terminal-title">harness — 内部视角</span></div>
+          <div class="terminal-body" id="parts-term" aria-live="polite"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="layers reveal">
+      <div class="layer">
+        <span class="lv">2021 · 评测时代</span>
+        <h3>评测 Harness</h3>
+        <p>EleutherAI 发布 <code>lm-evaluation-harness</code>：把"怎么考模型"标准化——固定场景、记录指标。这是 harness 一词最早出圈的用法。</p>
+      </div>
+      <div class="layer">
+        <span class="lv">2025 · 产品时代</span>
+        <h3>编码 Agent Harness</h3>
+        <p>Claude Code、Codex CLI 把"循环 + 工具 + 沙盒"做成终端里的程序员，harness 从评测术语变成用户手里的产品。</p>
+      </div>
+      <div class="layer">
+        <span class="lv">2026 · 显学时代</span>
+        <h3>通用 Agent Harness</h3>
+        <p>DeepSeek Harness 开源"一切皆插件"，OpenAI 发文 harness engineering：运行时骨架成为一门显学。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= MAKERS (WHITE) ================= -->
+<section class="section" id="makers">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">谁在做 Harness</p>
+      <h2>同一件事，三种做法</h2>
+      <p>各家叫法不一（harness / 运行时 / scaffolding 偶有混用），内涵高度相似。三个代表，三条路线。</p>
+    </div>
+    <div class="cards-3">
+      <article class="card reveal">
+        <div class="tag-row"><span class="tag tag-accent">Anthropic</span><span class="tag">2025 ·</span><span class="tag">强绑定</span></div>
+        <h3>Claude Code</h3>
+        <p>官方文档自称 "the agentic harness around Claude"：与自家模型深度耦合的终端编码 Agent，也是把 harness 一词带向大众的产品。</p>
+        <div class="seed">路线 → <b>模型 + harness 一起调优</b></div>
+      </article>
+      <article class="card reveal">
+        <div class="tag-row"><span class="tag tag-accent">OpenAI</span><span class="tag">2026 ·</span><span class="tag">方法论</span></div>
+        <h3>Codex 与 harness engineering</h3>
+        <p>Codex CLI 开源之后，2026 年 2 月官方发文《Harness engineering》：Agent 时代，工程师的角色转向设计、调校和运维这套骨架。</p>
+        <div class="seed">路线 → <b>把 harness 写成工程方法论</b></div>
+      </article>
+      <article class="card reveal">
+        <div class="tag-row"><span class="tag tag-accent">DeepSeek</span><span class="tag">2026 ·</span><span class="tag">开源</span></div>
+        <h3>DeepSeek Harness</h3>
+        <p>用 "Everything is a Plugin" 把 harness 做成可插拔的开源运行时：模型适配器、工具、审批、连循环本身都能换，也能接别家模型。</p>
+        <div class="seed">路线 → <b>一切皆插件</b> · 本系列有专页拆解</div>
+      </article>
+    </div>
+    <p class="cards-note reveal">此外还有 OpenHands 等开源 harness 与各类自建实现 · 术语边界仍在演化，以各家文档为准。</p>
+  </div>
+</section>
+
+<!-- ================= STATEMENT (DARK) ================= -->
+<section class="section section-dark" id="why">
+  <div class="container">
+    <div class="statement reveal">
+      <p class="eyebrow">为什么重要</p>
+      <h2>同一个模型，<br>换一套 Harness，就是另一个 Agent。</h2>
+      <p class="quote">Hugging Face 术语指南的总结很锋利：<b>"The harness is what makes the agent run."</b>（让 Agent 跑起来的，是 Harness。）社区流传的观察更直白：有团队只换 harness 不换模型，评测名次从三十名开外冲进前五；同一颗模型在不同 harness 里跑分能差出一截——第三方整理，本站未复测，但方向上可信。</p>
+      <div class="pillars">
+        <div class="pillar reveal">
+          <span class="p-no">01</span>
+          <h3>看什么，它说了算</h3>
+          <p>上下文窗口里装什么、何时压缩、注入哪些工具结果——模型的"视野"由 harness 编排，context engineering 的主战场就在这里。</p>
+        </div>
+        <div class="pillar reveal">
+          <span class="p-no">02</span>
+          <h3>做什么，它来执行</h3>
+          <p>模型只产出结构化的"意图"（tool call）；读写文件、跑终端、调 API，全部由 harness 在沙盒里落地、回填、留痕。</p>
+        </div>
+        <div class="pillar reveal">
+          <span class="p-no">03</span>
+          <h3>何时停，它来兜底</h3>
+          <p>停止条件、错误重试、步数预算、危险动作审批——Agent 的纪律性不是模型的美德，是 harness 的机制。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= DEEP DIVE (WHITE) ================= -->
+<section class="section" id="what">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">依据与事实</p>
+      <h2>先说清楚这个词</h2>
+    </div>
+    <div class="facts reveal">
+      <div class="fact"><span class="f-k">词源</span><div class="f-v">harness = 马具 / 挽具<small>给马套上挽具，力量才能被驾驭——模型也一样</small></div></div>
+      <div class="fact"><span class="f-k">心智模型</span><div class="f-v">三层：Model · Scaffolding · Harness<small>Scaffolding 是开跑前组装的静态件（提示词、工具定义）；Harness 是跑起来的运行时</small></div></div>
+      <div class="fact"><span class="f-k">公式</span><div class="f-v">Agent = Model + Harness<small>以及那句业内玩笑："If you're not the model, you're the harness."</small></div></div>
+      <div class="fact"><span class="f-k">正名</span><div class="f-v">最早出圈在评测场景<small>lm-evaluation-harness（2021）把"怎么考模型"工程化，至今仍是评测事实标准</small></div></div>
+      <div class="fact"><span class="f-k">产品化</span><div class="f-v">2025 年编码 Agent 普及<small>Claude Code、Codex CLI 相继落地，harness 成为人人可用的产品</small></div></div>
+      <div class="fact"><span class="f-k">显学</span><div class="f-v">2026 年范式化<small>OpenAI 发文 harness engineering；DeepSeek 开源插件化 harness；HF 撰文统一术语</small></div></div>
+    </div>
+
+    <div class="deep-block reveal" id="timeline">
+      <h3>一个词的四次出场</h3>
+      <ul class="timeline">
+        <li>
+          <span class="tl-year">2021</span>
+          <span class="tl-t">评测时代</span>
+          <p>EleutherAI 发布 <code>lm-evaluation-harness</code>：评测脚本从此有了统一的名字，"harness" 进入大模型工程词汇表。</p>
+        </li>
+        <li>
+          <span class="tl-year">2024</span>
+          <span class="tl-t">接口觉醒</span>
+          <p>SWE-agent 论文提出 Agent-Computer Interface（ACI）：为模型设计工具接口，正式成为研究方向——harness 的学术前身。</p>
+        </li>
+        <li>
+          <span class="tl-year">2025</span>
+          <span class="tl-t">产品时代</span>
+          <p>Claude Code、Codex CLI 相继发布，"循环 + 工具 + 沙盒"被做成千万用户手里的产品，Agent = Model + Harness 成为共识公式。</p>
+        </li>
+        <li>
+          <span class="tl-year">2026</span>
+          <span class="tl-t">显学时代</span>
+          <p>OpenAI 发文 harness engineering，DeepSeek 开源"一切皆插件"的 harness，Hugging Face 撰文为术语正名——骨架本身成了研究对象。</p>
+        </li>
+      </ul>
+    </div>
+
+    <div class="deep-block reveal">
+      <h3>设计取舍：三对张力，两处误解</h3>
+      <ul class="tensions">
+        <li><span><b>自由度 vs 安全</b>——工具给得越强，沙盒与审批就要越硬；能力与纪律必须一起涨。</span></li>
+        <li><span><b>越全 vs 越贵</b>——上下文塞得越满通常越聪明，也越慢越贵；压缩与取舍是每天的功课。</span></li>
+        <li><span><b>通用 vs 专用</b>——编码 harness 与办公 harness 的工具集、默认值完全不同，没有万能骨架。</span></li>
+        <li><span><b>强绑定 vs 可插拔</b>——Claude Code 与模型深度耦合，dsh 把适配器做成插件；两条路线各有拥趸。</span></li>
+        <li><span><b>静态 vs 运行时</b>——scaffolding 开跑前组装好，harness 在每一轮现场决策；混着叫会吃亏，尤其在训练管线里。</span></li>
+        <li><span><b>评测 vs 实战</b>——同一个 harness，跑分好看不代表干活好用；设计目标本就不同。</span></li>
+      </ul>
+      <p class="tensions-warn"><b>两个常见误解：</b>① Harness 不是模型的一部分——它跑在你的机器上，属于工程层，换模型不换它也能活；② Harness ≠ Harness.io——那是一家同名的 DevOps 平台公司，纯属重名。另外，社区术语尚未完全统一，读文章时留意语境。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FAQ (YELLOW) ================= -->
+<section class="section section-yellow" id="faq">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">接下来继续了解</p>
+      <h2>常见问题</h2>
+    </div>
+    <div class="faq-list">
+      <details class="faq-item reveal">
+        <summary>Harness 和 LangChain 这类"框架"是一回事吗？<span class="plus">+</span></summary>
+        <div class="faq-body">有重叠，侧重不同。框架给你一堆积木自己搭；harness 强调<b>开箱即用的运行时骨架</b>——循环、工具执行、安全、界面都配好，更像"产品化的框架"。dsh、Claude Code 这类 harness，可以理解成把框架的活儿替你干完了。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>为什么 2026 年突然人人都在说 harness？<span class="plus">+</span></summary>
+        <div class="faq-body">模型能力趋同之后，体验差异越来越多来自模型之外：上下文怎么编排、工具怎么给、动作怎么管。评测、安全、训练也都依赖这层骨架——它同时是各家的"护城河"和行业共同语言，自然被反复谈论。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>Harness 和 MCP 是什么关系？<span class="plus">+</span></summary>
+        <div class="faq-body">分工不同：harness 是运行时骨架，MCP 是给骨架<b>接外部工具</b>的协议。harness 消费 MCP server，把文件、搜索、企业系统等能力挂进工具层——骨架与插头的关系。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>评测 harness 和 Agent harness 是同一个词吗？<span class="plus">+</span></summary>
+        <div class="faq-body">同源、不同物。评测 harness 管<b>"怎么考"</b>：固定场景、记录指标；Agent harness 管<b>"怎么干活"</b>：真实环境、动态循环。今天口语里的 harness 多指后者，但读评测文章时多半是前者——看语境。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>我自己能搭一个吗？<span class="plus">+</span></summary>
+        <div class="faq-body">能，核心真的不大：一个循环、一次工具执行、一份会话存储，几十行就能跑起来（见页尾）。想认真用，可以选开源 harness（DeepSeek Harness、OpenHands 等）或成熟产品——自建的价值在于完全掌控安全与定制。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>Harness 会盖过模型的价值吗？<span class="plus">+</span></summary>
+        <div class="faq-body">不会，是放大器关系：<b>模型决定上限，harness 决定下限与稳定性</b>。更强模型降低做好 harness 的难度，更好的 harness 把模型能力兑现成产出——两者一起涨。</div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ================= AUDIENCE (WHITE) ================= -->
+<section class="section" id="who">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">它适合谁</p>
+      <h2>四类读者，四个入口</h2>
+    </div>
+    <div class="aud-grid">
+      <div class="aud-card reveal">
+        <span class="a-who">For Builders</span>
+        <h3>应用开发者</h3>
+        <p>选型或自建：理解循环、上下文、审批这些构件，才看得懂产品差异与成本结构。</p>
+        <div class="start">起点 → 上面六个构件 ↓</div>
+      </div>
+      <div class="aud-card reveal">
+        <span class="a-who">For Leads</span>
+        <h3>工程负责人</h3>
+        <p>安全、审计、成本都在 harness 层落袋：审批策略、沙盒、日志是你该问的第一组问题。</p>
+        <div class="start">起点 → 构件 ⑤ 沙盒与审批</div>
+      </div>
+      <div class="aud-card reveal">
+        <span class="a-who">For Researchers</span>
+        <h3>研究者</h3>
+        <p>ACI、评测方法、harness 与模型协同训练——骨架本身已经是研究对象。</p>
+        <div class="start">起点 → arXiv:2405.15793</div>
+      </div>
+      <div class="aud-card reveal">
+        <span class="a-who">For Curious</span>
+        <h3>好奇者</h3>
+        <p>看懂发布会与公告里的新词：再听到 harness，你知道他们到底在说什么。</p>
+        <div class="start">起点 → HF 术语指南 ↗</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SOURCES (WHITE + DARK CARD) ================= -->
+<section class="section" id="sources" style="padding-top:24px">
+  <div class="container">
+    <div class="sources-card reveal">
+      <p class="eyebrow">来源与延伸阅读</p>
+      <a class="source-item" href="https://huggingface.co/blog/agent-glossary" target="_blank" rel="noopener">
+        <span class="s-no">01</span>
+        <span><span class="s-t">Hugging Face · Harness, Scaffold, and the AI Agent Terms Worth Getting</span><br><span class="s-d">术语指南：本页三层心智模型与定义的主要参照</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="https://openai.com/index/harness-engineering" target="_blank" rel="noopener">
+        <span class="s-no">02</span>
+        <span><span class="s-t">OpenAI · Harness engineering</span><br><span class="s-d">Agent 时代工程师角色的官方方法论（2026 年 2 月）</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="https://github.com/EleutherAI/lm-evaluation-harness" target="_blank" rel="noopener">
+        <span class="s-no">03</span>
+        <span><span class="s-t">GitHub · EleutherAI/lm-evaluation-harness</span><br><span class="s-d">评测 harness 的事实标准（2021 至今）</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="https://arxiv.org/abs/2405.15793" target="_blank" rel="noopener">
+        <span class="s-no">04</span>
+        <span><span class="s-t">arXiv:2405.15793 · SWE-agent</span><br><span class="s-d">提出 Agent-Computer Interface（ACI）：工具接口设计成为学问</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="什么是DeepSeekHarness.html">
+        <span class="s-no">05</span>
+        <span><span class="s-t">姊妹篇 · 什么是 DeepSeek Harness？</span><br><span class="s-d">一个当代开源 harness 的完整拆解（本系列）</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <p class="sources-note">本页内容整理自以上公开资料，更新于 2026 年 10 月。术语仍在演化中，以各家最新文档为准。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CTA (ORANGE) ================= -->
+<section class="section section-cta">
+  <div class="container cta-grid">
+    <div class="reveal">
+      <p class="eyebrow">开始动手</p>
+      <h2>心脏只有几行</h2>
+      <p>剥掉界面、技能与安全件，所有 harness 共享同一颗心脏——一个循环。</p>
+      <div class="cta-cmd">
+        <pre><span class="t-cm">while True:</span>
+  r = model.chat(msgs, tools)
+  <span class="t-cm">if not r.tool_calls: break</span>
+  msgs += run_tools(r.tool_calls)</pre>
+        <button class="copy-btn" data-copy="while True:&#10;  r = model.chat(msgs, tools)&#10;  if not r.tool_calls: break&#10;  msgs += run_tools(r.tool_calls)">复制</button>
+      </div>
+    </div>
+    <div class="cta-art" aria-hidden="true">
+      <span class="q">?</span><span class="arrow">→</span><span class="v">✓</span>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FOOTER ================= -->
+<footer>
+  <div class="container">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <a class="brand" href="#top"><span class="brand-mark">&gt;_</span>Agent Harness 是什么？</a>
+        <p>一页讲清楚"包在模型外面的运行时骨架"：它的构件、它的谱系、谁在做，以及为什么 2026 年人人都在谈论它。</p>
+      </div>
+      <div class="foot-col">
+        <h4>本页导航</h4>
+        <ul>
+          <li><a href="#parts">拆一个 Harness</a></li>
+          <li><a href="#timeline">一个词的谱系</a></li>
+          <li><a href="#makers">谁在做 Harness</a></li>
+          <li><a href="#faq">常见问题</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h4>本系列</h4>
+        <ul>
+          <li><a href="什么是飞书CLI.html">什么是飞书 CLI？</a></li>
+          <li><a href="什么是DeepSeekHarness.html">什么是 DeepSeek Harness？</a></li>
+          <li><a href="index.html">🏠 知识地图（主页）</a></li>
+          <li><a href="#top">什么是 Agent Harness？（本页）</a></li>
+          <li><a href="什么是Prompt工程.html">什么是 Prompt 工程？</a></li>
+          <li><a href="什么是RAG.html">什么是 RAG？</a></li>
+          <li><a href="什么是MCP.html">什么是 MCP？</a></li>
+          <li><a href="什么是幻觉.html">什么是幻觉？</a></li>
+          <li><a href="什么是思维链.html">什么是思维链？</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>本页为独立学习指南，与所提及的各家公司没有关联 · 内容整理自公开资料</span>
+      <span>更新于 2026 年 10 月</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+document.documentElement.classList.add('js');
+
+/* ---------- helpers ---------- */
+var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function el(tag, cls, text){
+  var n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text !== undefined) n.textContent = text;
+  return n;
+}
+
+/* type a command string into a span, then call done */
+function typeCmd(span, text, done){
+  if (reduceMotion){ span.textContent = text; done && done(); return; }
+  var i = 0;
+  (function tick(){
+    span.textContent = text.slice(0, ++i);
+    if (i < text.length){ setTimeout(tick, text[i-1] === ' ' ? 34 : 18); }
+    else { done && done(); }
+  })();
+}
+
+function renderTerm(container, spec){
+  container.innerHTML = '';
+  var line = el('div','t-line');
+  var prompt = el('span','t-prompt', spec.prompt || '❯');
+  var cmd = el('span','t-cmd');
+  var cur = el('span','cursor');
+  line.appendChild(prompt); line.appendChild(cmd); line.appendChild(cur);
+  container.appendChild(line);
+  typeCmd(cmd, spec.cmd, function(){
+    cur.remove();
+    (spec.out || []).forEach(function(o){
+      container.appendChild(el('div','t-line ' + (o.cls || 't-out'), o.text));
+    });
+    if (spec.note) container.appendChild(el('div','t-note', spec.note));
+  });
+}
+
+/* ---------- hero terminal steps ---------- */
+var heroSteps = [
+  {
+    cmd: 'Agent = Model + Harness',
+    out: [
+      { text: 'Model        裸 LLM：只会生成下一个 token', cls: 't-out' },
+      { text: 'Scaffolding  预组装：提示词 · 工具定义 · 格式', cls: 't-out' },
+      { text: 'Harness      运行时：循环 · 调度 · 沙盒 · 留痕', cls: 't-ok' }
+    ],
+    note: '第 1 层是脑子，第 2 层是开跑前装好的静态件，第 3 层才是让一切动起来的骨架。'
+  },
+  {
+    cmd: '"修复这个报错"',
+    prompt: '你',
+    out: [
+      { text: '→ harness 组装上下文 → model.request', cls: 't-out' },
+      { text: '← model：tool_call edit(file, diff)', cls: 't-out' },
+      { text: '→ harness：沙盒里执行 → 结果回填', cls: 't-ok' },
+      { text: '…循环往复，直到模型不再发起调用', cls: 't-dim' }
+    ],
+    note: '模型从不直接碰你的文件系统——它只发出"意图"，动手的永远是 harness。'
+  },
+  {
+    cmd: 'while model 想调用工具:',
+    out: [
+      { text: '    执行 → 回填 → 再请求', cls: 't-out' },
+      { text: 'model："修好了，测试全绿"', cls: 't-ok' },
+      { text: 'harness：turn/end · 全程留痕', cls: 't-ok' }
+    ],
+    note: '"decides when to stop"——何时收工不是模型说的算，是 harness 的停止条件说的算。'
+  }
+];
+
+var heroTerm = document.getElementById('hero-term');
+var heroBtns = document.querySelectorAll('.terminal-steps button');
+var heroStopped = false;
+
+function showHeroStep(i){
+  heroBtns.forEach(function(b, j){
+    b.classList.toggle('active', i === j);
+    b.setAttribute('aria-selected', i === j ? 'true' : 'false');
+  });
+  renderTerm(heroTerm, heroSteps[i]);
+}
+heroBtns.forEach(function(b){
+  b.addEventListener('click', function(){
+    heroStopped = true; /* user took over, stop auto-advance */
+    showHeroStep(+b.dataset.step);
+  });
+});
+showHeroStep(0);
+/* auto-advance gently; stops once the user takes over */
+(function autoAdvance(){
+  if (reduceMotion) return;
+  var idx = 0;
+  setInterval(function(){
+    if (heroStopped) return;
+    idx = (idx + 1) % heroSteps.length;
+    showHeroStep(idx);
+  }, 7000);
+})();
+
+/* ---------- parts switcher ---------- */
+var parts = [
+  {
+    name: 'Agent 循环', desc: '取观察 → 出动作 → 循环',
+    spec: {
+      cmd: 'while True:',
+      out: [
+        { text: '  obs = env.observe()          # 看到什么', cls: 't-out' },
+        { text: '  act = model(history, tools)  # 想做什么', cls: 't-out' },
+        { text: '  if act.tool_calls:', cls: 't-out' },
+        { text: '      history += run(act.tool_calls)  # 回填', cls: 't-out' },
+        { text: '  else: break                  # 模型说：完成了', cls: 't-ok' }
+      ],
+      note: 'HF 的定义一句话："The harness is what makes the agent run."——循环就是它的心脏。'
+    }
+  },
+  {
+    name: '工具路由与执行', desc: '结构化调用 → 分发 → 回填',
+    spec: {
+      cmd: 'model → tool_call(fs.write, diff)',
+      out: [
+        { text: '✓ 解析结构化调用（name + 参数）', cls: 't-ok' },
+        { text: '✓ 校验权限 → 沙盒内执行', cls: 't-ok' },
+        { text: '✓ 结果回填上下文，等待下一轮', cls: 't-ok' },
+        { text: '✗ 出错 → 报错信息回填，模型自行纠错', cls: 't-out' }
+      ],
+      note: '模型从不直接碰你的文件系统——它只发出"请求"，动手的永远是 harness。'
+    }
+  },
+  {
+    name: '上下文管理', desc: '看得到什么，决定想得出什么',
+    spec: {
+      cmd: 'ctx.manage(history)',
+      out: [
+        { text: '→ 组装：系统提示词 + 技能 + 历史', cls: 't-out' },
+        { text: '→ 压缩：超窗内容摘要化（compaction）', cls: 't-out' },
+        { text: '→ 注入：工具结果、文件、环境状态', cls: 't-ok' },
+        { text: '✓ context engineering 的主战场', cls: 't-ok' }
+      ],
+      note: '模型的"记忆"不是天生的，是 harness 每一轮决定让它看见什么。'
+    }
+  },
+  {
+    name: '停止与纠错', desc: '决定何时收工',
+    spec: {
+      cmd: 'if act.stop_reason: …',
+      out: [
+        { text: '→ 模型不再发起工具调用 → 优雅终止', cls: 't-out' },
+        { text: '→ 步数 / 预算上限 → 强制收手', cls: 't-out' },
+        { text: '→ 出错重试 / 换路 / 降级', cls: 't-out' },
+        { text: '✓ "decides when to stop"（HF 原话）', cls: 't-ok' }
+      ],
+      note: '没有这一层，Agent 要么原地打转，要么一鼓作气跑飞。'
+    }
+  },
+  {
+    name: '沙盒与审批', desc: '把动作关进笼子',
+    spec: {
+      cmd: 'pre-execute → sandbox → post',
+      out: [
+        { text: '→ 危险动作弹审批，等人拍板', cls: 't-out' },
+        { text: '→ 进程由沙盒包装，文件写入受限', cls: 't-out' },
+        { text: '→ 策略可整体替换（如远程沙盒）', cls: 't-out' },
+        { text: '✓ 模型不承担安全责任，harness 承担', cls: 't-ok' }
+      ],
+      note: '挽具的"挽"字就在这里：既能发力，也能勒住。'
+    }
+  },
+  {
+    name: '日志与可观测', desc: '全程留痕，可审计',
+    spec: {
+      cmd: 'session.jsonl (append-only)',
+      out: [
+        { text: '→ 每轮对话、每次调用都落盘', cls: 't-out' },
+        { text: '→ 执行轨迹 / 计时 / 工具详情可查', cls: 't-out' },
+        { text: '✓ 评测与训练复用同一套骨架', cls: 't-ok' }
+      ],
+      note: '评测时跑固定场景记指标，训练时并行跑 episode 回传奖励——同一个骨架，两种用法。'
+    }
+  }
+];
+
+var partsList = document.getElementById('parts-list');
+var partsTerm = document.getElementById('parts-term');
+parts.forEach(function(t, i){
+  var b = el('button', 'part-btn' + (i === 0 ? ' active' : ''));
+  b.type = 'button';
+  b.setAttribute('role', 'tab');
+  b.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
+  b.appendChild(el('span', 'num', String(i + 1)));
+  var wrap = el('span');
+  wrap.appendChild(el('span', 't-name', t.name));
+  wrap.appendChild(document.createElement('br'));
+  wrap.appendChild(el('span', 't-desc', t.desc));
+  b.appendChild(wrap);
+  b.addEventListener('click', function(){
+    partsList.querySelectorAll('.part-btn').forEach(function(x){
+      x.classList.remove('active'); x.setAttribute('aria-selected', 'false');
+    });
+    b.classList.add('active'); b.setAttribute('aria-selected', 'true');
+    renderTerm(partsTerm, t.spec);
+  });
+  partsList.appendChild(b);
+});
+renderTerm(partsTerm, parts[0].spec);
+
+/* ---------- copy buttons ---------- */
+document.querySelectorAll('.copy-btn').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    var text = btn.dataset.copy || '';
+    var done = function(){
+      var old = btn.textContent;
+      btn.textContent = '已复制 ✓';
+      setTimeout(function(){ btn.textContent = old; }, 1600);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done, function(){ fallbackCopy(text); done(); });
+    } else { fallbackCopy(text); done(); }
+  });
+});
+function fallbackCopy(text){
+  var ta = document.createElement('textarea');
+  ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); } catch(e){}
+  ta.remove();
+}
+
+/* ---------- reveal on scroll ---------- */
+var revealEls = document.querySelectorAll('.reveal');
+if ('IntersectionObserver' in window && !reduceMotion){
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if (en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); }
+    });
+  }, { threshold: 0.12 });
+  revealEls.forEach(function(n){ io.observe(n); });
+} else {
+  revealEls.forEach(function(n){ n.classList.add('in'); });
+}
+</script>
+</body>
+</html>

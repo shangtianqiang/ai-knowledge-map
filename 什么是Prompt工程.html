@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#FBFAF7">
+<title>Prompt 工程是什么？ | 给想用好 AI 的人</title>
+<meta name="description" content="一页讲清楚 Prompt 工程（提示词工程）：它从哪来、六个核心技法、一门手艺的编年史，以及为什么它升级成了上下文工程。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2317151F'/%3E%3Ctext x='16' y='22' font-size='15' font-family='monospace' fill='%23B5A3FF' text-anchor='middle'%3E%3E_%3C/text%3E%3C/svg%3E">
+<style>
+  :root{
+    --cream:#FBFAF7;
+    --ink:#17151F;
+    --paper:#FFFFFF;
+    --yellow:#FFD166;
+    --purple:#6E56CF;
+    --purple-light:#B5A3FF;
+    --muted:rgba(23,21,31,.64);
+    --faint:rgba(23,21,31,.45);
+    --line:rgba(23,21,31,.14);
+    --line-strong:rgba(23,21,31,.85);
+    --cream-muted:rgba(251,250,247,.68);
+    --cream-faint:rgba(251,250,247,.42);
+    --cream-line:rgba(251,250,247,.16);
+    --mono:"SF Mono",ui-monospace,"JetBrains Mono",Menlo,Consolas,"Liberation Mono",monospace;
+    --shadow-card:0 1px 2px rgba(23,21,31,.05),0 10px 28px -14px rgba(23,21,31,.18);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    *,*::before,*::after{animation:none!important;transition:none!important}
+  }
+  body{
+    font-family:"PingFang SC","Microsoft YaHei","Inter Variable",system-ui,sans-serif;
+    background:var(--cream);
+    color:var(--ink);
+    font-size:16px;
+    line-height:1.75;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+  }
+  ::selection{background:var(--purple);color:#fff}
+  a{color:inherit}
+  .container{max-width:1128px;margin:0 auto;padding:0 24px}
+
+  /* ---------- reveal on scroll ---------- */
+  html.js .reveal{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s ease}
+  html.js .reveal.in{opacity:1;transform:none}
+  @media (prefers-reduced-motion:reduce){html.js .reveal{opacity:1;transform:none}}
+  @media print{html.js .reveal{opacity:1!important;transform:none!important}}
+
+  /* ---------- nav ---------- */
+  .nav{
+    position:sticky;top:0;z-index:50;
+    background:rgba(251,250,247,.92);
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  .nav-inner{display:flex;align-items:center;justify-content:space-between;height:60px;gap:16px}
+  .brand{display:flex;align-items:center;gap:10px;text-decoration:none;font-weight:800;font-size:15px;letter-spacing:.01em}
+  .brand-mark{
+    width:26px;height:26px;background:var(--ink);color:var(--purple-light);
+    font-family:var(--mono);font-size:12px;font-weight:700;line-height:26px;text-align:center;
+    border-radius:5px;flex:none;
+  }
+  .nav-links{display:flex;align-items:center;gap:22px;list-style:none}
+  .nav-links a{text-decoration:none;font-size:13.5px;font-weight:500;color:var(--muted);transition:color .15s}
+  .nav-links a:hover{color:var(--ink)}
+  .nav-links a.nav-cta{
+    color:var(--ink);font-weight:700;border:1.5px solid var(--line-strong);
+    padding:6px 14px;border-radius:0;
+  }
+  .nav-links a.nav-cta:hover{background:var(--ink);color:var(--cream)}
+  @media (max-width:720px){.nav-links li.hide-sm{display:none}}
+
+  /* ---------- buttons ---------- */
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:13px 26px;border-radius:0;border:1.5px solid transparent;
+    font-family:inherit;font-size:15px;font-weight:700;letter-spacing:.02em;
+    text-decoration:none;cursor:pointer;transition:transform .15s ease,background .15s ease,color .15s ease,box-shadow .15s ease;
+  }
+  .btn:active{transform:translateY(1px)}
+  .btn-primary{background:var(--purple);color:#fff}
+  .btn-primary:hover{box-shadow:0 6px 0 -2px rgba(23,21,31,.9)}
+  .btn-ghost{border-color:var(--line-strong);color:var(--ink);background:transparent}
+  .btn-ghost:hover{background:var(--ink);color:var(--cream)}
+  .btn-sm{padding:9px 18px;font-size:13.5px}
+
+  /* ---------- eyebrow / headings ---------- */
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:9px;
+    font-size:12.5px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;
+  }
+  .eyebrow::before{content:"";width:9px;height:9px;background:currentColor;flex:none}
+  h1{font-size:clamp(42px,6.6vw,74px);line-height:1.08;font-weight:800;letter-spacing:-.015em}
+  h2{font-size:clamp(30px,4.4vw,44px);line-height:1.18;font-weight:800;letter-spacing:-.01em}
+  h3{font-size:20px;font-weight:800;line-height:1.4}
+  .lead{font-size:clamp(17px,2vw,19.5px);line-height:1.8}
+
+  /* ---------- hero ---------- */
+  .hero{padding:76px 0 88px}
+  .hero-grid{display:grid;grid-template-columns:1.02fr .98fr;gap:56px;align-items:center}
+  @media (max-width:980px){.hero-grid{grid-template-columns:1fr;gap:44px}}
+  .hero .eyebrow{color:var(--ink);margin-bottom:26px}
+  .hero h1{margin-bottom:24px}
+  .hero .lead{color:var(--ink);margin-bottom:16px;max-width:34em}
+  .hero .example{color:var(--muted);font-size:15.5px;max-width:36em;margin-bottom:32px}
+  .hero .example b{color:var(--ink);font-weight:700}
+  .hero-actions{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:30px}
+  .hero-meta{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{
+    font-size:12px;font-weight:600;color:var(--muted);
+    border:1px solid var(--line);padding:5px 11px;border-radius:999px;
+    display:inline-flex;align-items:center;gap:6px;background:var(--paper);
+  }
+  .chip .dot{width:6px;height:6px;border-radius:50%;background:var(--purple)}
+
+  /* ---------- terminal ---------- */
+  .terminal{
+    background:var(--ink);border-radius:14px;overflow:hidden;
+    box-shadow:0 2px 4px rgba(23,21,31,.12),0 30px 60px -22px rgba(23,21,31,.45);
+    border:1px solid rgba(23,21,31,.9);
+  }
+  .terminal-bar{
+    display:flex;align-items:center;gap:7px;
+    padding:13px 16px;border-bottom:1px solid var(--cream-line);
+  }
+  .terminal-bar i{width:11px;height:11px;border-radius:50%;background:rgba(251,250,247,.22)}
+  .terminal-bar i:first-child{background:#FF5F57}
+  .terminal-bar i:nth-child(2){background:#FEBC2E}
+  .terminal-bar i:nth-child(3){background:#28C840}
+  .terminal-bar .terminal-title{
+    margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--cream-faint);letter-spacing:.08em;
+  }
+  .terminal-steps{display:flex;gap:6px;padding:12px 14px 0;flex-wrap:wrap}
+  .terminal-steps button{
+    font-family:inherit;font-size:12.5px;font-weight:700;letter-spacing:.04em;
+    background:transparent;color:var(--cream-faint);
+    border:1px solid var(--cream-line);border-radius:999px;
+    padding:5px 13px;cursor:pointer;transition:all .18s;
+  }
+  .terminal-steps button:hover{color:var(--cream);border-color:var(--cream-faint)}
+  .terminal-steps button.active{background:var(--purple);border-color:var(--purple);color:#fff}
+  .terminal-body{padding:18px 20px 22px;min-height:238px;font-family:var(--mono);font-size:13.5px;line-height:1.9}
+  .t-line{white-space:pre-wrap;word-break:break-all}
+  .t-prompt{color:var(--purple-light);font-weight:700;margin-right:9px}
+  .t-cmd{color:var(--cream)}
+  .t-out{color:var(--cream-faint)}
+  .t-ok{color:#3EE8C6}
+  .t-dim{color:rgba(251,250,247,.35)}
+  .t-user{color:var(--yellow)}
+  .t-note{color:var(--cream-faint);font-family:"PingFang SC","Microsoft YaHei",sans-serif;font-size:12px;margin-top:12px;padding-top:10px;border-top:1px dashed var(--cream-line)}
+  .cursor{display:inline-block;width:8px;height:15px;background:var(--purple-light);vertical-align:-2px;animation:blink 1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+  @media (prefers-reduced-motion:reduce){.cursor{animation:none}}
+
+  /* ---------- sections ---------- */
+  .section{padding:96px 0}
+  .section-head{max-width:680px;margin-bottom:52px}
+  .section-head .eyebrow{margin-bottom:20px}
+  .section-head p{color:var(--muted);margin-top:16px;font-size:16.5px}
+
+  /* yellow */
+  .section-yellow{background:var(--yellow)}
+  .section-yellow .section-head p{color:rgba(23,21,31,.72)}
+
+  /* dark */
+  .section-dark{background:var(--ink);color:var(--cream)}
+  .section-dark .eyebrow{color:var(--purple-light)}
+
+  /* ---------- skills switcher ---------- */
+  .skills-layout{display:grid;grid-template-columns:.9fr 1.1fr;gap:36px;align-items:start}
+  @media (max-width:900px){.skills-layout{grid-template-columns:1fr}}
+  .skills-list{display:flex;flex-direction:column;gap:10px}
+  .skill-btn{
+    display:flex;align-items:center;gap:14px;text-align:left;width:100%;
+    background:var(--paper);border:1.5px solid transparent;border-radius:10px;
+    padding:15px 18px;font-family:inherit;cursor:pointer;
+    transition:transform .16s ease,box-shadow .16s ease,border-color .16s;
+    box-shadow:var(--shadow-card);
+  }
+  .skill-btn:hover{transform:translateY(-2px)}
+  .skill-btn .num{
+    font-family:var(--mono);font-size:12px;font-weight:700;color:var(--muted);
+    width:30px;height:30px;border:1.5px solid var(--line);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;flex:none;transition:all .16s;
+  }
+  .skill-btn .t-name{font-size:15.5px;font-weight:700}
+  .skill-btn .t-desc{font-size:13px;color:var(--muted);margin-top:2px}
+  .skill-btn.active{border-color:var(--ink);transform:translateY(-2px)}
+  .skill-btn.active .num{background:var(--ink);border-color:var(--ink);color:var(--purple-light)}
+  .skills-terminal{position:sticky;top:84px}
+  @media (max-width:900px){.skills-terminal{position:static}}
+
+  .layers{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(23,21,31,.22);border:1.5px solid var(--ink);border-radius:12px;overflow:hidden;margin-top:56px}
+  @media (max-width:820px){.layers{grid-template-columns:1fr}}
+  .layer{background:var(--yellow);padding:26px 26px 24px}
+  .layer .lv{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.14em;color:rgba(23,21,31,.55);display:block;margin-bottom:12px}
+  .layer h3{font-size:17px;margin-bottom:8px}
+  .layer p{font-size:13.5px;color:rgba(23,21,31,.72);line-height:1.7}
+  .layer code{font-family:var(--mono);font-size:12.5px;background:rgba(23,21,31,.1);padding:2px 6px;border-radius:4px}
+
+  /* ---------- scenarios ---------- */
+  .cards-3{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+  @media (max-width:900px){.cards-3{grid-template-columns:1fr}}
+  .card{
+    background:var(--paper);border:1px solid var(--line);border-radius:12px;
+    padding:30px 28px 26px;box-shadow:var(--shadow-card);
+    display:flex;flex-direction:column;
+  }
+  .card .tag-row{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:20px}
+  .tag{
+    font-size:10.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+    padding:4px 9px;border:1px solid var(--line);border-radius:4px;color:var(--muted);
+  }
+  .tag.tag-accent{background:var(--ink);color:var(--purple-light);border-color:var(--ink)}
+  .card h3{margin-bottom:12px}
+  .card p{font-size:14.5px;color:var(--muted);flex:1}
+  .card .seed{
+    margin-top:20px;padding-top:16px;border-top:1px dashed var(--line);
+    font-family:var(--mono);font-size:12px;color:var(--faint);word-break:break-all;
+  }
+  .card .seed b{color:var(--ink);font-weight:700}
+  .cards-note{margin-top:30px;font-size:13px;color:var(--faint);display:flex;align-items:center;gap:8px}
+  .cards-note::before{content:"※";color:var(--muted)}
+
+  /* ---------- statement (dark) ---------- */
+  .statement{max-width:820px}
+  .statement h2{margin-bottom:28px}
+  .statement .quote{
+    font-size:clamp(17px,2vw,19px);line-height:1.85;color:var(--cream-muted);
+    border-left:3px solid var(--purple-light);padding-left:22px;margin-bottom:52px;max-width:36em;
+  }
+  .statement .quote b{color:var(--cream)}
+  .statement .quote code{font-family:var(--mono);font-size:14px;background:rgba(251,250,247,.12);padding:2px 7px;border-radius:4px;color:var(--cream)}
+  .pillars{display:grid;grid-template-columns:repeat(3,1fr);gap:34px}
+  @media (max-width:820px){.pillars{grid-template-columns:1fr}}
+  .pillar .p-no{font-family:var(--mono);font-size:13px;color:var(--purple-light);font-weight:700;letter-spacing:.12em;display:block;margin-bottom:14px}
+  .pillar h3{color:var(--cream);margin-bottom:10px;font-size:17.5px}
+  .pillar p{font-size:14.5px;color:var(--cream-muted);line-height:1.8}
+  .pillar code{font-family:var(--mono);font-size:12.5px;background:rgba(251,250,247,.12);padding:2px 6px;border-radius:4px;color:var(--cream)}
+
+  /* ---------- facts (deep dive) ---------- */
+  .facts{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  @media (max-width:820px){.facts{grid-template-columns:1fr}}
+  .fact{background:var(--paper);padding:26px 26px 22px}
+  .fact .f-k{font-size:12px;font-weight:800;letter-spacing:.14em;color:var(--faint);text-transform:uppercase;display:block;margin-bottom:10px}
+  .fact .f-v{font-size:15.5px;font-weight:600;line-height:1.65}
+  .fact .f-v small{display:block;font-weight:400;font-size:13px;color:var(--muted);margin-top:4px}
+
+  .deep-block{margin-top:76px}
+  .deep-block>h3{margin-bottom:26px;font-size:clamp(21px,2.6vw,25px)}
+
+  .timeline{list-style:none;border-left:2px solid var(--ink);margin-left:6px}
+  .timeline li{position:relative;padding:0 0 26px 28px}
+  .timeline li:last-child{padding-bottom:0}
+  .timeline li::before{
+    content:"";position:absolute;left:-7px;top:9px;width:12px;height:12px;
+    background:var(--purple);border:2px solid var(--ink);border-radius:50%;
+  }
+  .timeline .tl-year{font-family:var(--mono);font-size:12.5px;font-weight:700;letter-spacing:.1em;color:var(--faint);display:block;margin-bottom:4px}
+  .timeline .tl-t{font-weight:800;font-size:16.5px}
+  .timeline p{font-size:14px;color:var(--muted);margin-top:4px;max-width:40em}
+  .timeline code{font-family:var(--mono);font-size:12.5px;background:rgba(23,21,31,.07);padding:2px 6px;border-radius:4px;color:var(--ink)}
+
+  .tensions{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:14px 28px}
+  @media (max-width:820px){.tensions{grid-template-columns:1fr}}
+  .tensions li{
+    display:flex;gap:12px;font-size:14.5px;color:var(--muted);line-height:1.7;
+    padding:14px 0;border-bottom:1px solid var(--line);
+  }
+  .tensions li b{color:var(--ink)}
+  .tensions li::before{content:"◆";color:var(--purple);font-weight:800;flex:none;font-size:12px;padding-top:5px}
+  .tensions-warn{
+    margin-top:26px;padding:18px 22px;border-radius:10px;
+    background:rgba(110,86,207,.08);border:1px solid rgba(110,86,207,.4);
+    font-size:14px;color:var(--muted);
+  }
+  .tensions-warn b{color:var(--ink)}
+
+  /* ---------- FAQ ---------- */
+  .faq-list{max-width:780px}
+  .faq-item{background:var(--paper);border:1.5px solid var(--ink);border-radius:10px;margin-bottom:14px;overflow:hidden;box-shadow:var(--shadow-card)}
+  .faq-item summary{
+    list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:18px;
+    padding:20px 24px;font-weight:700;font-size:16px;
+  }
+  .faq-item summary::-webkit-details-marker{display:none}
+  .faq-item summary .plus{
+    flex:none;width:26px;height:26px;border:1.5px solid var(--ink);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:400;font-size:16px;line-height:1;transition:transform .2s ease,background .2s,color .2s;
+  }
+  .faq-item[open] summary .plus{background:var(--ink);color:var(--yellow);transform:rotate(45deg)}
+  .faq-item .faq-body{padding:0 24px 22px;font-size:14.5px;color:var(--muted);line-height:1.85}
+  .faq-item .faq-body b{color:var(--ink)}
+  .faq-item .faq-body code{font-family:var(--mono);font-size:12.5px;background:rgba(23,21,31,.07);padding:2px 6px;border-radius:4px;color:var(--ink)}
+
+  /* ---------- audience ---------- */
+  .aud-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+  @media (max-width:1000px){.aud-grid{grid-template-columns:1fr 1fr}}
+  @media (max-width:640px){.aud-grid{grid-template-columns:1fr}}
+  .aud-card{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:26px 24px;box-shadow:var(--shadow-card);display:flex;flex-direction:column}
+  .aud-card .a-who{font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin-bottom:12px}
+  .aud-card h3{font-size:16.5px;margin-bottom:10px}
+  .aud-card p{font-size:13.5px;color:var(--muted);flex:1;line-height:1.75}
+  .aud-card .start{
+    margin-top:16px;font-family:var(--mono);font-size:11.5px;color:#fff;
+    background:var(--purple);padding:7px 11px;border-radius:6px;word-break:break-all;
+  }
+
+  /* ---------- sources ---------- */
+  .sources-card{background:var(--ink);color:var(--cream);border-radius:16px;padding:52px 54px;max-width:860px}
+  @media (max-width:720px){.sources-card{padding:36px 26px}}
+  .sources-card .eyebrow{color:var(--yellow);margin-bottom:28px}
+  .source-item{display:flex;gap:18px;padding:16px 0;border-bottom:1px solid var(--cream-line);text-decoration:none;transition:padding-left .18s}
+  .source-item:hover{padding-left:8px}
+  .source-item:last-of-type{border-bottom:none}
+  .source-item .s-no{font-family:var(--mono);font-size:12.5px;color:var(--purple-light);font-weight:700;flex:none;padding-top:2px}
+  .source-item .s-t{font-weight:700;font-size:15.5px;color:var(--cream)}
+  .source-item .s-d{font-size:13px;color:var(--cream-faint);margin-top:3px}
+  .source-item .s-arrow{margin-left:auto;color:var(--cream-faint);flex:none;padding-top:2px}
+  .sources-note{margin-top:26px;font-size:12.5px;color:var(--cream-faint)}
+
+  /* ---------- CTA ---------- */
+  .section-cta{background:var(--purple)}
+  .cta-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:48px;align-items:center}
+  @media (max-width:820px){.cta-grid{grid-template-columns:1fr}}
+  .section-cta .eyebrow{color:rgba(255,255,255,.72);margin-bottom:22px}
+  .section-cta h2{margin-bottom:18px;color:#fff}
+  .section-cta p{color:rgba(255,255,255,.85);max-width:30em;margin-bottom:30px}
+  .cta-cmd{
+    display:flex;align-items:flex-start;gap:12px;background:var(--ink);border-radius:10px;
+    padding:16px 18px;font-family:var(--mono);font-size:13px;line-height:1.9;color:var(--cream);
+    max-width:520px;box-shadow:0 14px 30px -12px rgba(23,21,31,.5);
+  }
+  .cta-cmd pre{font-family:inherit;white-space:pre-wrap;word-break:break-all;flex:1;margin:0}
+  .cta-cmd .t-cm{color:var(--purple-light)}
+  .copy-btn{
+    flex:none;font-family:inherit;font-size:11px;font-weight:700;letter-spacing:.08em;
+    background:transparent;color:var(--cream-faint);border:1px solid var(--cream-line);
+    border-radius:4px;padding:4px 9px;cursor:pointer;transition:all .15s;
+  }
+  .cta-cmd .copy-btn{color:var(--cream-muted);border-color:var(--cream-line)}
+  .cta-cmd .copy-btn:hover{color:var(--yellow);border-color:var(--yellow)}
+  .cta-art{display:flex;align-items:center;justify-content:center;gap:22px;font-family:var(--mono);font-weight:700}
+  .cta-art .q,.cta-art .v{font-size:clamp(56px,7vw,88px);line-height:1}
+  .cta-art .q{color:rgba(255,255,255,.32)}
+  .cta-art .v{color:#fff}
+  .cta-art .arrow{font-size:34px;color:rgba(255,255,255,.55)}
+  @media (max-width:820px){.cta-art{display:none}}
+
+  /* ---------- footer ---------- */
+  footer{background:var(--ink);color:var(--cream);padding:64px 0 36px}
+  .foot-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:44px;margin-bottom:52px}
+  @media (max-width:820px){.foot-grid{grid-template-columns:1fr}}
+  .foot-brand .brand{color:var(--cream);margin-bottom:16px}
+  .foot-brand .brand-mark{background:var(--purple);color:#fff}
+  .foot-brand p{font-size:13.5px;color:var(--cream-faint);max-width:26em}
+  .foot-col h4{font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--cream-faint);margin-bottom:18px}
+  .foot-col ul{list-style:none}
+  .foot-col li{margin-bottom:11px}
+  .foot-col a{font-size:14px;color:var(--cream-muted);text-decoration:none;transition:color .15s}
+  .foot-col a:hover{color:var(--cream)}
+  .foot-bottom{border-top:1px solid var(--cream-line);padding-top:26px;font-size:12.5px;color:var(--cream-faint);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+  [id]{scroll-margin-top:76px}
+</style>
+</head>
+<body>
+
+<!-- ================= NAV ================= -->
+<nav class="nav">
+  <div class="container nav-inner">
+    <a class="brand" href="#top"><span class="brand-mark">&gt;_</span>Prompt 工程是什么？</a>
+    <ul class="nav-links">
+      <li class="hide-sm"><a href="#skills">六个核心技法</a></li>
+      <li class="hide-sm"><a href="#timeline">编年史</a></li>
+      <li class="hide-sm"><a href="#teachers">谁在教你</a></li>
+      <li class="hide-sm"><a href="#faq">常见问题</a></li>
+      <li><a class="nav-cta" href="什么是AgentHarness.html">姊妹篇 ↗</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- ================= HERO ================= -->
+<header class="hero" id="top">
+  <div class="container hero-grid">
+    <div>
+      <p class="eyebrow">给想用好 AI 的人的实用指南</p>
+      <h1>Prompt 工程<br>是什么？</h1>
+      <p class="lead">Prompt 工程（提示词工程）是设计和打磨给模型的输入，让它的输出<strong>稳定、可控、可用</strong>的手艺：不是玄学咒语，而是把需求说清楚、给对示例、定好格式、配好评测的工程方法。</p>
+      <p class="example">比如，同一句"帮我写周报"：新手得到一篇空话模板；会写提示词的人给出<b>背景、示例、格式与禁忌</b>，得到一篇能直接交的周报。差别不在模型，在输入。到 2026 年，这门手艺已经升级为<b>上下文工程（context engineering）</b>——但内核没变。</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#skills">学六个核心技法 ↓</a>
+        <a class="btn btn-ghost" href="什么是AgentHarness.html">姊妹篇：Agent Harness ↗</a>
+      </div>
+      <div class="hero-meta">
+        <span class="chip"><i class="dot"></i>2020 · 起源于 GPT-3</span>
+        <span class="chip"><i class="dot"></i>2022 · 思维链成名</span>
+        <span class="chip"><i class="dot"></i>系统提示词 = 产品资产</span>
+        <span class="chip"><i class="dot"></i>2025+ · 上下文工程</span>
+      </div>
+    </div>
+
+    <div class="terminal" aria-label="提示词对比演示">
+      <div class="terminal-bar"><i></i><i></i><i></i><span class="terminal-title">prompt — 对比实验</span></div>
+      <div class="terminal-steps" role="tablist" aria-label="演示步骤">
+        <button type="button" role="tab" data-step="0" aria-selected="true">① 差的提示</button>
+        <button type="button" role="tab" data-step="1" aria-selected="false">② 好的提示</button>
+        <button type="button" role="tab" data-step="2" aria-selected="false">③ 进产品的提示</button>
+      </div>
+      <div class="terminal-body" id="hero-term" aria-live="polite"></div>
+    </div>
+  </div>
+</header>
+
+<!-- ================= SKILLS (YELLOW) ================= -->
+<section class="section section-yellow" id="skills">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">六个核心技法</p>
+      <h2>把"随便聊聊"变成"精确下单"</h2>
+      <p>综合 Anthropic、OpenAI 官方指南与学术文献，真正撑起效果的就这六招。点击左侧技法，右侧看它长什么样。</p>
+    </div>
+
+    <div class="skills-layout">
+      <div class="skills-list" id="skills-list" role="tablist" aria-label="技法列表"></div>
+      <div class="skills-terminal">
+        <div class="terminal">
+          <div class="terminal-bar"><i></i><i></i><i></i><span class="terminal-title">prompt — 示例</span></div>
+          <div class="terminal-body" id="skills-term" aria-live="polite"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="layers reveal">
+      <div class="layer">
+        <span class="lv">2020–2022 · 学术起源</span>
+        <h3>上下文学习与思维链</h3>
+        <p>GPT-3 论文确立"给示例就能学"，CoT 论文让"一步步想"成为显学——提示词第一次被当作研究对象。</p>
+      </div>
+      <div class="layer">
+        <span class="lv">2023–2024 · 大众与玄学期</span>
+        <h3>岗位热词与万能模板</h3>
+        <p>ChatGPT 引爆，"prompt engineer" 成热招岗位；咒语满天飞的同时，CO-STAR 等结构化框架开始把玄学沉淀成方法。</p>
+      </div>
+      <div class="layer">
+        <span class="lv">2025–2026 · 工程化</span>
+        <h3>上下文工程接棒</h3>
+        <p>从写一句话升级为管理整个上下文窗口；提示词进版本库、配评测与回归，成为受管的工程资产。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= TEACHERS (WHITE) ================= -->
+<section class="section" id="teachers">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">谁在教你</p>
+      <h2>三家官方，一堆好工具</h2>
+      <p>学这门手艺不必东拼西凑——两家模型厂牌的官方指南加一个中文社区资源，足够从入门到进阶。</p>
+    </div>
+    <div class="cards-3">
+      <article class="card reveal">
+        <div class="tag-row"><span class="tag tag-accent">Anthropic</span><span class="tag">文档</span><span class="tag">教程</span></div>
+        <h3>官方九大原则 + 交互教程</h3>
+        <p>把"说清楚、给示例、让模型思考、用 XML 标签、系统提示词、链式提示"整理成原则；还有一个可以动手练的开源交互教程，控制台里甚至内置了自动改写提示词的 Prompt Improver。</p>
+        <div class="seed">入口 → <b>docs.claude.com · prompt engineering</b></div>
+      </article>
+      <article class="card reveal">
+        <div class="tag-row"><span class="tag tag-accent">OpenAI</span><span class="tag">指南</span><span class="tag">Cookbook</span></div>
+        <h3>六大策略 + GPT-5 提示指南</h3>
+        <p>官方框架：写清楚指令、提供参考文本、拆分子任务、给模型"思考时间"、使用外部工具、系统化测试。GPT-5 时代的 prompting guide 进一步覆盖 Agent 与工具调用场景。</p>
+        <div class="seed">入口 → <b>platform.openai.com/docs/guides/prompt-engineering</b></div>
+      </article>
+      <article class="card reveal">
+        <div class="tag-row"><span class="tag tag-accent">社区</span><span class="tag">中文</span><span class="tag">开源</span></div>
+        <h3>中文指南与工程化工具</h3>
+        <p>promptingguide.ai 有完整的中文版；DSPy 主张"别手写咒语，写程序自动优化提示"；promptfoo 等工具给提示词配上评测；团队普遍建起自己的提示词库。</p>
+        <div class="seed">入口 → <b>promptingguide.ai/zh</b></div>
+      </article>
+    </div>
+    <p class="cards-note reveal">各家话术不同，核心原则高度一致：说清楚 · 给示例 · 定格式 · 可评测。</p>
+  </div>
+</section>
+
+<!-- ================= STATEMENT (DARK) ================= -->
+<section class="section section-dark" id="why">
+  <div class="container">
+    <div class="statement reveal">
+      <p class="eyebrow">为什么重要</p>
+      <h2>提示词不是咒语，<br>是你与模型的接口规范。</h2>
+      <p class="quote">它决定模型看到什么、以什么身份回答、按什么格式交卷。2025 年年中起，"context engineering"（上下文工程）成为行业新词：一句话的提示词，长成了对整个上下文窗口的管理——检索内容、工具结果、对话历史、系统规则，都要有人编排。<b>但这门手艺的内核没变：说清楚，给例子，可验证。</b></p>
+      <div class="pillars">
+        <div class="pillar reveal">
+          <span class="p-no">01</span>
+          <h3>说清楚是硬功夫</h3>
+          <p>模糊输入 = 模型替你做所有决定。把背景、目标、格式、禁忌写全，是最被低估、回报最高的技能。</p>
+        </div>
+        <div class="pillar reveal">
+          <span class="p-no">02</span>
+          <h3>示例比形容词有用</h3>
+          <p>一篇好范文胜过十个"专业一点"。"Show, not tell" 是上下文学习的全部秘密——模型靠模仿学习。</p>
+        </div>
+        <div class="pillar reveal">
+          <span class="p-no">03</span>
+          <h3>可评测才可迭代</h3>
+          <p>好提示是测出来的，不是灵感。建小测试集，改一版跑一遍对比输出——和写代码跑测试是同一个道理。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= DEEP DIVE (WHITE) ================= -->
+<section class="section" id="what">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">依据与事实</p>
+      <h2>先说清楚这门手艺</h2>
+    </div>
+    <div class="facts reveal">
+      <div class="fact"><span class="f-k">词源</span><div class="f-v">prompt = 提词卡<small>戏剧里给演员提词的纸条——模型也需要一张</small></div></div>
+      <div class="fact"><span class="f-k">出生</span><div class="f-v">2020 · GPT-3 论文<small>《Language Models are Few-Shot Learners》：示例放进输入就能学会任务（arXiv:2005.14165）</small></div></div>
+      <div class="fact"><span class="f-k">成名</span><div class="f-v">2022 · 思维链<small>《Chain-of-Thought Prompting》："一步步想"显著提升推理（arXiv:2201.11903）</small></div></div>
+      <div class="fact"><span class="f-k">岗位</span><div class="f-v">2023 · prompt engineer 热潮<small>ChatGPT 引爆需求；Anthropic 开出 25–33 万美元年薪招提示工程师，引发热议</small></div></div>
+      <div class="fact"><span class="f-k">升级</span><div class="f-v">2025 · context engineering<small>Agent 时代，一句话提示词升级为对整个上下文窗口的工程化管理</small></div></div>
+      <div class="fact"><span class="f-k">现在</span><div class="f-v">2026 · 工程资产<small>系统提示词进版本库、配评测回归，随产品一起发布</small></div></div>
+    </div>
+
+    <div class="deep-block reveal" id="timeline">
+      <h3>一门手艺的编年史</h3>
+      <ul class="timeline">
+        <li>
+          <span class="tl-year">2020</span>
+          <span class="tl-t">上下文学习</span>
+          <p>GPT-3 论文证明：一个参数都不改，把示例写进输入，模型就能"现场学会"新任务。提示词工程自此有了学术起点。</p>
+        </li>
+        <li>
+          <span class="tl-year">2022</span>
+          <span class="tl-t">思维链爆发</span>
+          <p>Chain-of-Thought 与 ReAct 相继发表："一步步想"和"边想边做"成为流传至今的两大经典套路。</p>
+        </li>
+        <li>
+          <span class="tl-year">2023</span>
+          <span class="tl-t">大众化与岗位热潮</span>
+          <p>ChatGPT 两个月破亿用户；"prompt engineer" 成为热招岗位，提示词第一次成为大众话题——也埋下"咒语玄学"的种子。</p>
+        </li>
+        <li>
+          <span class="tl-year">2024</span>
+          <span class="tl-t">框架沉淀</span>
+          <p>CO-STAR 等结构化框架、两家官方指南与开源教程出现；提示词从玄学走向方法论，开始被系统化教学。</p>
+        </li>
+        <li>
+          <span class="tl-year">2025</span>
+          <span class="tl-t">上下文工程接棒</span>
+          <p>"context engineering" 成行业热词：从写一句话，到管理模型看到的整个世界——系统提示、检索内容、工具结果、记忆。</p>
+        </li>
+        <li>
+          <span class="tl-year">2026</span>
+          <span class="tl-t">资产化</span>
+          <p>系统提示词与产品一起进版本库，配评测与回归；提示词工程成为 AI 工程的标准工序，而非聊天技巧。</p>
+        </li>
+      </ul>
+    </div>
+
+    <div class="deep-block reveal">
+      <h3>常见张力与误解</h3>
+      <ul class="tensions">
+        <li><span><b>越具体 vs 越灵活</b>——约束太死限制发挥，太松模型自由发挥；格式管死、内容留白。</span></li>
+        <li><span><b>示例多 vs 上下文贵</b>——例子给得越足越稳，但占窗口、拖速度；精选 2-3 个胜过堆 10 个。</span></li>
+        <li><span><b>一句话 vs 系统提示词</b>——每轮都要重复的规则，应该上移到系统层只写一次。</span></li>
+        <li><span><b>人工打磨 vs 自动优化</b>——DSPy 一派主张把提示当程序让算法调；人工理解任务的能力仍不可替代。</span></li>
+        <li><span><b>技巧 vs 评测</b>——听来的技巧是起点，自己的测试集才是裁判；别照抄别人的咒语。</span></li>
+        <li><span><b>中文 vs 英文</b>——现代模型差距已小，用你最擅长表达的语言写；个别标签名用英文更稳。</span></li>
+      </ul>
+      <p class="tensions-warn"><b>三个常见误解：</b>① "礼貌和威胁能显著提升效果"——个别研究测出微小差异，远不如说清楚、给示例实在；② "存在万能咒语"——任务不同接口就不同，骨架可复用、内容必须定制；③ "提示词工程要消失了"——它没有消失，而是升级为上下文工程与评测驱动的工程实践。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FAQ (YELLOW) ================= -->
+<section class="section section-yellow" id="faq">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">接下来继续了解</p>
+      <h2>常见问题</h2>
+    </div>
+    <div class="faq-list">
+      <details class="faq-item reveal">
+        <summary>都 2026 年了，学提示词还有用吗？<span class="plus">+</span></summary>
+        <div class="faq-body">有用，但内容变了：死记咒语确实过时了；把需求说清楚、给好示例、设计格式与评测，依然是人机协作的核心技能——<b>模型越强，"会提问"的杠杆越大</b>，因为它替你省下的返工也越多。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>提示词工程和上下文工程是什么关系？<span class="plus">+</span></summary>
+        <div class="faq-body">上下文工程是超集：不只写一句话，而是管理模型看到的<b>全部上下文</b>——系统提示、检索内容、对话历史、工具结果。提示词工程是其中最贴身、最常改的部分，也是入门上下文工程的第一步。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>用英文写效果更好吗？<span class="plus">+</span></summary>
+        <div class="faq-body">现代模型的中英差距已经很小，<b>用你最擅长表达的语言写</b>；关键在信息完整与格式清晰，不在语言本身。个别场合（如 XML 标签名、代码注释）用英文更稳。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>系统提示词和用户提示词有什么区别？<span class="plus">+</span></summary>
+        <div class="faq-body">系统提示词是<b>常驻规则</b>——身份、边界、输出格式，每次对话都生效；用户提示词是每轮输入。产品的"性格"几乎全在前者，所以改它要走版本管理和评测，而不是随手编辑。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>有万能模板吗？<span class="plus">+</span></summary>
+        <div class="faq-body">没有万能咒语，但有<b>可复用的骨架</b>：角色 → 背景 → 任务 → 格式 → 约束 → 示例（见页尾）。每个任务都要填自己的肉——骨架保证你不漏项，内容决定输出质量。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>怎么知道我的提示词变好了？<span class="plus">+</span></summary>
+        <div class="faq-body">建一套 10–20 条的测试用例，每次改动跑一遍、对比输出——<b>评测驱动的迭代</b>。感觉"好像更好了"不算数，测出来才算数；这也正是它被称为"工程"的原因。</div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ================= AUDIENCE (WHITE) ================= -->
+<section class="section" id="who">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">它适合谁</p>
+      <h2>四类读者，四个入口</h2>
+    </div>
+    <div class="aud-grid">
+      <div class="aud-card reveal">
+        <span class="a-who">For Writers</span>
+        <h3>内容工作者</h3>
+        <p>把"碰运气"变成稳定产线：定格式、给范文、设禁忌，让 AI 的产出第一次就能用。</p>
+        <div class="start">起点 → 六技法 ① 说清楚</div>
+      </div>
+      <div class="aud-card reveal">
+        <span class="a-who">For Devs</span>
+        <h3>开发者</h3>
+        <p>系统提示词是你产品的隐形代码——同样需要版本管理、评审和回归测试。</p>
+        <div class="start">起点 → Anthropic 交互教程 ↗</div>
+      </div>
+      <div class="aud-card reveal">
+        <span class="a-who">For PMs</span>
+        <h3>产品经理</h3>
+        <p>设计 AI 功能 = 设计接口：把"用户意图 → 模型行为"的翻译规则写清楚、写完整。</p>
+        <div class="start">起点 → OpenAI 六大策略 ↗</div>
+      </div>
+      <div class="aud-card reveal">
+        <span class="a-who">For Students</span>
+        <h3>学生 / 研究者</h3>
+        <p>从两篇奠基论文读起，理解上下文学习与思维链，再看今天的 Agent 如何继承它们。</p>
+        <div class="start">起点 → arXiv:2201.11903</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SOURCES (WHITE + DARK CARD) ================= -->
+<section class="section" id="sources" style="padding-top:24px">
+  <div class="container">
+    <div class="sources-card reveal">
+      <p class="eyebrow">来源与延伸阅读</p>
+      <a class="source-item" href="https://www.promptingguide.ai/zh" target="_blank" rel="noopener">
+        <span class="s-no">01</span>
+        <span><span class="s-t">提示工程指南（中文版）· promptingguide.ai</span><br><span class="s-d">最系统的中文学习资源，从基础技法到研究前沿</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="https://docs.claude.com/en/docs/build-with-claude/prompt-engineering/overview" target="_blank" rel="noopener">
+        <span class="s-no">02</span>
+        <span><span class="s-t">Anthropic · Prompt Engineering 官方文档</span><br><span class="s-d">九大原则、XML 标签、系统提示词与链式提示</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="https://platform.openai.com/docs/guides/prompt-engineering" target="_blank" rel="noopener">
+        <span class="s-no">03</span>
+        <span><span class="s-t">OpenAI · Prompt engineering guide</span><br><span class="s-d">官方六大策略与 GPT-5 时代的提示指南</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="https://arxiv.org/abs/2005.14165" target="_blank" rel="noopener">
+        <span class="s-no">04</span>
+        <span><span class="s-t">arXiv:2005.14165 · GPT-3 论文</span><br><span class="s-d">Language Models are Few-Shot Learners——上下文学习的起点</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="https://arxiv.org/abs/2201.11903" target="_blank" rel="noopener">
+        <span class="s-no">05</span>
+        <span><span class="s-t">arXiv:2201.11903 · Chain-of-Thought</span><br><span class="s-d">思维链提示论文："一步步想"从这里成名</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="什么是AgentHarness.html">
+        <span class="s-no">06</span>
+        <span><span class="s-t">姊妹篇 · 什么是 Agent Harness？</span><br><span class="s-d">提示词的"最终归宿"：系统提示词住进运行时骨架（本系列）</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <p class="sources-note">本页内容整理自以上公开资料，更新于 2026 年 10 月。术语与最佳实践仍在演化，以各家最新文档为准。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CTA (PURPLE) ================= -->
+<section class="section section-cta">
+  <div class="container cta-grid">
+    <div class="reveal">
+      <p class="eyebrow">开始动手</p>
+      <h2>六行万能骨架</h2>
+      <p>没有万能咒语，但有一个可以填一辈子的骨架——填满这六行，你已经超过大多数用户。</p>
+      <div class="cta-cmd">
+        <pre><span class="t-cm">角色：</span>你是____
+<span class="t-cm">背景：</span>____
+<span class="t-cm">任务：</span>____
+<span class="t-cm">格式：</span>____（最好附 1–3 个示例）
+<span class="t-cm">约束：</span>不要____
+<span class="t-cm">不确定时：</span>说"不知道"，不要编</pre>
+        <button class="copy-btn" data-copy="角色：你是____&#10;背景：____&#10;任务：____&#10;格式：____（最好附 1–3 个示例）&#10;约束：不要____&#10;不确定时：说"不知道"，不要编">复制</button>
+      </div>
+    </div>
+    <div class="cta-art" aria-hidden="true">
+      <span class="q">?</span><span class="arrow">→</span><span class="v">✓</span>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FOOTER ================= -->
+<footer>
+  <div class="container">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <a class="brand" href="#top"><span class="brand-mark">&gt;_</span>Prompt 工程是什么？</a>
+        <p>一页讲清楚这门"与模型对话的手艺"：它从哪来、六个核心技法、编年史，以及它如何升级为上下文工程。</p>
+      </div>
+      <div class="foot-col">
+        <h4>本页导航</h4>
+        <ul>
+          <li><a href="#skills">六个核心技法</a></li>
+          <li><a href="#timeline">一门手艺的编年史</a></li>
+          <li><a href="#teachers">谁在教你</a></li>
+          <li><a href="#faq">常见问题</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h4>本系列</h4>
+        <ul>
+          <li><a href="什么是飞书CLI.html">什么是飞书 CLI？</a></li>
+          <li><a href="什么是DeepSeekHarness.html">什么是 DeepSeek Harness？</a></li>
+          <li><a href="什么是AgentHarness.html">什么是 Agent Harness？</a></li>
+          <li><a href="index.html">🏠 知识地图（主页）</a></li>
+          <li><a href="#top">什么是 Prompt 工程？（本页）</a></li>
+          <li><a href="什么是RAG.html">什么是 RAG？</a></li>
+          <li><a href="什么是MCP.html">什么是 MCP？</a></li>
+          <li><a href="什么是幻觉.html">什么是幻觉？</a></li>
+          <li><a href="什么是思维链.html">什么是思维链？</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>本页为独立学习指南，与所提及的各家公司没有关联 · 内容整理自公开资料</span>
+      <span>更新于 2026 年 10 月</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+document.documentElement.classList.add('js');
+
+/* ---------- helpers ---------- */
+var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function el(tag, cls, text){
+  var n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text !== undefined) n.textContent = text;
+  return n;
+}
+
+/* type a command string into a span, then call done */
+function typeCmd(span, text, done){
+  if (reduceMotion){ span.textContent = text; done && done(); return; }
+  var i = 0;
+  (function tick(){
+    span.textContent = text.slice(0, ++i);
+    if (i < text.length){ setTimeout(tick, text[i-1] === ' ' ? 34 : 18); }
+    else { done && done(); }
+  })();
+}
+
+function renderTerm(container, spec){
+  container.innerHTML = '';
+  var line = el('div','t-line');
+  var prompt = el('span','t-prompt', spec.prompt || '❯');
+  var cmd = el('span','t-cmd');
+  var cur = el('span','cursor');
+  line.appendChild(prompt); line.appendChild(cmd); line.appendChild(cur);
+  container.appendChild(line);
+  typeCmd(cmd, spec.cmd, function(){
+    cur.remove();
+    (spec.out || []).forEach(function(o){
+      container.appendChild(el('div','t-line ' + (o.cls || 't-out'), o.text));
+    });
+    if (spec.note) container.appendChild(el('div','t-note', spec.note));
+  });
+}
+
+/* ---------- hero terminal steps ---------- */
+var heroSteps = [
+  {
+    cmd: '"帮我写个周报"',
+    prompt: '你',
+    out: [
+      { text: '← 模型只能靠猜：什么岗位？什么格式？', cls: 't-out' },
+      { text: '← 输出一篇空泛模板："本周完成了各项工作…"', cls: 't-out' },
+      { text: '✗ 你删改重写的功夫，够手写三篇', cls: 't-dim' }
+    ],
+    note: '模糊输入 = 模型替你做所有决定，而且它猜得理直气壮。'
+  },
+  {
+    cmd: '"我是后端工程师，附上周报范文…"',
+    prompt: '你',
+    out: [
+      { text: '背景：B 端团队，本周上线配额功能', cls: 't-out' },
+      { text: '格式：进展 / 风险 / 下周计划 三段式', cls: 't-out' },
+      { text: '约束：不要形容词，只写事实与数字', cls: 't-ok' },
+      { text: '✓ 一篇能直接交的周报', cls: 't-ok' }
+    ],
+    note: '说清楚 + 给示例 + 定格式——三招解决八成问题。'
+  },
+  {
+    cmd: 'system: 你是本产品的客服助手…',
+    prompt: '⚙',
+    out: [
+      { text: '→ 固化成系统提示词：身份 · 边界 · 格式', cls: 't-out' },
+      { text: '→ 每一次对话都带着它运行', cls: 't-out' },
+      { text: '→ 改动走版本管理 + 评测回归', cls: 't-out' },
+      { text: '✓ 提示词从"聊天技巧"变成"工程资产"', cls: 't-ok' }
+    ],
+    note: 'Agent 时代，提示词大多住进 harness 的系统提示词里——有版本、有评测、可回归。'
+  }
+];
+
+var heroTerm = document.getElementById('hero-term');
+var heroBtns = document.querySelectorAll('.terminal-steps button');
+var heroStopped = false;
+
+function showHeroStep(i){
+  heroBtns.forEach(function(b, j){
+    b.classList.toggle('active', i === j);
+    b.setAttribute('aria-selected', i === j ? 'true' : 'false');
+  });
+  renderTerm(heroTerm, heroSteps[i]);
+}
+heroBtns.forEach(function(b){
+  b.addEventListener('click', function(){
+    heroStopped = true; /* user took over, stop auto-advance */
+    showHeroStep(+b.dataset.step);
+  });
+});
+showHeroStep(0);
+/* auto-advance gently; stops once the user takes over */
+(function autoAdvance(){
+  if (reduceMotion) return;
+  var idx = 0;
+  setInterval(function(){
+    if (heroStopped) return;
+    idx = (idx + 1) % heroSteps.length;
+    showHeroStep(idx);
+  }, 7000);
+})();
+
+/* ---------- skills switcher ---------- */
+var skills = [
+  {
+    name: '说清楚', desc: 'Be clear & direct · 第一原则',
+    spec: {
+      prompt: '你',
+      cmd: '"帮我写封邮件"',
+      out: [
+        { text: '✗ 这样写，模型只能替你猜', cls: 't-dim' },
+        { text: '谁：新入职的产品经理', cls: 't-out' },
+        { text: '事：给老板发项目延期的邮件', cls: 't-out' },
+        { text: '要：3 句话内，先结论后原因', cls: 't-out' },
+        { text: '别：道歉不超过一次', cls: 't-ok' }
+      ],
+      note: 'Anthropic 官方第一原则：清楚直接胜过一切花活。模糊是输出平庸的头号原因。'
+    }
+  },
+  {
+    name: '给示例', desc: 'Few-shot · 上下文学习',
+    spec: {
+      cmd: '示例 1：输入 → 输出',
+      out: [
+        { text: '示例 2：输入 → 输出', cls: 't-out' },
+        { text: '示例 3：输入 → 输出', cls: 't-out' },
+        { text: '→ 模型模仿例子的风格、粒度、格式', cls: 't-out' },
+        { text: '✓ Show, not tell——比 10 个形容词都管用', cls: 't-ok' }
+      ],
+      note: '2020 年 GPT-3 论文证明的能力：从示例中"现场学会"任务，一个参数都不用改。'
+    }
+  },
+  {
+    name: '让它一步步想', desc: 'Chain-of-Thought · 思维链',
+    spec: {
+      cmd: '"请一步步推理，再给出结论"',
+      out: [
+        { text: '→ 复杂题：先分解 → 逐步推 → 再作答', cls: 't-out' },
+        { text: '→ 数学、逻辑、多条件判断尤其有效', cls: 't-out' },
+        { text: '→ 中间步骤写出错，答案也跟着错', cls: 't-dim' },
+        { text: '✓ 2022 年论文：推理性能大幅跃升', cls: 't-ok' }
+      ],
+      note: 'Google 的 CoT 论文让它成名；今天的推理模型已把这一招内化成默认行为。'
+    }
+  },
+  {
+    name: '角色与系统提示', desc: 'Role / System · 框定行为',
+    spec: {
+      cmd: 'system: 你是一位严谨的审稿编辑…',
+      out: [
+        { text: '→ 身份决定视角、口径与默认值', cls: 't-out' },
+        { text: '→ 规则与禁止项放在系统层常驻', cls: 't-out' },
+        { text: '→ 每轮都要重复的话，只说一次', cls: 't-out' },
+        { text: '✓ 产品的"性格"几乎全在这里', cls: 't-ok' }
+      ],
+      note: '用户提示词每次都要说的事，应该上移到系统提示词——写一次，长期生效。'
+    }
+  },
+  {
+    name: '结构化输出', desc: '标签 · 分隔符 · JSON',
+    spec: {
+      cmd: '<需求>…</需求> <约束>…</约束>',
+      out: [
+        { text: '→ 标签帮模型"定位"每段内容', cls: 't-out' },
+        { text: '→ 用 ### 或 --- 分隔指令与材料', cls: 't-out' },
+        { text: '→ 要求 JSON / 表格输出，程序好接', cls: 't-out' },
+        { text: '✓ 格式稳定，下游才敢接', cls: 't-ok' }
+      ],
+      note: '让人看得懂是聊天，让程序接得住是工程——分隔线从这一步画起。'
+    }
+  },
+  {
+    name: '拆解与链接', desc: 'Chaining · 分而治之',
+    spec: {
+      cmd: '大纲 → 扩写 → 自查 → 修订',
+      out: [
+        { text: '→ 每步只做一件事', cls: 't-out' },
+        { text: '→ 上一步输出做下一步输入', cls: 't-out' },
+        { text: '→ 中间加"自查"环节拦错误', cls: 't-out' },
+        { text: '✓ 复杂任务的正确姿势', cls: 't-ok' }
+      ],
+      note: '一次塞不下的任务就拆——这也是 ReAct（2022）和今天 Agent 循环的共同思想。'
+    }
+  }
+];
+
+var skillsList = document.getElementById('skills-list');
+var skillsTerm = document.getElementById('skills-term');
+skills.forEach(function(t, i){
+  var b = el('button', 'skill-btn' + (i === 0 ? ' active' : ''));
+  b.type = 'button';
+  b.setAttribute('role', 'tab');
+  b.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
+  b.appendChild(el('span', 'num', String(i + 1)));
+  var wrap = el('span');
+  wrap.appendChild(el('span', 't-name', t.name));
+  wrap.appendChild(document.createElement('br'));
+  wrap.appendChild(el('span', 't-desc', t.desc));
+  b.appendChild(wrap);
+  b.addEventListener('click', function(){
+    skillsList.querySelectorAll('.skill-btn').forEach(function(x){
+      x.classList.remove('active'); x.setAttribute('aria-selected', 'false');
+    });
+    b.classList.add('active'); b.setAttribute('aria-selected', 'true');
+    renderTerm(skillsTerm, t.spec);
+  });
+  skillsList.appendChild(b);
+});
+renderTerm(skillsTerm, skills[0].spec);
+
+/* ---------- copy buttons ---------- */
+document.querySelectorAll('.copy-btn').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    var text = btn.dataset.copy || '';
+    var done = function(){
+      var old = btn.textContent;
+      btn.textContent = '已复制 ✓';
+      setTimeout(function(){ btn.textContent = old; }, 1600);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done, function(){ fallbackCopy(text); done(); });
+    } else { fallbackCopy(text); done(); }
+  });
+});
+function fallbackCopy(text){
+  var ta = document.createElement('textarea');
+  ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); } catch(e){}
+  ta.remove();
+}
+
+/* ---------- reveal on scroll ---------- */
+var revealEls = document.querySelectorAll('.reveal');
+if ('IntersectionObserver' in window && !reduceMotion){
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if (en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); }
+    });
+  }, { threshold: 0.12 });
+  revealEls.forEach(function(n){ io.observe(n); });
+} else {
+  revealEls.forEach(function(n){ n.classList.add('in'); });
+}
+</script>
+</body>
+</html>

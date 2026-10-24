@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#FBFAF7">
+<title>飞书 CLI 是什么？ | 给想让 AI 动手干活的人</title>
+<meta name="description" content="一页讲清楚飞书 CLI（lark-cli）：飞书官方开源的命令行工具，让你和 AI Agent 在终端里直接读写飞书。安装、认证、命令示例与常见问题。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2317151F'/%3E%3Ctext x='16' y='22' font-size='15' font-family='monospace' fill='%2300BFA6' text-anchor='middle'%3E%3E_%3C/text%3E%3C/svg%3E">
+<style>
+  :root{
+    --cream:#FBFAF7;
+    --ink:#17151F;
+    --paper:#FFFFFF;
+    --yellow:#FFD166;
+    --teal:#00BFA6;
+    --blue:#3370FF;
+    --red:#F54A45;
+    --muted:rgba(23,21,31,.64);
+    --faint:rgba(23,21,31,.45);
+    --line:rgba(23,21,31,.14);
+    --line-strong:rgba(23,21,31,.85);
+    --cream-muted:rgba(251,250,247,.68);
+    --cream-faint:rgba(251,250,247,.42);
+    --cream-line:rgba(251,250,247,.16);
+    --mono:"SF Mono",ui-monospace,"JetBrains Mono",Menlo,Consolas,"Liberation Mono",monospace;
+    --shadow-card:0 1px 2px rgba(23,21,31,.05),0 10px 28px -14px rgba(23,21,31,.18);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    *,*::before,*::after{animation:none!important;transition:none!important}
+  }
+  body{
+    font-family:"PingFang SC","Microsoft YaHei","Inter Variable",system-ui,sans-serif;
+    background:var(--cream);
+    color:var(--ink);
+    font-size:16px;
+    line-height:1.75;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+  }
+  ::selection{background:var(--yellow);color:var(--ink)}
+  a{color:inherit}
+  .container{max-width:1128px;margin:0 auto;padding:0 24px}
+
+  /* ---------- reveal on scroll ---------- */
+  html.js .reveal{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s ease}
+  html.js .reveal.in{opacity:1;transform:none}
+  @media (prefers-reduced-motion:reduce){html.js .reveal{opacity:1;transform:none}}
+  @media print{html.js .reveal{opacity:1!important;transform:none!important}}
+
+  /* ---------- nav ---------- */
+  .nav{
+    position:sticky;top:0;z-index:50;
+    background:rgba(251,250,247,.92);
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  .nav-inner{display:flex;align-items:center;justify-content:space-between;height:60px;gap:16px}
+  .brand{display:flex;align-items:center;gap:10px;text-decoration:none;font-weight:800;font-size:15px;letter-spacing:.01em}
+  .brand-mark{
+    width:26px;height:26px;background:var(--ink);color:var(--teal);
+    font-family:var(--mono);font-size:12px;font-weight:700;line-height:26px;text-align:center;
+    border-radius:5px;flex:none;
+  }
+  .nav-links{display:flex;align-items:center;gap:22px;list-style:none}
+  .nav-links a{text-decoration:none;font-size:13.5px;font-weight:500;color:var(--muted);transition:color .15s}
+  .nav-links a:hover{color:var(--ink)}
+  .nav-links a.nav-cta{
+    color:var(--ink);font-weight:700;border:1.5px solid var(--line-strong);
+    padding:6px 14px;border-radius:0;
+  }
+  .nav-links a.nav-cta:hover{background:var(--ink);color:var(--cream)}
+  @media (max-width:720px){.nav-links li.hide-sm{display:none}}
+
+  /* ---------- buttons ---------- */
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:13px 26px;border-radius:0;border:1.5px solid transparent;
+    font-family:inherit;font-size:15px;font-weight:700;letter-spacing:.02em;
+    text-decoration:none;cursor:pointer;transition:transform .15s ease,background .15s ease,color .15s ease,box-shadow .15s ease;
+  }
+  .btn:active{transform:translateY(1px)}
+  .btn-primary{background:var(--teal);color:var(--ink)}
+  .btn-primary:hover{box-shadow:0 6px 0 -2px rgba(23,21,31,.9)}
+  .btn-ghost{border-color:var(--line-strong);color:var(--ink);background:transparent}
+  .btn-ghost:hover{background:var(--ink);color:var(--cream)}
+  .btn-sm{padding:9px 18px;font-size:13.5px}
+
+  /* ---------- eyebrow / headings ---------- */
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:9px;
+    font-size:12.5px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;
+  }
+  .eyebrow::before{content:"";width:9px;height:9px;background:currentColor;flex:none}
+  h1{font-size:clamp(46px,7.4vw,80px);line-height:1.06;font-weight:800;letter-spacing:-.015em}
+  h2{font-size:clamp(30px,4.4vw,44px);line-height:1.18;font-weight:800;letter-spacing:-.01em}
+  h3{font-size:20px;font-weight:800;line-height:1.4}
+  .lead{font-size:clamp(17px,2vw,19.5px);line-height:1.8}
+
+  /* ---------- hero ---------- */
+  .hero{padding:76px 0 88px}
+  .hero-grid{display:grid;grid-template-columns:1.02fr .98fr;gap:56px;align-items:center}
+  @media (max-width:980px){.hero-grid{grid-template-columns:1fr;gap:44px}}
+  .hero .eyebrow{color:var(--ink);margin-bottom:26px}
+  .hero h1{margin-bottom:24px}
+  .hero .lead{color:var(--ink);margin-bottom:16px;max-width:34em}
+  .hero .example{color:var(--muted);font-size:15.5px;max-width:36em;margin-bottom:32px}
+  .hero .example b{color:var(--ink);font-weight:700}
+  .hero-actions{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:30px}
+  .hero-meta{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{
+    font-size:12px;font-weight:600;color:var(--muted);
+    border:1px solid var(--line);padding:5px 11px;border-radius:999px;
+    display:inline-flex;align-items:center;gap:6px;background:var(--paper);
+  }
+  .chip .dot{width:6px;height:6px;border-radius:50%;background:var(--teal)}
+
+  /* ---------- terminal ---------- */
+  .terminal{
+    background:var(--ink);border-radius:14px;overflow:hidden;
+    box-shadow:0 2px 4px rgba(23,21,31,.12),0 30px 60px -22px rgba(23,21,31,.45);
+    border:1px solid rgba(23,21,31,.9);
+  }
+  .terminal-bar{
+    display:flex;align-items:center;gap:7px;
+    padding:13px 16px;border-bottom:1px solid var(--cream-line);
+  }
+  .terminal-bar i{width:11px;height:11px;border-radius:50%;background:rgba(251,250,247,.22)}
+  .terminal-bar i:first-child{background:#FF5F57}
+  .terminal-bar i:nth-child(2){background:#FEBC2E}
+  .terminal-bar i:nth-child(3){background:#28C840}
+  .terminal-bar .terminal-title{
+    margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--cream-faint);letter-spacing:.08em;
+  }
+  .terminal-steps{display:flex;gap:6px;padding:12px 14px 0;flex-wrap:wrap}
+  .terminal-steps button{
+    font-family:inherit;font-size:12.5px;font-weight:700;letter-spacing:.04em;
+    background:transparent;color:var(--cream-faint);
+    border:1px solid var(--cream-line);border-radius:999px;
+    padding:5px 13px;cursor:pointer;transition:all .18s;
+  }
+  .terminal-steps button:hover{color:var(--cream);border-color:var(--cream-faint)}
+  .terminal-steps button.active{background:var(--yellow);border-color:var(--yellow);color:var(--ink)}
+  .terminal-body{padding:18px 20px 22px;min-height:238px;font-family:var(--mono);font-size:13.5px;line-height:1.9}
+  .t-line{white-space:pre-wrap;word-break:break-all}
+  .t-prompt{color:var(--teal);font-weight:700;margin-right:9px}
+  .t-cmd{color:var(--cream)}
+  .t-out{color:var(--cream-faint)}
+  .t-ok{color:#3EE8C6}
+  .t-dim{color:rgba(251,250,247,.35)}
+  .t-note{color:var(--cream-faint);font-family:"PingFang SC","Microsoft YaHei",sans-serif;font-size:12px;margin-top:12px;padding-top:10px;border-top:1px dashed var(--cream-line)}
+  .cursor{display:inline-block;width:8px;height:15px;background:var(--yellow);vertical-align:-2px;animation:blink 1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+  @media (prefers-reduced-motion:reduce){.cursor{animation:none}}
+
+  /* ---------- sections ---------- */
+  .section{padding:96px 0}
+  .section-head{max-width:640px;margin-bottom:52px}
+  .section-head .eyebrow{margin-bottom:20px}
+  .section-head p{color:var(--muted);margin-top:16px;font-size:16.5px}
+
+  /* yellow */
+  .section-yellow{background:var(--yellow)}
+  .section-yellow .section-head p{color:rgba(23,21,31,.72)}
+
+  /* dark */
+  .section-dark{background:var(--ink);color:var(--cream)}
+  .section-dark .eyebrow{color:var(--teal)}
+
+  /* ---------- task switcher ---------- */
+  .task-layout{display:grid;grid-template-columns:.9fr 1.1fr;gap:36px;align-items:start}
+  @media (max-width:900px){.task-layout{grid-template-columns:1fr}}
+  .task-list{display:flex;flex-direction:column;gap:10px}
+  .task-btn{
+    display:flex;align-items:center;gap:14px;text-align:left;width:100%;
+    background:var(--paper);border:1.5px solid transparent;border-radius:10px;
+    padding:16px 18px;font-family:inherit;cursor:pointer;
+    transition:transform .16s ease,box-shadow .16s ease,border-color .16s;
+    box-shadow:var(--shadow-card);
+  }
+  .task-btn:hover{transform:translateY(-2px)}
+  .task-btn .num{
+    font-family:var(--mono);font-size:12px;font-weight:700;color:var(--muted);
+    width:30px;height:30px;border:1.5px solid var(--line);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;flex:none;transition:all .16s;
+  }
+  .task-btn .t-name{font-size:15.5px;font-weight:700}
+  .task-btn .t-desc{font-size:13px;color:var(--muted);margin-top:2px}
+  .task-btn.active{border-color:var(--ink);transform:translateY(-2px)}
+  .task-btn.active .num{background:var(--ink);border-color:var(--ink);color:var(--yellow)}
+  .task-terminal{position:sticky;top:84px}
+  @media (max-width:900px){.task-terminal{position:static}}
+
+  .layers{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(23,21,31,.22);border:1.5px solid var(--ink);border-radius:12px;overflow:hidden;margin-top:56px}
+  @media (max-width:820px){.layers{grid-template-columns:1fr}}
+  .layer{background:var(--yellow);padding:26px 26px 24px}
+  .layer .lv{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.14em;color:rgba(23,21,31,.55);display:block;margin-bottom:12px}
+  .layer h3{font-size:17px;margin-bottom:8px}
+  .layer p{font-size:13.5px;color:rgba(23,21,31,.72);line-height:1.7}
+  .layer code{font-family:var(--mono);font-size:12.5px;background:rgba(23,21,31,.1);padding:2px 6px;border-radius:4px}
+
+  /* ---------- scenarios ---------- */
+  .cards-3{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+  @media (max-width:900px){.cards-3{grid-template-columns:1fr}}
+  .card{
+    background:var(--paper);border:1px solid var(--line);border-radius:12px;
+    padding:30px 28px 26px;box-shadow:var(--shadow-card);
+    display:flex;flex-direction:column;
+  }
+  .card .tag-row{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:20px}
+  .tag{
+    font-size:10.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+    padding:4px 9px;border:1px solid var(--line);border-radius:4px;color:var(--muted);
+  }
+  .tag.tag-accent{background:var(--ink);color:var(--yellow);border-color:var(--ink)}
+  .card h3{margin-bottom:12px}
+  .card p{font-size:14.5px;color:var(--muted);flex:1}
+  .card .seed{
+    margin-top:20px;padding-top:16px;border-top:1px dashed var(--line);
+    font-family:var(--mono);font-size:12px;color:var(--faint);word-break:break-all;
+  }
+  .card .seed b{color:var(--ink);font-weight:700}
+  .cards-note{margin-top:30px;font-size:13px;color:var(--faint);display:flex;align-items:center;gap:8px}
+  .cards-note::before{content:"※";color:var(--muted)}
+
+  /* ---------- statement (dark) ---------- */
+  .statement{max-width:820px}
+  .statement h2{margin-bottom:28px}
+  .statement .quote{
+    font-size:clamp(17px,2vw,19px);line-height:1.85;color:var(--cream-muted);
+    border-left:3px solid var(--teal);padding-left:22px;margin-bottom:52px;max-width:36em;
+  }
+  .statement .quote b{color:var(--cream)}
+  .pillars{display:grid;grid-template-columns:repeat(3,1fr);gap:34px}
+  @media (max-width:820px){.pillars{grid-template-columns:1fr}}
+  .pillar .p-no{font-family:var(--mono);font-size:13px;color:var(--teal);font-weight:700;letter-spacing:.12em;display:block;margin-bottom:14px}
+  .pillar h3{color:var(--cream);margin-bottom:10px;font-size:17.5px}
+  .pillar p{font-size:14.5px;color:var(--cream-muted);line-height:1.8}
+  .pillar code{font-family:var(--mono);font-size:12.5px;background:rgba(251,250,247,.12);padding:2px 6px;border-radius:4px;color:var(--cream)}
+
+  /* ---------- facts (deep dive) ---------- */
+  .facts{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  @media (max-width:820px){.facts{grid-template-columns:1fr}}
+  .fact{background:var(--paper);padding:26px 26px 22px}
+  .fact .f-k{font-size:12px;font-weight:800;letter-spacing:.14em;color:var(--faint);text-transform:uppercase;display:block;margin-bottom:10px}
+  .fact .f-v{font-size:15.5px;font-weight:600;line-height:1.65}
+  .fact .f-v small{display:block;font-weight:400;font-size:13px;color:var(--muted);margin-top:4px}
+
+  .deep-block{margin-top:76px}
+  .deep-block>h3{margin-bottom:26px;font-size:clamp(21px,2.6vw,25px)}
+  .setup-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+  @media (max-width:820px){.setup-grid{grid-template-columns:1fr}}
+  .setup-card{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:28px;box-shadow:var(--shadow-card)}
+  .setup-card .s-step{display:inline-block;font-family:var(--mono);font-size:12px;font-weight:700;background:var(--ink);color:var(--yellow);padding:4px 10px;border-radius:4px;margin-bottom:16px}
+  .setup-card h4{font-size:16.5px;font-weight:800;margin-bottom:8px}
+  .setup-card p{font-size:14px;color:var(--muted);margin-bottom:14px}
+  .cmdline{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    background:var(--ink);border-radius:8px;padding:12px 14px;
+    font-family:var(--mono);font-size:12.5px;color:var(--cream);word-break:break-all;
+  }
+  .cmdline .t-prompt{flex:none}
+  .copy-btn{
+    flex:none;font-family:inherit;font-size:11px;font-weight:700;letter-spacing:.08em;
+    background:transparent;color:var(--cream-faint);border:1px solid var(--cream-line);
+    border-radius:4px;padding:4px 9px;cursor:pointer;transition:all .15s;
+  }
+  .copy-btn:hover{color:var(--yellow);border-color:var(--yellow)}
+  .setup-note{margin-top:22px;font-size:13.5px;color:var(--muted);background:var(--paper);border:1px dashed var(--line);border-radius:10px;padding:16px 20px}
+  .setup-note b{color:var(--ink)}
+
+  .safety{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:14px 28px}
+  @media (max-width:820px){.safety{grid-template-columns:1fr}}
+  .safety li{
+    display:flex;gap:12px;font-size:14.5px;color:var(--muted);line-height:1.7;
+    padding:14px 0;border-bottom:1px solid var(--line);
+  }
+  .safety li b{color:var(--ink)}
+  .safety li::before{content:"✓";color:var(--teal);font-weight:800;flex:none}
+  .safety-warn{
+    margin-top:26px;padding:18px 22px;border-radius:10px;
+    background:rgba(245,74,69,.07);border:1px solid rgba(245,74,69,.3);
+    font-size:14px;color:var(--muted);
+  }
+  .safety-warn b{color:var(--red)}
+
+  /* ---------- FAQ ---------- */
+  .faq-list{max-width:780px}
+  .faq-item{background:var(--paper);border:1.5px solid var(--ink);border-radius:10px;margin-bottom:14px;overflow:hidden;box-shadow:var(--shadow-card)}
+  .faq-item summary{
+    list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:18px;
+    padding:20px 24px;font-weight:700;font-size:16px;
+  }
+  .faq-item summary::-webkit-details-marker{display:none}
+  .faq-item summary .plus{
+    flex:none;width:26px;height:26px;border:1.5px solid var(--ink);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:400;font-size:16px;line-height:1;transition:transform .2s ease,background .2s,color .2s;
+  }
+  .faq-item[open] summary .plus{background:var(--ink);color:var(--yellow);transform:rotate(45deg)}
+  .faq-item .faq-body{padding:0 24px 22px;font-size:14.5px;color:var(--muted);line-height:1.85}
+  .faq-item .faq-body b{color:var(--ink)}
+  .faq-item .faq-body code{font-family:var(--mono);font-size:12.5px;background:rgba(23,21,31,.07);padding:2px 6px;border-radius:4px;color:var(--ink)}
+
+  /* ---------- audience ---------- */
+  .aud-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+  @media (max-width:1000px){.aud-grid{grid-template-columns:1fr 1fr}}
+  @media (max-width:640px){.aud-grid{grid-template-columns:1fr}}
+  .aud-card{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:26px 24px;box-shadow:var(--shadow-card);display:flex;flex-direction:column}
+  .aud-card .a-who{font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin-bottom:12px}
+  .aud-card h3{font-size:16.5px;margin-bottom:10px}
+  .aud-card p{font-size:13.5px;color:var(--muted);flex:1;line-height:1.75}
+  .aud-card .start{
+    margin-top:16px;font-family:var(--mono);font-size:11.5px;color:var(--ink);
+    background:var(--yellow);padding:7px 11px;border-radius:6px;word-break:break-all;
+  }
+
+  /* ---------- sources ---------- */
+  .sources-card{background:var(--ink);color:var(--cream);border-radius:16px;padding:52px 54px;max-width:860px}
+  @media (max-width:720px){.sources-card{padding:36px 26px}}
+  .sources-card .eyebrow{color:var(--yellow);margin-bottom:28px}
+  .source-item{display:flex;gap:18px;padding:16px 0;border-bottom:1px solid var(--cream-line);text-decoration:none;transition:padding-left .18s}
+  .source-item:hover{padding-left:8px}
+  .source-item:last-of-type{border-bottom:none}
+  .source-item .s-no{font-family:var(--mono);font-size:12.5px;color:var(--teal);font-weight:700;flex:none;padding-top:2px}
+  .source-item .s-t{font-weight:700;font-size:15.5px;color:var(--cream)}
+  .source-item .s-d{font-size:13px;color:var(--cream-faint);margin-top:3px}
+  .source-item .s-arrow{margin-left:auto;color:var(--cream-faint);flex:none;padding-top:2px}
+  .sources-note{margin-top:26px;font-size:12.5px;color:var(--cream-faint)}
+
+  /* ---------- CTA ---------- */
+  .section-cta{background:var(--teal)}
+  .cta-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:48px;align-items:center}
+  @media (max-width:820px){.cta-grid{grid-template-columns:1fr}}
+  .section-cta .eyebrow{color:rgba(23,21,31,.6);margin-bottom:22px}
+  .section-cta h2{margin-bottom:18px}
+  .section-cta p{color:rgba(23,21,31,.78);max-width:30em;margin-bottom:30px}
+  .cta-cmd{
+    display:flex;align-items:center;gap:12px;background:var(--ink);border-radius:10px;
+    padding:16px 18px;font-family:var(--mono);font-size:14px;color:var(--cream);
+    max-width:480px;box-shadow:0 14px 30px -12px rgba(23,21,31,.5);
+  }
+  .cta-cmd .copy-btn{color:var(--cream-muted);border-color:var(--cream-line)}
+  .cta-cmd .copy-btn:hover{color:var(--yellow);border-color:var(--yellow)}
+  .cta-art{display:flex;align-items:center;justify-content:center;gap:22px;font-family:var(--mono);font-weight:700}
+  .cta-art .q,.cta-art .v{font-size:clamp(56px,7vw,88px);line-height:1}
+  .cta-art .q{color:rgba(23,21,31,.32)}
+  .cta-art .v{color:var(--ink)}
+  .cta-art .arrow{font-size:34px;color:rgba(23,21,31,.55)}
+  @media (max-width:820px){.cta-art{display:none}}
+
+  /* ---------- footer ---------- */
+  footer{background:var(--ink);color:var(--cream);padding:64px 0 36px}
+  .foot-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:44px;margin-bottom:52px}
+  @media (max-width:820px){.foot-grid{grid-template-columns:1fr}}
+  .foot-brand .brand{color:var(--cream);margin-bottom:16px}
+  .foot-brand .brand-mark{background:var(--teal);color:var(--ink)}
+  .foot-brand p{font-size:13.5px;color:var(--cream-faint);max-width:26em}
+  .foot-col h4{font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--cream-faint);margin-bottom:18px}
+  .foot-col ul{list-style:none}
+  .foot-col li{margin-bottom:11px}
+  .foot-col a{font-size:14px;color:var(--cream-muted);text-decoration:none;transition:color .15s}
+  .foot-col a:hover{color:var(--cream)}
+  .foot-bottom{border-top:1px solid var(--cream-line);padding-top:26px;font-size:12.5px;color:var(--cream-faint);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+  /* back to top of content anchors */
+  [id]{scroll-margin-top:76px}
+</style>
+</head>
+<body>
+
+<!-- ================= NAV ================= -->
+<nav class="nav">
+  <div class="container nav-inner">
+    <a class="brand" href="#top"><span class="brand-mark">&gt;_</span>飞书 CLI 是什么？</a>
+    <ul class="nav-links">
+      <li class="hide-sm"><a href="#tasks">体验任务</a></li>
+      <li class="hide-sm"><a href="#what">能力总览</a></li>
+      <li class="hide-sm"><a href="#start">快速开始</a></li>
+      <li class="hide-sm"><a href="#faq">常见问题</a></li>
+      <li><a class="nav-cta" href="https://github.com/larksuite/cli" target="_blank" rel="noopener">GitHub ↗</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- ================= HERO ================= -->
+<header class="hero" id="top">
+  <div class="container hero-grid">
+    <div>
+      <p class="eyebrow">给想让 AI 动手干活的人的实用指南</p>
+      <h1>飞书 CLI<br>是什么？</h1>
+      <p class="lead">飞书 CLI（命令行里的 <strong>lark-cli</strong>）是飞书官方开源的终端客户端：一行命令读消息、写文档、查日历、建多维表格——它也是 AI Agent 操作飞书的那双手。</p>
+      <p class="example">比如，在终端输入一条命令，把会议纪要直接写成一篇飞书文档；或者对 Claude Code 说一句<b>"把本周评审意见整理成周报，发到项目大群"</b>，它通过 CLI 在飞书里把事办完——你只管看结果。</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#start">三十秒上手 ↓</a>
+        <a class="btn btn-ghost" href="https://github.com/larksuite/cli" target="_blank" rel="noopener">GitHub 仓库 ↗</a>
+      </div>
+      <div class="hero-meta">
+        <span class="chip"><i class="dot"></i>larksuite 官方 · MIT 开源</span>
+        <span class="chip"><i class="dot"></i>npm 周下载约 7.7 万</span>
+        <span class="chip"><i class="dot"></i>GitHub 10k+ Star</span>
+        <span class="chip"><i class="dot"></i>macOS / Windows / Linux</span>
+      </div>
+    </div>
+
+    <div class="terminal" aria-label="飞书 CLI 命令演示">
+      <div class="terminal-bar"><i></i><i></i><i></i><span class="terminal-title">terminal — zsh</span></div>
+      <div class="terminal-steps" role="tablist" aria-label="演示步骤">
+        <button type="button" role="tab" data-step="0" aria-selected="true">① 配置</button>
+        <button type="button" role="tab" data-step="1" aria-selected="false">② 授权</button>
+        <button type="button" role="tab" data-step="2" aria-selected="false">③ 干活</button>
+      </div>
+      <div class="terminal-body" id="hero-term" aria-live="polite"></div>
+    </div>
+  </div>
+</header>
+
+<!-- ================= TASKS (YELLOW) ================= -->
+<section class="section section-yellow" id="tasks">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">体验一个任务</p>
+      <h2>挑一件事，看命令长什么样</h2>
+      <p>这些写法都来自官方文档与 README，思路可以在你自己的终端里原样运行。点左侧任务，右侧终端会跟着切换。</p>
+    </div>
+
+    <div class="task-layout">
+      <div class="task-list" id="task-list" role="tablist" aria-label="任务列表"></div>
+      <div class="task-terminal">
+        <div class="terminal">
+          <div class="terminal-bar"><i></i><i></i><i></i><span class="terminal-title">lark-cli — 演示</span></div>
+          <div class="terminal-body" id="task-term" aria-live="polite"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="layers reveal">
+      <div class="layer">
+        <span class="lv">LAYER 1 · 最顺手</span>
+        <h3>快捷命令 <code>+</code></h3>
+        <p>高频动作的一行式封装，参数少、默认值聪明，比如 <code>im +messages-send</code>、<code>docs +create</code>、<code>calendar +agenda</code>。</p>
+      </div>
+      <div class="layer">
+        <span class="lv">LAYER 2 · 最全面</span>
+        <h3>域命令</h3>
+        <p>由开放平台 OpenAPI 元数据生成，覆盖 18 个业务域的全部接口，参数即文档，配合 <code>--help</code> 就能查。</p>
+      </div>
+      <div class="layer">
+        <span class="lv">LAYER 3 · 最彻底</span>
+        <h3>通用调用 <code>lark-cli api</code></h3>
+        <p>任何开放平台接口都能直调：方法 + 路径 + 参数，路径与官方 OpenAPI 完全一致，2500+ 接口尽收其中。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SCENARIOS (WHITE) ================= -->
+<section class="section" id="scenarios">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">大家正在用 CLI 做什么</p>
+      <h2>把重复劳动交给命令</h2>
+      <p>三个最常见的自动化场景。它们是社区里的典型玩法，具体效果取决于你的权限范围与配置。</p>
+    </div>
+    <div class="cards-3">
+      <article class="card reveal">
+        <div class="tag-row"><span class="tag tag-accent">消息</span><span class="tag">摘要</span><span class="tag">定时</span></div>
+        <h3>群消息 → 每日简报</h3>
+        <p>每天早上让 Agent 读一遍项目群，把阻塞项、结论和待办整理成一份摘要，发回给你或写进文档。信息不再靠爬楼。</p>
+        <div class="seed">命令雏形 → <b>im</b> 读消息 + <b>docs</b> 写简报 + cron 定时</div>
+      </article>
+      <article class="card reveal">
+        <div class="tag-row"><span class="tag tag-accent">文档</span><span class="tag">协作</span></div>
+        <h3>周报自动写进飞书</h3>
+        <p>从任务列表、多维表格里取数，让 AI 起草周报，用一条命令生成文档，再把链接丢回大群——周五下午省出一杯咖啡的时间。</p>
+        <div class="seed">命令雏形 → <b>docs +create</b> --doc-format markdown</div>
+      </article>
+      <article class="card reveal">
+        <div class="tag-row"><span class="tag tag-accent">日历</span><span class="tag">会议</span></div>
+        <h3>面试排期不拉扯</h3>
+        <p>查面试官本周空档、建视频会议、发日程邀请，一条流水线跑完。HR 不用再在三个日历之间来回对时间。</p>
+        <div class="seed">命令雏形 → <b>calendar +agenda</b> + <b>vc</b> 建会 + 发邀请</div>
+      </article>
+    </div>
+    <p class="cards-note reveal">以上为社区常见玩法，本站未复测 · 动手前建议先加 <b style="font-family:var(--mono)">--dry-run</b> 预览会发生什么。</p>
+  </div>
+</section>
+
+<!-- ================= STATEMENT (DARK) ================= -->
+<section class="section section-dark" id="why">
+  <div class="container">
+    <div class="statement reveal">
+      <p class="eyebrow">为什么是命令行</p>
+      <h2>以前是你操作飞书，<br>现在是 AI 操作飞书，你只管拍板。</h2>
+      <p class="quote">官方文档的比喻很直白：AI Agent 看不到你的日历，读不了你的群聊，打不开你的文档——<b>飞书 CLI 就是给 Agent 的那双手</b>。它把两百多个飞书操作封装成稳定的文本接口：输入是命令，输出是结构化 JSON，任何能开终端的 AI 都能用。</p>
+      <div class="pillars">
+        <div class="pillar reveal">
+          <span class="p-no">01</span>
+          <h3>为 Agent 而生</h3>
+          <p>26 个官方 Agent Skills 开箱即用，Claude Code、Cursor、Codex、TRAE 装上就能用；命令本身做过"AI 友好"实测调优。</p>
+        </div>
+        <div class="pillar reveal">
+          <span class="p-no">02</span>
+          <h3>机器可判断</h3>
+          <p>JSON 输出契约：成功与否看 <code>ok == true</code>，错误信封走 stderr，Agent 不用猜测界面截图里发生了什么。</p>
+        </div>
+        <div class="pillar reveal">
+          <span class="p-no">03</span>
+          <h3>先看再执行</h3>
+          <p><code>--dry-run</code> 预览、<code>schema</code> 自省、分页与限速参数，把危险操作挡在真正发生之前。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= DEEP DIVE (WHITE) ================= -->
+<section class="section" id="what">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">依据与事实</p>
+      <h2>它到底是什么</h2>
+    </div>
+    <div class="facts reveal">
+      <div class="fact"><span class="f-k">出身</span><div class="f-v">larksuite 团队官方维护<small>2026 年开源，MIT 协议，更新非常勤（npm 已发布 100+ 个版本）</small></div></div>
+      <div class="fact"><span class="f-k">形态</span><div class="f-v">Go 编写的单文件二进制<small>npm 分发（<b style="font-family:var(--mono)">@larksuite/cli</b>），也可以克隆源码自己构建</small></div></div>
+      <div class="fact"><span class="f-k">覆盖</span><div class="f-v">18 大业务域 · 200+ 命令<small>另有 2500+ 个开放平台接口可通用调用</small></div></div>
+      <div class="fact"><span class="f-k">双端</span><div class="f-v">中文飞书 & 国际版 Lark<small>同一套命令，两个版本都能登录使用</small></div></div>
+      <div class="fact"><span class="f-k">双身份</span><div class="f-v">--as user / --as bot<small>以"你"的身份读写个人资源，或以"应用"身份干公共的活</small></div></div>
+      <div class="fact"><span class="f-k">配套</span><div class="f-v">26 个 Agent Skills<small>消息、文档、表格、日历、邮箱、审批……另有企业级扩展支持</small></div></div>
+    </div>
+
+    <div class="deep-block reveal" id="start">
+      <h3>你需要提供什么</h3>
+      <div class="setup-grid">
+        <div class="setup-card">
+          <span class="s-step">STEP 1 · 10 秒</span>
+          <h4>装上它</h4>
+          <p>一条 npm 命令，装完自动配好补全。需要 Node.js 18+ 环境；没有 Node 也可以克隆 Go 源码构建。</p>
+          <div class="cmdline"><span><span class="t-prompt">❯</span><span id="cmd-install">npx @larksuite/cli@latest install</span></span><button class="copy-btn" data-copy="npx @larksuite/cli@latest install">复制</button></div>
+        </div>
+        <div class="setup-card">
+          <span class="s-step">STEP 2 · 约 5 分钟</span>
+          <h4>配一次，用很久</h4>
+          <p>首次使用初始化配置并授权。凭证会被放进操作系统原生密钥链，之后所有命令直接可用。</p>
+          <div class="cmdline"><span><span class="t-prompt">❯</span>lark-cli config init</span><button class="copy-btn" data-copy="lark-cli config init">复制</button></div>
+          <div class="cmdline" style="margin-top:10px"><span><span class="t-prompt">❯</span>lark-cli auth login --recommend</span><button class="copy-btn" data-copy="lark-cli auth login --recommend">复制</button></div>
+        </div>
+      </div>
+      <p class="setup-note"><b>不想授权个人数据？</b>也可以直接用：仍能发消息、建文档，只是读不了你的日历和私信；等 AI 真需要时会自动发起授权提示，你在手机上点一下确认即可。应用与权限始终遵循企业开放平台的统一管控规则。</p>
+    </div>
+
+    <div class="deep-block reveal">
+      <h3>安全边界在哪里</h3>
+      <ul class="safety">
+        <li><span><b>凭证不落明文</b>——App Secret 与令牌保存在 macOS Keychain / 凭据管理器等系统密钥链里。</span></li>
+        <li><span><b>令牌默认 DPoP 绑定</b>——即使 token 泄露也难以被冒用，可用 <b style="font-family:var(--mono)">config set dpop</b> 调整级别。</span></li>
+        <li><span><b>输入防注入、输出净化</b>——终端内容经过清洗，降低提示词注入被带进 Agent 上下文的风险。</span></li>
+        <li><span><b>最小授权</b>——按业务域授权（如 <b style="font-family:var(--mono)">auth login --domain docs</b>），用不到的权限不开。</span></li>
+        <li><span><b>企业管控不打折</b>——CLI 只是一键创建应用，权限审批、审计仍走企业开放平台的原有流程。</span></li>
+        <li><span><b>可预览可撤销</b>——<b style="font-family:var(--mono)">--dry-run</b> 先看后跑，<b style="font-family:var(--mono)">auth logout</b> 随时下线本机登录态。</span></li>
+      </ul>
+      <p class="safety-warn"><b>官方的诚实提醒：</b>工具本身做了不少防护，但模型幻觉与提示词注入的风险仍然存在。官方建议把对接的机器人当作<b>私人助手</b>使用，不要拉进群聊；给 AI 的权限够用就好。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FAQ (YELLOW) ================= -->
+<section class="section section-yellow" id="faq">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">接下来继续了解</p>
+      <h2>常见问题</h2>
+    </div>
+    <div class="faq-list">
+      <details class="faq-item reveal">
+        <summary>飞书 CLI 免费吗？<span class="plus">+</span></summary>
+        <div class="faq-body">工具本身 <b>MIT 开源、完全免费</b>。使用需要一个飞书"企业自建应用"，在开放平台创建应用不收费，<code>lark-cli config init</code> 还能一键帮你创建。API 调用消耗的是应用自身的频率配额，个人与中小团队场景完全够用。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>需要企业管理员审批吗？<span class="plus">+</span></summary>
+        <div class="faq-body">取决于企业设置：创建应用通常人人可以，但开通敏感权限（读私聊、通讯录等）时，部分企业会要求管理员审核。权限不足时 CLI 会在报错里直接给出 <code>console_url</code>，按提示去开发者后台补开即可。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>它和飞书机器人是什么关系？<span class="plus">+</span></summary>
+        <div class="faq-body">机器人是飞书里"会说话的应用"，CLI 是操作飞书的"手柄"，两者常常配合：<b>机器人收指令，CLI 办事情</b>。CLI 支持两种身份——<code>--as user</code> 以你本人的身份读写你的日历和文档，<code>--as bot</code> 以应用身份收发消息、操作应用自己的资源。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>它和 MCP 是什么关系？<span class="plus">+</span></summary>
+        <div class="faq-body">MCP 是让 AI 接工具的通用协议，飞书 CLI 则是官方做好的<b>"现成实现"</b>：鉴权、schema 自省、JSON 输出契约、Agent Skills 都已内置。官方在 OpenClaw 等平台上的飞书插件，底层也是基于这套 CLI 构建的。对个人用户来说，装上 CLI 基本等于跳过自建 MCP 服务的那一整套调试。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>我的账号安全吗？<span class="plus">+</span></summary>
+        <div class="faq-body">CLI 在<b>本机</b>运行：凭证进系统密钥链、令牌默认 DPoP 绑定、不经过第三方服务器。风险主要来自把过大的权限交给 AI——官方明确提醒警惕模型幻觉与提示词注入。建议按业务域最小授权、先 <code>--dry-run</code> 再执行，并优先作为私人助手使用。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>支持 Windows 和国际版 Lark 吗？<span class="plus">+</span></summary>
+        <div class="faq-body">支持。<b>macOS / Windows / Linux</b> 都有官方二进制，通过 npm 一行安装；中文飞书与国际版 Lark 都能登录使用。工具迭代很勤，截至本页整理时 npm 上已发布 100+ 个版本。</div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ================= AUDIENCE (WHITE) ================= -->
+<section class="section" id="who">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">它适合谁</p>
+      <h2>四类人，四个起点</h2>
+    </div>
+    <div class="aud-grid">
+      <div class="aud-card reveal">
+        <span class="a-who">For Developers</span>
+        <h3>开发者</h3>
+        <p>把 OpenAPI 写进脚本、CI 和内部工具，不用再手写鉴权和 token 管理，2500+ 接口即取即用。</p>
+        <div class="start">起点 → lark-cli help</div>
+      </div>
+      <div class="aud-card reveal">
+        <span class="a-who">For Ops</span>
+        <h3>行政 / 运营</h3>
+        <p>批量发通知、收集表催办、把 Excel 变成多维表格——交给 AI 一句话，终端里跑完。</p>
+        <div class="start">起点 → im +messages-send</div>
+      </div>
+      <div class="aud-card reveal">
+        <span class="a-who">For Leads</span>
+        <h3>团队负责人</h3>
+        <p>周报、站会纪要自动成文并发回群里，信息同步不再靠人催、靠人记。</p>
+        <div class="start">起点 → docs +create</div>
+      </div>
+      <div class="aud-card reveal">
+        <span class="a-who">For AI Players</span>
+        <h3>AI 玩家</h3>
+        <p>给 Claude Code、Cursor 装上飞书的双手，26 个官方 Skills 装完即用，让 AI 真正"进群干活"。</p>
+        <div class="start">起点 → npx skills add larksuite/cli</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SOURCES (WHITE + DARK CARD) ================= -->
+<section class="section" id="sources" style="padding-top:24px">
+  <div class="container">
+    <div class="sources-card reveal">
+      <p class="eyebrow">来源与延伸阅读</p>
+      <a class="source-item" href="https://github.com/larksuite/cli" target="_blank" rel="noopener">
+        <span class="s-no">01</span>
+        <span><span class="s-t">GitHub · larksuite/cli</span><br><span class="s-d">官方开源仓库，README.zh.md 有最全的命令速查</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="https://www.feishu.cn/feishu-cli" target="_blank" rel="noopener">
+        <span class="s-no">02</span>
+        <span><span class="s-t">feishu.cn/feishu-cli</span><br><span class="s-d">官方产品介绍页，含各 AI 工具的接入指引</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="https://open.feishu.cn/document/mcp_open_tools/feishu-cli-let-ai-actually-do-your-work-in-feishu" target="_blank" rel="noopener">
+        <span class="s-no">03</span>
+        <span><span class="s-t">开放平台文档 · Put your AI to work in Lark</span><br><span class="s-d">官方开发者文档：认证、profile、权限与安全说明</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="https://www.npmjs.com/package/@larksuite/cli" target="_blank" rel="noopener">
+        <span class="s-no">04</span>
+        <span><span class="s-t">npm · @larksuite/cli</span><br><span class="s-d">版本发布记录与安装分发信息</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <p class="sources-note">本页内容整理自以上官方公开资料，更新于 2026 年 10 月。命令细节与最新特性请以官方文档为准。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CTA (TEAL) ================= -->
+<section class="section section-cta">
+  <div class="container cta-grid">
+    <div class="reveal">
+      <p class="eyebrow">开始使用</p>
+      <h2>试着敲出第一条命令</h2>
+      <p>装好之后，把下面这行交给你的 AI 去跑——或者，你自己跑。</p>
+      <div class="cta-cmd">
+        <span style="color:var(--teal);font-weight:700">❯</span>
+        <span style="flex:1;word-break:break-all">npx @larksuite/cli@latest install</span>
+        <button class="copy-btn" data-copy="npx @larksuite/cli@latest install">复制</button>
+      </div>
+    </div>
+    <div class="cta-art" aria-hidden="true">
+      <span class="q">?</span><span class="arrow">→</span><span class="v">✓</span>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FOOTER ================= -->
+<footer>
+  <div class="container">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <a class="brand" href="#top"><span class="brand-mark">&gt;_</span>飞书 CLI 是什么？</a>
+        <p>一页讲清楚飞书的命令行工具：它是什么、能做什么、怎么开始，以及把权限交给 AI 之前你该知道的事。</p>
+      </div>
+      <div class="foot-col">
+        <h4>本页导航</h4>
+        <ul>
+          <li><a href="#tasks">体验一个任务</a></li>
+          <li><a href="#why">为什么是命令行</a></li>
+          <li><a href="#start">快速开始</a></li>
+          <li><a href="#faq">常见问题</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h4>本系列</h4>
+        <ul>
+          <li><a href="index.html">🏠 知识地图（主页）</a></li>
+          <li><a href="#top">什么是飞书 CLI？（本页）</a></li>
+          <li><a href="什么是DeepSeekHarness.html">什么是 DeepSeek Harness？</a></li>
+          <li><a href="什么是AgentHarness.html">什么是 Agent Harness？</a></li>
+          <li><a href="什么是Prompt工程.html">什么是 Prompt 工程？</a></li>
+          <li><a href="什么是RAG.html">什么是 RAG？</a></li>
+          <li><a href="什么是MCP.html">什么是 MCP？</a></li>
+          <li><a href="什么是幻觉.html">什么是幻觉？</a></li>
+          <li><a href="什么是思维链.html">什么是思维链？</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h4>官方资源</h4>
+        <ul>
+          <li><a href="https://github.com/larksuite/cli" target="_blank" rel="noopener">GitHub · larksuite/cli ↗</a></li>
+          <li><a href="https://www.feishu.cn/feishu-cli" target="_blank" rel="noopener">官方介绍页 ↗</a></li>
+          <li><a href="https://open.feishu.cn/document/mcp_open_tools/feishu-cli-let-ai-actually-do-your-work-in-feishu" target="_blank" rel="noopener">开放平台文档 ↗</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>本页为独立学习指南，与飞书及字节跳动官方没有关联 · 内容整理自官方公开文档</span>
+      <span>更新于 2026 年 10 月</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+document.documentElement.classList.add('js');
+
+/* ---------- helpers ---------- */
+var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function el(tag, cls, text){
+  var n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text !== undefined) n.textContent = text;
+  return n;
+}
+
+/* type a command string into a span, then call done */
+function typeCmd(span, text, done){
+  if (reduceMotion){ span.textContent = text; done && done(); return; }
+  var i = 0;
+  (function tick(){
+    span.textContent = text.slice(0, ++i);
+    if (i < text.length){ setTimeout(tick, text[i-1] === ' ' ? 34 : 18); }
+    else { done && done(); }
+  })();
+}
+
+function renderTerm(container, spec){
+  container.innerHTML = '';
+  var line = el('div','t-line');
+  var prompt = el('span','t-prompt','❯');
+  var cmd = el('span','t-cmd');
+  var cur = el('span','cursor');
+  line.appendChild(prompt); line.appendChild(cmd); line.appendChild(cur);
+  container.appendChild(line);
+  typeCmd(cmd, spec.cmd, function(){
+    cur.remove();
+    (spec.out || []).forEach(function(o){
+      container.appendChild(el('div','t-line ' + (o.cls || 't-out'), o.text));
+    });
+    if (spec.note) container.appendChild(el('div','t-note', spec.note));
+  });
+}
+
+/* ---------- hero terminal steps ---------- */
+var heroSteps = [
+  {
+    cmd: 'lark-cli config init',
+    out: [
+      { text: '✓ 已一键创建企业自建应用  cli_a6f2…', cls: 't-ok' },
+      { text: '✓ App Secret 已存入系统密钥链', cls: 't-ok' },
+      { text: '{ "ok": true }', cls: 't-dim' }
+    ],
+    note: '第 1 步 · 配置：不用去后台翻文档，交互式问答即可，全程约 1 分钟。'
+  },
+  {
+    cmd: 'lark-cli auth login --recommend',
+    out: [
+      { text: '→ 已拉起浏览器，确认后回到终端…', cls: 't-out' },
+      { text: '✓ 已授权 12 个常用权限（domain: im,docs,calendar…）', cls: 't-ok' },
+      { text: '✓ 身份 user · DPoP 令牌保护已启用', cls: 't-ok' }
+    ],
+    note: '第 2 步 · 授权：权限按业务域最小授予，手机上点一下确认就行。'
+  },
+  {
+    cmd: "lark-cli docs +create --doc-format markdown \\\n    --content $'<title>周报</title>\\n# 本周进展…'",
+    out: [
+      { text: '{', cls: 't-dim' },
+      { text: '  "ok": true,', cls: 't-ok' },
+      { text: '  "url": "https://xxx.feishu.cn/docx/WbKf…"', cls: 't-out' },
+      { text: '}', cls: 't-dim' }
+    ],
+    note: '第 3 步 · 干活：一条命令，文档已经在飞书里了。AI 也可以替你敲这条命令。'
+  }
+];
+
+var heroTerm = document.getElementById('hero-term');
+var heroBtns = document.querySelectorAll('.terminal-steps button');
+var heroTimer = null;
+
+function showHeroStep(i){
+  heroBtns.forEach(function(b, j){
+    b.classList.toggle('active', i === j);
+    b.setAttribute('aria-selected', i === j ? 'true' : 'false');
+  });
+  renderTerm(heroTerm, heroSteps[i]);
+}
+heroBtns.forEach(function(b){
+  b.addEventListener('click', function(){
+    heroTimer = true; /* user took over, stop auto-advance */
+    clearTimeout(showHeroStep._t);
+    showHeroStep(+b.dataset.step);
+  });
+});
+showHeroStep(0);
+/* auto-advance the demo gently; stops once the user takes over */
+(function autoAdvance(){
+  if (reduceMotion) return;
+  var idx = 0;
+  setInterval(function(){
+    if (heroTimer) return;
+    idx = (idx + 1) % heroSteps.length;
+    showHeroStep(idx);
+  }, 7000);
+})();
+
+/* ---------- task switcher ---------- */
+var tasks = [
+  {
+    name: '发一条消息', desc: 'im 域 · 快捷命令',
+    spec: {
+      cmd: 'lark-cli im +messages-send \\\n    --chat-id "oc_1a2b" \\\n    --text "周五 15:00 评审会，记得参加"',
+      out: [
+        { text: '{', cls: 't-dim' },
+        { text: '  "ok": true,', cls: 't-ok' },
+        { text: '  "message_id": "om_9f3e…"', cls: 't-out' },
+        { text: '}', cls: 't-dim' }
+      ],
+      note: 'im 是"即时通讯"域，+ 开头的是快捷命令：常用操作被封装成一行，参数有智能默认值。'
+    }
+  },
+  {
+    name: '写一篇文档', desc: 'docs 域 · Markdown 写入',
+    spec: {
+      cmd: "lark-cli docs +create --doc-format markdown \\\n    --content $'<title>周报</title>\\n# 本周进展\\n- 上线了搜索优化'",
+      out: [
+        { text: '✓ ok:true → https://xxx.feishu.cn/docx/WbKf…', cls: 't-ok' },
+        { text: '✓ 文档已创建在你的云空间', cls: 't-ok' }
+      ],
+      note: '支持 Markdown 与 XML 两种写入格式；表格、图片、画板都能进文档。'
+    }
+  },
+  {
+    name: '查今日日程', desc: 'calendar 域 · 用户身份',
+    spec: {
+      cmd: 'lark-cli calendar +agenda',
+      out: [
+        { text: '10:00  产品评审          (30min)', cls: 't-out' },
+        { text: '14:30  候选人面试 · 后端  (45min)', cls: 't-out' },
+        { text: '16:00  1:1               (30min)', cls: 't-out' },
+        { text: '✓ 3 个日程，均已读出', cls: 't-ok' }
+      ],
+      note: '以你的身份（--as user）读取；加 --as bot 可切换成应用身份干公共的活。'
+    }
+  },
+  {
+    name: '写一条表格记录', desc: 'api 通用调用 · 多维表格',
+    spec: {
+      cmd: 'lark-cli api POST \\\n  /open-apis/bitable/v1/apps/app_x/tables/tbl_x/records \\\n  --data \'{"fields":{"标题":"补测试用例"}}\'',
+      out: [
+        { text: '{ "ok": true, "record_id": "recw2…" }', cls: 't-ok' }
+      ],
+      note: '2500+ 个开放平台接口都能这样直调：方法 + 路径 + 参数，路径与官方 OpenAPI 一致。'
+    }
+  },
+  {
+    name: '查接口参数', desc: 'schema 自省 · 少幻觉',
+    spec: {
+      cmd: 'lark-cli schema im.messages.delete',
+      out: [
+        { text: 'method  DELETE', cls: 't-out' },
+        { text: 'path    /open-apis/im/v1/messages/:message_id', cls: 't-out' },
+        { text: 'params  message_id (required, string)', cls: 't-out' }
+      ],
+      note: '不确定参数怎么填时先自省一下——AI 也靠这条命令减少幻觉。'
+    }
+  }
+];
+
+var taskList = document.getElementById('task-list');
+var taskTerm = document.getElementById('task-term');
+tasks.forEach(function(t, i){
+  var b = el('button', 'task-btn' + (i === 0 ? ' active' : ''));
+  b.type = 'button';
+  b.setAttribute('role', 'tab');
+  b.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
+  b.appendChild(el('span', 'num', String(i + 1)));
+  var wrap = el('span');
+  wrap.appendChild(el('span', 't-name', t.name));
+  wrap.appendChild(document.createElement('br'));
+  wrap.appendChild(el('span', 't-desc', t.desc));
+  b.appendChild(wrap);
+  b.addEventListener('click', function(){
+    taskList.querySelectorAll('.task-btn').forEach(function(x){
+      x.classList.remove('active'); x.setAttribute('aria-selected', 'false');
+    });
+    b.classList.add('active'); b.setAttribute('aria-selected', 'true');
+    renderTerm(taskTerm, t.spec);
+  });
+  taskList.appendChild(b);
+});
+renderTerm(taskTerm, tasks[0].spec);
+
+/* ---------- copy buttons ---------- */
+document.querySelectorAll('.copy-btn').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    var text = btn.dataset.copy || '';
+    var done = function(){
+      var old = btn.textContent;
+      btn.textContent = '已复制 ✓';
+      setTimeout(function(){ btn.textContent = old; }, 1600);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done, function(){ fallbackCopy(text); done(); });
+    } else { fallbackCopy(text); done(); }
+  });
+});
+function fallbackCopy(text){
+  var ta = document.createElement('textarea');
+  ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); } catch(e){}
+  ta.remove();
+}
+
+/* ---------- reveal on scroll ---------- */
+var revealEls = document.querySelectorAll('.reveal');
+if ('IntersectionObserver' in window && !reduceMotion){
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if (en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); }
+    });
+  }, { threshold: 0.12 });
+  revealEls.forEach(function(n){ io.observe(n); });
+} else {
+  revealEls.forEach(function(n){ n.classList.add('in'); });
+}
+</script>
+</body>
+</html>

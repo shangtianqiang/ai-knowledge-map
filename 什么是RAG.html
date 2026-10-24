@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#FBFAF7">
+<title>RAG 是什么？ | 给想让 AI 读过你资料的人</title>
+<meta name="description" content="一页讲清楚 RAG（检索增强生成）：让模型开卷考试的工程方法。流程六步、与长上下文的取舍、治幻觉的价值与常见问题。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2317151F'/%3E%3Ctext x='16' y='22' font-size='15' font-family='monospace' fill='%23E879C4' text-anchor='middle'%3E%3E_%3C/text%3E%3C/svg%3E">
+<style>
+  :root{
+    --cream:#FBFAF7;
+    --ink:#17151F;
+    --paper:#FFFFFF;
+    --yellow:#FFD166;
+    --rose:#D6409F;
+    --rose-light:#E879C4;
+    --muted:rgba(23,21,31,.64);
+    --faint:rgba(23,21,31,.45);
+    --line:rgba(23,21,31,.14);
+    --line-strong:rgba(23,21,31,.85);
+    --cream-muted:rgba(251,250,247,.68);
+    --cream-faint:rgba(251,250,247,.42);
+    --cream-line:rgba(251,250,247,.16);
+    --mono:"SF Mono",ui-monospace,"JetBrains Mono",Menlo,Consolas,"Liberation Mono",monospace;
+    --shadow-card:0 1px 2px rgba(23,21,31,.05),0 10px 28px -14px rgba(23,21,31,.18);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    *,*::before,*::after{animation:none!important;transition:none!important}
+  }
+  body{
+    font-family:"PingFang SC","Microsoft YaHei","Inter Variable",system-ui,sans-serif;
+    background:var(--cream);
+    color:var(--ink);
+    font-size:16px;
+    line-height:1.75;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+  }
+  ::selection{background:var(--rose);color:#fff}
+  a{color:inherit}
+  .container{max-width:1128px;margin:0 auto;padding:0 24px}
+
+  html.js .reveal{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s ease}
+  html.js .reveal.in{opacity:1;transform:none}
+  @media (prefers-reduced-motion:reduce){html.js .reveal{opacity:1;transform:none}}
+  @media print{html.js .reveal{opacity:1!important;transform:none!important}}
+
+  .nav{
+    position:sticky;top:0;z-index:50;
+    background:rgba(251,250,247,.92);
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  .nav-inner{display:flex;align-items:center;justify-content:space-between;height:60px;gap:16px}
+  .brand{display:flex;align-items:center;gap:10px;text-decoration:none;font-weight:800;font-size:15px;letter-spacing:.01em}
+  .brand-mark{
+    width:26px;height:26px;background:var(--ink);color:var(--rose-light);
+    font-family:var(--mono);font-size:12px;font-weight:700;line-height:26px;text-align:center;
+    border-radius:5px;flex:none;
+  }
+  .nav-links{display:flex;align-items:center;gap:22px;list-style:none}
+  .nav-links a{text-decoration:none;font-size:13.5px;font-weight:500;color:var(--muted);transition:color .15s}
+  .nav-links a:hover{color:var(--ink)}
+  .nav-links a.nav-cta{
+    color:var(--ink);font-weight:700;border:1.5px solid var(--line-strong);
+    padding:6px 14px;border-radius:0;
+  }
+  .nav-links a.nav-cta:hover{background:var(--ink);color:var(--cream)}
+  @media (max-width:720px){.nav-links li.hide-sm{display:none}}
+
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:13px 26px;border-radius:0;border:1.5px solid transparent;
+    font-family:inherit;font-size:15px;font-weight:700;letter-spacing:.02em;
+    text-decoration:none;cursor:pointer;transition:transform .15s ease,background .15s ease,color .15s ease,box-shadow .15s ease;
+  }
+  .btn:active{transform:translateY(1px)}
+  .btn-primary{background:var(--rose);color:#fff}
+  .btn-primary:hover{box-shadow:0 6px 0 -2px rgba(23,21,31,.9)}
+  .btn-ghost{border-color:var(--line-strong);color:var(--ink);background:transparent}
+  .btn-ghost:hover{background:var(--ink);color:var(--cream)}
+  .btn-sm{padding:9px 18px;font-size:13.5px}
+
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:9px;
+    font-size:12.5px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;
+  }
+  .eyebrow::before{content:"";width:9px;height:9px;background:currentColor;flex:none}
+  h1{font-size:clamp(42px,6.6vw,74px);line-height:1.08;font-weight:800;letter-spacing:-.015em}
+  h2{font-size:clamp(30px,4.4vw,44px);line-height:1.18;font-weight:800;letter-spacing:-.01em}
+  h3{font-size:20px;font-weight:800;line-height:1.4}
+  .lead{font-size:clamp(17px,2vw,19.5px);line-height:1.8}
+
+  .hero{padding:76px 0 88px}
+  .hero-grid{display:grid;grid-template-columns:1.02fr .98fr;gap:56px;align-items:center}
+  @media (max-width:980px){.hero-grid{grid-template-columns:1fr;gap:44px}}
+  .hero .eyebrow{color:var(--ink);margin-bottom:26px}
+  .hero h1{margin-bottom:24px}
+  .hero .lead{color:var(--ink);margin-bottom:16px;max-width:34em}
+  .hero .example{color:var(--muted);font-size:15.5px;max-width:36em;margin-bottom:32px}
+  .hero .example b{color:var(--ink);font-weight:700}
+  .hero-actions{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:30px}
+  .hero-meta{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{
+    font-size:12px;font-weight:600;color:var(--muted);
+    border:1px solid var(--line);padding:5px 11px;border-radius:999px;
+    display:inline-flex;align-items:center;gap:6px;background:var(--paper);
+  }
+  .chip .dot{width:6px;height:6px;border-radius:50%;background:var(--rose)}
+
+  .terminal{
+    background:var(--ink);border-radius:14px;overflow:hidden;
+    box-shadow:0 2px 4px rgba(23,21,31,.12),0 30px 60px -22px rgba(23,21,31,.45);
+    border:1px solid rgba(23,21,31,.9);
+  }
+  .terminal-bar{
+    display:flex;align-items:center;gap:7px;
+    padding:13px 16px;border-bottom:1px solid var(--cream-line);
+  }
+  .terminal-bar i{width:11px;height:11px;border-radius:50%;background:rgba(251,250,247,.22)}
+  .terminal-bar i:first-child{background:#FF5F57}
+  .terminal-bar i:nth-child(2){background:#FEBC2E}
+  .terminal-bar i:nth-child(3){background:#28C840}
+  .terminal-bar .terminal-title{
+    margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--cream-faint);letter-spacing:.08em;
+  }
+  .terminal-steps{display:flex;gap:6px;padding:12px 14px 0;flex-wrap:wrap}
+  .terminal-steps button{
+    font-family:inherit;font-size:12.5px;font-weight:700;letter-spacing:.04em;
+    background:transparent;color:var(--cream-faint);
+    border:1px solid var(--cream-line);border-radius:999px;
+    padding:5px 13px;cursor:pointer;transition:all .18s;
+  }
+  .terminal-steps button:hover{color:var(--cream);border-color:var(--cream-faint)}
+  .terminal-steps button.active{background:var(--rose);border-color:var(--rose);color:#fff}
+  .terminal-body{padding:18px 20px 22px;min-height:238px;font-family:var(--mono);font-size:13.5px;line-height:1.9}
+  .t-line{white-space:pre-wrap;word-break:break-all}
+  .t-prompt{color:var(--rose-light);font-weight:700;margin-right:9px}
+  .t-cmd{color:var(--cream)}
+  .t-out{color:var(--cream-faint)}
+  .t-ok{color:#3EE8C6}
+  .t-dim{color:rgba(251,250,247,.35)}
+  .t-user{color:var(--yellow)}
+  .t-note{color:var(--cream-faint);font-family:"PingFang SC","Microsoft YaHei",sans-serif;font-size:12px;margin-top:12px;padding-top:10px;border-top:1px dashed var(--cream-line)}
+  .cursor{display:inline-block;width:8px;height:15px;background:var(--rose-light);vertical-align:-2px;animation:blink 1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+  @media (prefers-reduced-motion:reduce){.cursor{animation:none}}
+
+  .section{padding:96px 0}
+  .section-head{max-width:680px;margin-bottom:52px}
+  .section-head .eyebrow{margin-bottom:20px}
+  .section-head p{color:var(--muted);margin-top:16px;font-size:16.5px}
+
+  .section-yellow{background:var(--yellow)}
+  .section-yellow .section-head p{color:rgba(23,21,31,.72)}
+
+  .section-dark{background:var(--ink);color:var(--cream)}
+  .section-dark .eyebrow{color:var(--rose-light)}
+
+  .parts-layout{display:grid;grid-template-columns:.9fr 1.1fr;gap:36px;align-items:start}
+  @media (max-width:900px){.parts-layout{grid-template-columns:1fr}}
+  .parts-list{display:flex;flex-direction:column;gap:10px}
+  .part-btn{
+    display:flex;align-items:center;gap:14px;text-align:left;width:100%;
+    background:var(--paper);border:1.5px solid transparent;border-radius:10px;
+    padding:15px 18px;font-family:inherit;cursor:pointer;
+    transition:transform .16s ease,box-shadow .16s ease,border-color .16s;
+    box-shadow:var(--shadow-card);
+  }
+  .part-btn:hover{transform:translateY(-2px)}
+  .part-btn .num{
+    font-family:var(--mono);font-size:12px;font-weight:700;color:var(--muted);
+    width:30px;height:30px;border:1.5px solid var(--line);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;flex:none;transition:all .16s;
+  }
+  .part-btn .t-name{font-size:15.5px;font-weight:700}
+  .part-btn .t-desc{font-size:13px;color:var(--muted);margin-top:2px}
+  .part-btn.active{border-color:var(--ink);transform:translateY(-2px)}
+  .part-btn.active .num{background:var(--ink);border-color:var(--ink);color:var(--rose-light)}
+  .parts-terminal{position:sticky;top:84px}
+  @media (max-width:900px){.parts-terminal{position:static}}
+
+  .layers{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(23,21,31,.22);border:1.5px solid var(--ink);border-radius:12px;overflow:hidden;margin-top:56px}
+  @media (max-width:820px){.layers{grid-template-columns:1fr}}
+  .layer{background:var(--yellow);padding:26px 26px 24px}
+  .layer .lv{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.14em;color:rgba(23,21,31,.55);display:block;margin-bottom:12px}
+  .layer h3{font-size:17px;margin-bottom:8px}
+  .layer p{font-size:13.5px;color:rgba(23,21,31,.72);line-height:1.7}
+  .layer code{font-family:var(--mono);font-size:12.5px;background:rgba(23,21,31,.1);padding:2px 6px;border-radius:4px}
+
+  .cards-3{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+  @media (max-width:900px){.cards-3{grid-template-columns:1fr}}
+  .card{
+    background:var(--paper);border:1px solid var(--line);border-radius:12px;
+    padding:30px 28px 26px;box-shadow:var(--shadow-card);
+    display:flex;flex-direction:column;
+  }
+  .card .tag-row{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:20px}
+  .tag{
+    font-size:10.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+    padding:4px 9px;border:1px solid var(--line);border-radius:4px;color:var(--muted);
+  }
+  .tag.tag-accent{background:var(--ink);color:var(--rose-light);border-color:var(--ink)}
+  .card h3{margin-bottom:12px}
+  .card p{font-size:14.5px;color:var(--muted);flex:1}
+  .card .seed{
+    margin-top:20px;padding-top:16px;border-top:1px dashed var(--line);
+    font-family:var(--mono);font-size:12px;color:var(--faint);word-break:break-all;
+  }
+  .card .seed b{color:var(--ink);font-weight:700}
+  .cards-note{margin-top:30px;font-size:13px;color:var(--faint);display:flex;align-items:center;gap:8px}
+  .cards-note::before{content:"※";color:var(--muted)}
+
+  .statement{max-width:820px}
+  .statement h2{margin-bottom:28px}
+  .statement .quote{
+    font-size:clamp(17px,2vw,19px);line-height:1.85;color:var(--cream-muted);
+    border-left:3px solid var(--rose-light);padding-left:22px;margin-bottom:52px;max-width:36em;
+  }
+  .statement .quote b{color:var(--cream)}
+  .statement .quote code{font-family:var(--mono);font-size:14px;background:rgba(251,250,247,.12);padding:2px 7px;border-radius:4px;color:var(--cream)}
+  .pillars{display:grid;grid-template-columns:repeat(3,1fr);gap:34px}
+  @media (max-width:820px){.pillars{grid-template-columns:1fr}}
+  .pillar .p-no{font-family:var(--mono);font-size:13px;color:var(--rose-light);font-weight:700;letter-spacing:.12em;display:block;margin-bottom:14px}
+  .pillar h3{color:var(--cream);margin-bottom:10px;font-size:17.5px}
+  .pillar p{font-size:14.5px;color:var(--cream-muted);line-height:1.8}
+  .pillar code{font-family:var(--mono);font-size:12.5px;background:rgba(251,250,247,.12);padding:2px 6px;border-radius:4px;color:var(--cream)}
+
+  .facts{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  @media (max-width:820px){.facts{grid-template-columns:1fr}}
+  .fact{background:var(--paper);padding:26px 26px 22px}
+  .fact .f-k{font-size:12px;font-weight:800;letter-spacing:.14em;color:var(--faint);text-transform:uppercase;display:block;margin-bottom:10px}
+  .fact .f-v{font-size:15.5px;font-weight:600;line-height:1.65}
+  .fact .f-v small{display:block;font-weight:400;font-size:13px;color:var(--muted);margin-top:4px}
+
+  .deep-block{margin-top:76px}
+  .deep-block>h3{margin-bottom:26px;font-size:clamp(21px,2.6vw,25px)}
+
+  .timeline{list-style:none;border-left:2px solid var(--ink);margin-left:6px}
+  .timeline li{position:relative;padding:0 0 26px 28px}
+  .timeline li:last-child{padding-bottom:0}
+  .timeline li::before{
+    content:"";position:absolute;left:-7px;top:9px;width:12px;height:12px;
+    background:var(--rose);border:2px solid var(--ink);border-radius:50%;
+  }
+  .timeline .tl-year{font-family:var(--mono);font-size:12.5px;font-weight:700;letter-spacing:.1em;color:var(--faint);display:block;margin-bottom:4px}
+  .timeline .tl-t{font-weight:800;font-size:16.5px}
+  .timeline p{font-size:14px;color:var(--muted);margin-top:4px;max-width:40em}
+  .timeline code{font-family:var(--mono);font-size:12.5px;background:rgba(23,21,31,.07);padding:2px 6px;border-radius:4px;color:var(--ink)}
+
+  .tensions{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:14px 28px}
+  @media (max-width:820px){.tensions{grid-template-columns:1fr}}
+  .tensions li{
+    display:flex;gap:12px;font-size:14.5px;color:var(--muted);line-height:1.7;
+    padding:14px 0;border-bottom:1px solid var(--line);
+  }
+  .tensions li b{color:var(--ink)}
+  .tensions li::before{content:"◆";color:var(--rose);font-weight:800;flex:none;font-size:12px;padding-top:5px}
+  .tensions-warn{
+    margin-top:26px;padding:18px 22px;border-radius:10px;
+    background:rgba(214,64,159,.08);border:1px solid rgba(214,64,159,.4);
+    font-size:14px;color:var(--muted);
+  }
+  .tensions-warn b{color:var(--ink)}
+
+  .faq-list{max-width:780px}
+  .faq-item{background:var(--paper);border:1.5px solid var(--ink);border-radius:10px;margin-bottom:14px;overflow:hidden;box-shadow:var(--shadow-card)}
+  .faq-item summary{
+    list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:18px;
+    padding:20px 24px;font-weight:700;font-size:16px;
+  }
+  .faq-item summary::-webkit-details-marker{display:none}
+  .faq-item summary .plus{
+    flex:none;width:26px;height:26px;border:1.5px solid var(--ink);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:400;font-size:16px;line-height:1;transition:transform .2s ease,background .2s,color .2s;
+  }
+  .faq-item[open] summary .plus{background:var(--ink);color:var(--yellow);transform:rotate(45deg)}
+  .faq-item .faq-body{padding:0 24px 22px;font-size:14.5px;color:var(--muted);line-height:1.85}
+  .faq-item .faq-body b{color:var(--ink)}
+  .faq-item .faq-body code{font-family:var(--mono);font-size:12.5px;background:rgba(23,21,31,.07);padding:2px 6px;border-radius:4px;color:var(--ink)}
+
+  .aud-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+  @media (max-width:1000px){.aud-grid{grid-template-columns:1fr 1fr}}
+  @media (max-width:640px){.aud-grid{grid-template-columns:1fr}}
+  .aud-card{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:26px 24px;box-shadow:var(--shadow-card);display:flex;flex-direction:column}
+  .aud-card .a-who{font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin-bottom:12px}
+  .aud-card h3{font-size:16.5px;margin-bottom:10px}
+  .aud-card p{font-size:13.5px;color:var(--muted);flex:1;line-height:1.75}
+  .aud-card .start{
+    margin-top:16px;font-family:var(--mono);font-size:11.5px;color:#fff;
+    background:var(--rose);padding:7px 11px;border-radius:6px;word-break:break-all;
+  }
+
+  .sources-card{background:var(--ink);color:var(--cream);border-radius:16px;padding:52px 54px;max-width:860px}
+  @media (max-width:720px){.sources-card{padding:36px 26px}}
+  .sources-card .eyebrow{color:var(--yellow);margin-bottom:28px}
+  .source-item{display:flex;gap:18px;padding:16px 0;border-bottom:1px solid var(--cream-line);text-decoration:none;transition:padding-left .18s}
+  .source-item:hover{padding-left:8px}
+  .source-item:last-of-type{border-bottom:none}
+  .source-item .s-no{font-family:var(--mono);font-size:12.5px;color:var(--rose-light);font-weight:700;flex:none;padding-top:2px}
+  .source-item .s-t{font-weight:700;font-size:15.5px;color:var(--cream)}
+  .source-item .s-d{font-size:13px;color:var(--cream-faint);margin-top:3px}
+  .source-item .s-arrow{margin-left:auto;color:var(--cream-faint);flex:none;padding-top:2px}
+  .sources-note{margin-top:26px;font-size:12.5px;color:var(--cream-faint)}
+
+  .section-cta{background:var(--rose)}
+  .cta-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:48px;align-items:center}
+  @media (max-width:820px){.cta-grid{grid-template-columns:1fr}}
+  .section-cta .eyebrow{color:rgba(255,255,255,.72);margin-bottom:22px}
+  .section-cta h2{margin-bottom:18px;color:#fff}
+  .section-cta p{color:rgba(255,255,255,.85);max-width:30em;margin-bottom:30px}
+  .cta-cmd{
+    display:flex;align-items:flex-start;gap:12px;background:var(--ink);border-radius:10px;
+    padding:16px 18px;font-family:var(--mono);font-size:13px;line-height:1.9;color:var(--cream);
+    max-width:540px;box-shadow:0 14px 30px -12px rgba(23,21,31,.5);
+  }
+  .cta-cmd pre{font-family:inherit;white-space:pre-wrap;word-break:break-all;flex:1;margin:0}
+  .cta-cmd .t-cm{color:var(--rose-light)}
+  .copy-btn{
+    flex:none;font-family:inherit;font-size:11px;font-weight:700;letter-spacing:.08em;
+    background:transparent;color:var(--cream-faint);border:1px solid var(--cream-line);
+    border-radius:4px;padding:4px 9px;cursor:pointer;transition:all .15s;
+  }
+  .cta-cmd .copy-btn{color:var(--cream-muted);border-color:var(--cream-line)}
+  .cta-cmd .copy-btn:hover{color:var(--yellow);border-color:var(--yellow)}
+  .cta-art{display:flex;align-items:center;justify-content:center;gap:22px;font-family:var(--mono);font-weight:700}
+  .cta-art .q,.cta-art .v{font-size:clamp(56px,7vw,88px);line-height:1}
+  .cta-art .q{color:rgba(255,255,255,.32)}
+  .cta-art .v{color:#fff}
+  .cta-art .arrow{font-size:34px;color:rgba(255,255,255,.55)}
+  @media (max-width:820px){.cta-art{display:none}}
+
+  footer{background:var(--ink);color:var(--cream);padding:64px 0 36px}
+  .foot-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:44px;margin-bottom:52px}
+  @media (max-width:820px){.foot-grid{grid-template-columns:1fr}}
+  .foot-brand .brand{color:var(--cream);margin-bottom:16px}
+  .foot-brand .brand-mark{background:var(--rose);color:#fff}
+  .foot-brand p{font-size:13.5px;color:var(--cream-faint);max-width:26em}
+  .foot-col h4{font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--cream-faint);margin-bottom:18px}
+  .foot-col ul{list-style:none}
+  .foot-col li{margin-bottom:11px}
+  .foot-col a{font-size:14px;color:var(--cream-muted);text-decoration:none;transition:color .15s}
+  .foot-col a:hover{color:var(--cream)}
+  .foot-bottom{border-top:1px solid var(--cream-line);padding-top:26px;font-size:12.5px;color:var(--cream-faint);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+  [id]{scroll-margin-top:76px}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="container nav-inner">
+    <a class="brand" href="#top"><span class="brand-mark">&gt;_</span>RAG 是什么？</a>
+    <ul class="nav-links">
+      <li class="hide-sm"><a href="#parts">流程拆解</a></li>
+      <li class="hide-sm"><a href="#timeline">编年史</a></li>
+      <li class="hide-sm"><a href="#makers">谁在用</a></li>
+      <li class="hide-sm"><a href="#faq">常见问题</a></li>
+      <li><a class="nav-cta" href="什么是Prompt工程.html">姊妹篇 ↗</a></li>
+    </ul>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="container hero-grid">
+    <div>
+      <p class="eyebrow">给想让 AI 读过你资料的人的实用指南</p>
+      <h1>RAG<br>是什么？</h1>
+      <p class="lead">RAG（Retrieval-Augmented Generation，检索增强生成）是让模型"开卷考试"的工程方法：回答之前，先从你的资料里检索出相关段落，连同问题一起交给模型——答案有出处、可更新、不靠死记硬背。</p>
+      <p class="example">比如对公司知识库做问答：模型没读过你们的报销制度，硬答就是幻觉；RAG 先搜出制度原文里最相关的三段，让它<b>"根据以下材料作答，并标注出处"</b>——答案立刻从"碰运气"变成"可验证"。</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#parts">看流程拆解 ↓</a>
+        <a class="btn btn-ghost" href="什么是Prompt工程.html">姊妹篇：Prompt 工程 ↗</a>
+      </div>
+      <div class="hero-meta">
+        <span class="chip"><i class="dot"></i>2020 · Meta 论文提出</span>
+        <span class="chip"><i class="dot"></i>开卷考试类比</span>
+        <span class="chip"><i class="dot"></i>治幻觉第一味药</span>
+        <span class="chip"><i class="dot"></i>企业落地首选</span>
+      </div>
+    </div>
+
+    <div class="terminal" aria-label="RAG 流程演示">
+      <div class="terminal-bar"><i></i><i></i><i></i><span class="terminal-title">rag — 流程演示</span></div>
+      <div class="terminal-steps" role="tablist" aria-label="演示步骤">
+        <button type="button" role="tab" data-step="0" aria-selected="true">① 闭卷的困境</button>
+        <button type="button" role="tab" data-step="1" aria-selected="false">② 检索</button>
+        <button type="button" role="tab" data-step="2" aria-selected="false">③ 增强与生成</button>
+      </div>
+      <div class="terminal-body" id="hero-term" aria-live="polite"></div>
+    </div>
+  </div>
+</header>
+
+<section class="section section-yellow" id="parts">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">流程拆解</p>
+      <h2>六步，搭起一条开卷流水线</h2>
+      <p>所有 RAG 系统万变不离这六步。点击左侧步骤，右侧看它的职责与要点——顺序就是数据流的方向。</p>
+    </div>
+
+    <div class="parts-layout">
+      <div class="parts-list" id="parts-list" role="tablist" aria-label="步骤列表"></div>
+      <div class="parts-terminal">
+        <div class="terminal">
+          <div class="terminal-bar"><i></i><i></i><i></i><span class="terminal-title">rag — 内部视角</span></div>
+          <div class="terminal-body" id="parts-term" aria-live="polite"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="layers reveal">
+      <div class="layer">
+        <span class="lv">2020 · 论文起点</span>
+        <h3>检索 + 生成首度合体</h3>
+        <p>Lewis 等人（Facebook AI Research）提出 RAG：<code>参数化知识（模型内化）+ 非参数化知识（外挂检索）</code>，在开放域问答上验证价值。</p>
+      </div>
+      <div class="layer">
+        <span class="lv">2023 · 企业落地</span>
+        <h3>知识库问答元年</h3>
+        <p>向量数据库与 embedding 模型产品化，"把公司文档接给大模型"成为大模型第一波企业级场景。</p>
+      </div>
+      <div class="layer">
+        <span class="lv">2025+ · 与长上下文共存</span>
+        <h3>窗口再大，RAG 不倒</h3>
+        <p>百万 token 窗口让"整本塞进去"成为可能，但成本、精度与权限控制，让检索增强依然不可替代。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="makers">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">谁在用</p>
+      <h2>三个最常见的落地形态</h2>
+      <p>RAG 不是实验室技术——它是过去几年企业接入大模型的第一入口。</p>
+    </div>
+    <div class="cards-3">
+      <article class="card reveal">
+        <div class="tag-row"><span class="tag tag-accent">场景一</span><span class="tag">知识库问答</span></div>
+        <h3>企业内部知识库</h3>
+        <p>制度、产品文档、工单历史入索引。员工用自然语言提问，直接得到带出处的答案——新人培训周期肉眼可见地缩短。</p>
+        <div class="seed">典型 → <b>内部问答 · 制度查询</b></div>
+      </article>
+      <article class="card reveal">
+        <div class="tag-row"><span class="tag tag-accent">场景二</span><span class="tag">客服</span></div>
+        <h3>先查帮助中心再回答</h3>
+        <p>客户问题先检索帮助文档，答不上来转人工；回答附带引用链接，让客户自己核对——投诉率和重复咨询一起降。</p>
+        <div class="seed">典型 → <b>帮助中心 · 工单辅助</b></div>
+      </article>
+      <article class="card reveal">
+        <div class="tag-row"><span class="tag tag-accent">衔接</span><span class="tag">Agent</span></div>
+        <h3>Agent 的外接记忆</h3>
+        <p>Agent 干活中途要查文档、查工单、查代码库，靠的多半是 RAG 式检索——它是姊妹篇里那双"手"背后的"资料柜"。</p>
+        <div class="seed">衔接 → <b>姊妹篇 · Agent Harness</b></div>
+      </article>
+    </div>
+    <p class="cards-note reveal">以上为典型落地形态 · 实际效果取决于资料质量与检索调优。</p>
+  </div>
+</section>
+
+<section class="section section-dark" id="why">
+  <div class="container">
+    <div class="statement reveal">
+      <p class="eyebrow">为什么重要</p>
+      <h2>让模型开卷考试，<br>而不是背下整座图书馆。</h2>
+      <p class="quote">原论文的表述是"把<b>参数化知识</b>（模型内化的）与<b>非参数化知识</b>（外挂检索的）结合起来"。翻译成大白话：模型内化语言与推理，事实交给外部资料库。知识可以随时更新、按权限隔离、每句都有出处——这三件事，纯训练一件都做不到。</p>
+      <div class="pillars">
+        <div class="pillar reveal">
+          <span class="p-no">01</span>
+          <h3>知识外挂</h3>
+          <p>更新不重训：索引夜里换一批，答案白天就是新的。模型的知识冻结日期，不再是系统的知识边界。</p>
+        </div>
+        <div class="pillar reveal">
+          <span class="p-no">02</span>
+          <h3>每句有出处</h3>
+          <p>引用让"信我"变成"自己验证"。它既是产品信任感，也是收窄幻觉的第一道闸（见姊妹篇幻觉页）。</p>
+        </div>
+        <div class="pillar reveal">
+          <span class="p-no">03</span>
+          <h3>权限可隔离</h3>
+          <p>谁能搜到什么，在检索层说了算。这一条让它成为企业敢把私有资料接给 AI 的前提。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="what">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">依据与事实</p>
+      <h2>先说清楚这门手艺</h2>
+    </div>
+    <div class="facts reveal">
+      <div class="fact"><span class="f-k">全称</span><div class="f-v">Retrieval-Augmented Generation<small>检索增强生成——"先查资料，再作答"</small></div></div>
+      <div class="fact"><span class="f-k">出生</span><div class="f-v">2020 · Meta（Facebook AI Research）<small>Lewis et al.，arXiv:2005.11401</small></div></div>
+      <div class="fact"><span class="f-k">类比</span><div class="f-v">开卷考试<small>模型带推理能力入场，资料外挂开卷</small></div></div>
+      <div class="fact"><span class="f-k">流程</span><div class="f-v">索引 → 检索 → 生成<small>切块 · 嵌入 · 向量库 · top-k · 引用</small></div></div>
+      <div class="fact"><span class="f-k">治病</span><div class="f-v">幻觉第一味药<small>答案限定在材料内，并要求标注出处</small></div></div>
+      <div class="fact"><span class="f-k">取舍</span><div class="f-v">与长上下文共存<small>窗口再大，也贵、也慢、也管不了权限</small></div></div>
+    </div>
+
+    <div class="deep-block reveal" id="timeline">
+      <h3>一门手艺的编年史</h3>
+      <ul class="timeline">
+        <li>
+          <span class="tl-year">2020</span>
+          <span class="tl-t">论文提出</span>
+          <p>Facebook AI Research 的 Lewis 等人把检索器（DPR）与生成器（BART）拼接，在开放域问答上验证了"检索增强"的价值，并给它起了这个名字。</p>
+        </li>
+        <li>
+          <span class="tl-year">2022–2023</span>
+          <span class="tl-t">基建成熟</span>
+          <p>embedding 模型与向量数据库产品化，"把公司文档接给大模型"从论文里的一张图，变成一套标准工程。</p>
+        </li>
+        <li>
+          <span class="tl-year">2023–2024</span>
+          <span class="tl-t">企业普及</span>
+          <p>知识库问答成为大模型第一波落地场景；分块策略、混合检索、重排序成为专门学问。</p>
+        </li>
+        <li>
+          <span class="tl-year">2025+</span>
+          <span class="tl-t">持续进化</span>
+          <p>GraphRAG、多路召回、Agentic RAG（让 Agent 自己决定查什么）接连出现；长上下文没有杀死它，反而逼它变得更精。</p>
+        </li>
+      </ul>
+    </div>
+
+    <div class="deep-block reveal">
+      <h3>设计取舍与常见误解</h3>
+      <ul class="tensions">
+        <li><span><b>检索准 vs 召回全</b>——top-k 太少漏关键，太多塞噪声；重排序（rerank）是中场裁判。</span></li>
+        <li><span><b>切块大 vs 小</b>——大块保上下文，小块保精度；按文档结构切通常最稳。</span></li>
+        <li><span><b>向量 vs 关键词</b>——语义检索懂变体，关键词检索懂编号与专名；混合检索全都要。</span></li>
+        <li><span><b>长上下文 vs RAG</b>——塞得下不等于查得准、付得起、管得住权限；两者常配合使用。</span></li>
+        <li><span><b>自动化 vs 权限</b>——检索层必须继承文档权限，否则 AI 会变成最大的越权接口。</span></li>
+        <li><span><b>引用 vs 流畅</b>——要求标注出处会约束文风，但换来可验证性，值。</span></li>
+      </ul>
+      <p class="tensions-warn"><b>三个常见误解：</b>① RAG ≠ 把文档全部塞给模型——全塞只是"长上下文"，检索与引用才是 RAG 的灵魂；② RAG 不能消灭幻觉——它收窄幻觉空间，但模型仍可能不忠实于材料，所以要评测；③ 建完就一劳永逸——文档在变，索引要跟着更新，效果要持续测。</p>
+    </div>
+  </div>
+</section>
+
+<section class="section section-yellow" id="faq">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">接下来继续了解</p>
+      <h2>常见问题</h2>
+    </div>
+    <div class="faq-list">
+      <details class="faq-item reveal">
+        <summary>RAG 和微调怎么选？<span class="plus">+</span></summary>
+        <div class="faq-body">记事实用 RAG（可更新、有出处），学风格与领域技能才考虑微调。绝大多数"模型不懂我们业务"的问题，答案是 RAG 而不是微调——因为你要的其实是一份会更新的资料，而不是一个新大脑。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>需要专门的向量数据库吗？<span class="plus">+</span></summary>
+        <div class="faq-body">小规模用 <code>pgvector</code> 这类数据库插件就够；百万级以上再考虑专用向量库。先跑通流程、验证检索质量，再优化基建——顺序别反了。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>为什么我的 RAG 答非所问？<span class="plus">+</span></summary>
+        <div class="faq-body">九成问题出在检索：切块不合理、embedding 选型不当、top-k 太小、材料太旧。排查顺序：先看<b>检索回来的段落对不对</b>，再怪模型。检索是上限，生成只是下限的兑现。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>长上下文来了，RAG 会死吗？<span class="plus">+</span></summary>
+        <div class="faq-body">不会。塞整本书又贵又慢，权限没法隔离，也难标出处。实践中常见"长上下文 + 检索"混用：窗口装常驻资料，检索补时效内容与长尾。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>RAG 能完全治好幻觉吗？<span class="plus">+</span></summary>
+        <div class="faq-body">不能，只能大幅收窄：检索可能漏掉关键段，模型也可能不忠实于材料。引用 + 评测 + 允许说"不知道"，三件套一起上——详见姊妹篇《什么是幻觉？》。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>企业的敏感文档能接吗？<span class="plus">+</span></summary>
+        <div class="faq-body">能，而且权限过滤是必须项：检索层继承文档权限，谁提问就只能搜到谁有权看的块。这件事要在架构里做，不能靠提示词"求"模型别泄露。</div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="who">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">它适合谁</p>
+      <h2>四类人，四个入口</h2>
+    </div>
+    <div class="aud-grid">
+      <div class="aud-card reveal">
+        <span class="a-who">For KM</span>
+        <h3>知识管理者</h3>
+        <p>把沉睡的制度与文档变成随问随答的知识库，答案带出处，更新只动索引。</p>
+        <div class="start">起点 → 流程六步 ↓</div>
+      </div>
+      <div class="aud-card reveal">
+        <span class="a-who">For Devs</span>
+        <h3>开发者</h3>
+        <p>从 pgvector 加一个 embedding 模型起步，一天跑通最小闭环，再谈优化。</p>
+        <div class="start">起点 → arXiv:2005.11401</div>
+      </div>
+      <div class="aud-card reveal">
+        <span class="a-who">For Secs</span>
+        <h3>安全团队</h3>
+        <p>权限过滤、审计日志、材料来源——RAG 让"AI 读过什么"第一次可管理。</p>
+        <div class="start">起点 → 构件 ⑥ 生成与引用</div>
+      </div>
+      <div class="aud-card reveal">
+        <span class="a-who">For PMs</span>
+        <h3>产品经理</h3>
+        <p>设计"引用与跳转"体验：让用户一键核对答案出处，信任感翻倍。</p>
+        <div class="start">起点 → 姊妹篇 Prompt 工程</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="sources" style="padding-top:24px">
+  <div class="container">
+    <div class="sources-card reveal">
+      <p class="eyebrow">来源与延伸阅读</p>
+      <a class="source-item" href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">
+        <span class="s-no">01</span>
+        <span><span class="s-t">arXiv:2005.11401 · RAG 原论文</span><br><span class="s-d">Lewis et al., 2020, Facebook AI Research</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="https://aws.amazon.com/what-is/retrieval-augmented-generation/" target="_blank" rel="noopener">
+        <span class="s-no">02</span>
+        <span><span class="s-t">AWS · 什么是 RAG</span><br><span class="s-d">流程与价值的官方科普</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="https://cloud.google.com/vertex-ai" target="_blank" rel="noopener">
+        <span class="s-no">03</span>
+        <span><span class="s-t">Google Cloud · Vertex AI RAG 文档</span><br><span class="s-d">托管 RAG 组件与落地指引</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="https://blogs.nvidia.com/blog/what-is-retrieval-augmented-generation/" target="_blank" rel="noopener">
+        <span class="s-no">04</span>
+        <span><span class="s-t">NVIDIA · What is RAG</span><br><span class="s-d">图解式科普，适合入门</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="什么是幻觉.html">
+        <span class="s-no">05</span>
+        <span><span class="s-t">姊妹篇 · 什么是幻觉？</span><br><span class="s-d">RAG 是治幻觉第一味药，但不只靠它（本系列）</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <p class="sources-note">本页内容整理自以上公开资料，更新于 2026 年 10 月。工具与最佳实践仍在演化，以各家最新文档为准。</p>
+    </div>
+  </div>
+</section>
+
+<section class="section section-cta">
+  <div class="container cta-grid">
+    <div class="reveal">
+      <p class="eyebrow">开始动手</p>
+      <h2>先让 AI 读你的资料</h2>
+      <p>十行伪代码，就是所有 RAG 系统共用的骨架。</p>
+      <div class="cta-cmd">
+        <pre><span class="t-cm">问题</span> = 用户输入
+<span class="t-cm">段落</span> = 向量库.检索(问题, top_k=3)
+<span class="t-cm">提示</span> = "根据以下材料作答并标注出处："
+       + 段落
+<span class="t-cm">答案</span> = model(提示)</pre>
+        <button class="copy-btn" data-copy="问题 = 用户输入&#10;段落 = 向量库.检索(问题, top_k=3)&#10;提示 = '根据以下材料作答并标注出处：' + 段落&#10;答案 = model(提示)">复制</button>
+      </div>
+    </div>
+    <div class="cta-art" aria-hidden="true">
+      <span class="q">?</span><span class="arrow">→</span><span class="v">✓</span>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <a class="brand" href="#top"><span class="brand-mark">&gt;_</span>RAG 是什么？</a>
+        <p>一页讲清楚"开卷考试"这门手艺：流程六步、与长上下文的取舍、它在治幻觉版图里的位置。</p>
+      </div>
+      <div class="foot-col">
+        <h4>本页导航</h4>
+        <ul>
+          <li><a href="#parts">流程拆解</a></li>
+          <li><a href="#timeline">编年史</a></li>
+          <li><a href="#makers">谁在用</a></li>
+          <li><a href="#faq">常见问题</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h4>本系列</h4>
+        <ul>
+          <li><a href="什么是飞书CLI.html">什么是飞书 CLI？</a></li>
+          <li><a href="什么是DeepSeekHarness.html">什么是 DeepSeek Harness？</a></li>
+          <li><a href="什么是AgentHarness.html">什么是 Agent Harness？</a></li>
+          <li><a href="什么是Prompt工程.html">什么是 Prompt 工程？</a></li>
+          <li><a href="index.html">🏠 知识地图（主页）</a></li>
+          <li><a href="#top">什么是 RAG？（本页）</a></li>
+          <li><a href="什么是MCP.html">什么是 MCP？</a></li>
+          <li><a href="什么是幻觉.html">什么是幻觉？</a></li>
+          <li><a href="什么是思维链.html">什么是思维链？</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>本页为独立学习指南，与所提及的各家公司没有关联 · 内容整理自公开资料</span>
+      <span>更新于 2026 年 10 月</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+document.documentElement.classList.add('js');
+
+var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function el(tag, cls, text){
+  var n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text !== undefined) n.textContent = text;
+  return n;
+}
+
+function typeCmd(span, text, done){
+  if (reduceMotion){ span.textContent = text; done && done(); return; }
+  var i = 0;
+  (function tick(){
+    span.textContent = text.slice(0, ++i);
+    if (i < text.length){ setTimeout(tick, text[i-1] === ' ' ? 34 : 18); }
+    else { done && done(); }
+  })();
+}
+
+function renderTerm(container, spec){
+  container.innerHTML = '';
+  var line = el('div','t-line');
+  var prompt = el('span','t-prompt', spec.prompt || '❯');
+  var cmd = el('span','t-cmd');
+  var cur = el('span','cursor');
+  line.appendChild(prompt); line.appendChild(cmd); line.appendChild(cur);
+  container.appendChild(line);
+  typeCmd(cmd, spec.cmd, function(){
+    cur.remove();
+    (spec.out || []).forEach(function(o){
+      container.appendChild(el('div','t-line ' + (o.cls || 't-out'), o.text));
+    });
+    if (spec.note) container.appendChild(el('div','t-note', spec.note));
+  });
+}
+
+var heroSteps = [
+  {
+    cmd: '"我们公司的报销流程是什么？"',
+    prompt: '你',
+    out: [
+      { text: '← 模型没读过你的员工手册', cls: 't-out' },
+      { text: '✗ 自信地编一个"标准流程"', cls: 't-out' },
+      { text: '✗ 幻觉：流畅 · 具体 · 错误', cls: 't-dim' }
+    ],
+    note: '模型的知识冻结在训练数据里，你的资料不在其中。'
+  },
+  {
+    cmd: 'query → 向量库检索 top-k',
+    out: [
+      { text: '→ 离线：文档切块 → 嵌入 → 入库', cls: 't-out' },
+      { text: '→ 在线：按语义相似度找回最相关 3 段', cls: 't-out' },
+      { text: '✓ 找回的是：制度原文 · 产品文档 · 工单', cls: 't-ok' }
+    ],
+    note: '语义检索的好处：换个说法也能搜到，不必逐字命中。'
+  },
+  {
+    cmd: '"根据以下材料作答并标注出处…"',
+    prompt: '⚙',
+    out: [
+      { text: '→ 检索段落拼进提示词 → 生成答案', cls: 't-out' },
+      { text: '→ 要求标注：结论来自哪份文档', cls: 't-out' },
+      { text: '✓ 可验证 · 可更新 · 不靠死记', cls: 't-ok' }
+    ],
+    note: '索引夜里更新，答案白天就是新的——知识不再被训练日期锁死。'
+  }
+];
+
+var heroTerm = document.getElementById('hero-term');
+var heroBtns = document.querySelectorAll('.terminal-steps button');
+var heroStopped = false;
+
+function showHeroStep(i){
+  heroBtns.forEach(function(b, j){
+    b.classList.toggle('active', i === j);
+    b.setAttribute('aria-selected', i === j ? 'true' : 'false');
+  });
+  renderTerm(heroTerm, heroSteps[i]);
+}
+heroBtns.forEach(function(b){
+  b.addEventListener('click', function(){
+    heroStopped = true;
+    showHeroStep(+b.dataset.step);
+  });
+});
+showHeroStep(0);
+(function autoAdvance(){
+  if (reduceMotion) return;
+  var idx = 0;
+  setInterval(function(){
+    if (heroStopped) return;
+    idx = (idx + 1) % heroSteps.length;
+    showHeroStep(idx);
+  }, 7000);
+})();
+
+var parts = [
+  {
+    name: '文档切块', desc: 'Chunking · 检索的最小单位',
+    spec: {
+      cmd: 'chunk ≈ 500 token · overlap 50',
+      out: [
+        { text: '→ 按标题/段落切，别硬切句子', cls: 't-out' },
+        { text: '→ 留一点重叠，防止语义断裂', cls: 't-out' },
+        { text: '✓ 块切不好，后面全白搭', cls: 't-ok' }
+      ],
+      note: '块太大稀释相关度，太小丢上下文——切分是 RAG 的第一道手艺。'
+    }
+  },
+  {
+    name: '嵌入', desc: 'Embedding · 文字变向量',
+    spec: {
+      cmd: '"报销流程" → [0.12, -0.8, …]',
+      out: [
+        { text: '→ 语义越近，向量越接近', cls: 't-out' },
+        { text: '→ 用同一个 embedding 模型统一编码', cls: 't-out' },
+        { text: '✓ 换个问法也能搜到', cls: 't-ok' }
+      ],
+      note: '"按意思搜索"的数学底座：意思在向量空间里有了坐标。'
+    }
+  },
+  {
+    name: '向量库', desc: 'Vector DB · 存向量算相似',
+    spec: {
+      cmd: 'FAISS · pgvector · Milvus…',
+      out: [
+        { text: '→ 近似最近邻搜索（ANN）', cls: 't-out' },
+        { text: '→ 毫秒级从百万块里找 top-k', cls: 't-out' },
+        { text: '✓ 混合检索：向量 + 关键词更稳', cls: 't-ok' }
+      ],
+      note: '2020 年论文用的 FAISS，今天的选择多到挑花眼——原理没变。'
+    }
+  },
+  {
+    name: '检索', desc: 'Retrieval · 找回最相关几段',
+    spec: {
+      cmd: 'top-k = 3~5 段',
+      out: [
+        { text: '→ 按问题向量搜相似块', cls: 't-out' },
+        { text: '→ 可加 rerank 精排', cls: 't-out' },
+        { text: '→ 按权限过滤，别搜到别人的工资条', cls: 't-out' },
+        { text: '✓ 检索质量 = 答案质量的上限', cls: 't-ok' }
+      ],
+      note: 'RAG 的铁律：垃圾进，垃圾出——模型救不了检索。'
+    }
+  },
+  {
+    name: '增强', desc: 'Augmentation · 材料拼进提示词',
+    spec: {
+      cmd: '"根据以下材料作答…"',
+      out: [
+        { text: '→ 材料 + 问题 + 输出要求（标出处）', cls: 't-out' },
+        { text: '→ 材料放进标签，别和指令混写', cls: 't-out' },
+        { text: '✓ 没找到就允许说"没找到"', cls: 't-ok' }
+      ],
+      note: '这一步是 Prompt 工程的主场——姊妹篇里的六行骨架直接用上。'
+    }
+  },
+  {
+    name: '生成与引用', desc: 'Generation · 有出处的回答',
+    spec: {
+      cmd: '答案 + 引用 [1][2][3]',
+      out: [
+        { text: '→ 只依据材料，不自由发挥', cls: 't-out' },
+        { text: '→ 结论后标注来源文档与位置', cls: 't-out' },
+        { text: '✓ 用户可点开原文核对', cls: 't-ok' }
+      ],
+      note: '引用是 RAG 的诚意：把"信我"变成"自己验证"。'
+    }
+  }
+];
+
+var partsList = document.getElementById('parts-list');
+var partsTerm = document.getElementById('parts-term');
+parts.forEach(function(t, i){
+  var b = el('button', 'part-btn' + (i === 0 ? ' active' : ''));
+  b.type = 'button';
+  b.setAttribute('role', 'tab');
+  b.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
+  b.appendChild(el('span', 'num', String(i + 1)));
+  var wrap = el('span');
+  wrap.appendChild(el('span', 't-name', t.name));
+  wrap.appendChild(document.createElement('br'));
+  wrap.appendChild(el('span', 't-desc', t.desc));
+  b.appendChild(wrap);
+  b.addEventListener('click', function(){
+    partsList.querySelectorAll('.part-btn').forEach(function(x){
+      x.classList.remove('active'); x.setAttribute('aria-selected', 'false');
+    });
+    b.classList.add('active'); b.setAttribute('aria-selected', 'true');
+    renderTerm(partsTerm, t.spec);
+  });
+  partsList.appendChild(b);
+});
+renderTerm(partsTerm, parts[0].spec);
+
+document.querySelectorAll('.copy-btn').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    var text = btn.dataset.copy || '';
+    var done = function(){
+      var old = btn.textContent;
+      btn.textContent = '已复制 ✓';
+      setTimeout(function(){ btn.textContent = old; }, 1600);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done, function(){ fallbackCopy(text); done(); });
+    } else { fallbackCopy(text); done(); }
+  });
+});
+function fallbackCopy(text){
+  var ta = document.createElement('textarea');
+  ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); } catch(e){}
+  ta.remove();
+}
+
+var revealEls = document.querySelectorAll('.reveal');
+if ('IntersectionObserver' in window && !reduceMotion){
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if (en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); }
+    });
+  }, { threshold: 0.12 });
+  revealEls.forEach(function(n){ io.observe(n); });
+} else {
+  revealEls.forEach(function(n){ n.classList.add('in'); });
+}
+</script>
+</body>
+</html>

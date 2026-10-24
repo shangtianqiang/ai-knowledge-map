@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#FBFAF7">
+<title>DeepSeek Harness 是什么？ | 共探智能上限</title>
+<meta name="description" content="一页讲清楚 DeepSeek Harness（dsh）：DeepSeek 官方开源的 Agent 运行框架，一切皆插件。启动方式、架构原理、安全机制与常见问题。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2317151F'/%3E%3Ctext x='16' y='22' font-size='15' font-family='monospace' fill='%238AA5FF' text-anchor='middle'%3Ed_%3C/text%3E%3C/svg%3E">
+<style>
+  :root{
+    --cream:#FBFAF7;
+    --ink:#17151F;
+    --paper:#FFFFFF;
+    --yellow:#FFD166;
+    --blue:#4D6BFE;
+    --blue-light:#8AA5FF;
+    --muted:rgba(23,21,31,.64);
+    --faint:rgba(23,21,31,.45);
+    --line:rgba(23,21,31,.14);
+    --line-strong:rgba(23,21,31,.85);
+    --cream-muted:rgba(251,250,247,.68);
+    --cream-faint:rgba(251,250,247,.42);
+    --cream-line:rgba(251,250,247,.16);
+    --mono:"SF Mono",ui-monospace,"JetBrains Mono",Menlo,Consolas,"Liberation Mono",monospace;
+    --shadow-card:0 1px 2px rgba(23,21,31,.05),0 10px 28px -14px rgba(23,21,31,.18);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    *,*::before,*::after{animation:none!important;transition:none!important}
+  }
+  body{
+    font-family:"PingFang SC","Microsoft YaHei","Inter Variable",system-ui,sans-serif;
+    background:var(--cream);
+    color:var(--ink);
+    font-size:16px;
+    line-height:1.75;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+  }
+  ::selection{background:var(--blue);color:#fff}
+  a{color:inherit}
+  .container{max-width:1128px;margin:0 auto;padding:0 24px}
+
+  /* ---------- reveal on scroll ---------- */
+  html.js .reveal{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s ease}
+  html.js .reveal.in{opacity:1;transform:none}
+  @media (prefers-reduced-motion:reduce){html.js .reveal{opacity:1;transform:none}}
+  @media print{html.js .reveal{opacity:1!important;transform:none!important}}
+
+  /* ---------- nav ---------- */
+  .nav{
+    position:sticky;top:0;z-index:50;
+    background:rgba(251,250,247,.92);
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  .nav-inner{display:flex;align-items:center;justify-content:space-between;height:60px;gap:16px}
+  .brand{display:flex;align-items:center;gap:10px;text-decoration:none;font-weight:800;font-size:15px;letter-spacing:.01em}
+  .brand-mark{
+    width:26px;height:26px;background:var(--ink);color:var(--blue-light);
+    font-family:var(--mono);font-size:12px;font-weight:700;line-height:26px;text-align:center;
+    border-radius:5px;flex:none;
+  }
+  .nav-links{display:flex;align-items:center;gap:22px;list-style:none}
+  .nav-links a{text-decoration:none;font-size:13.5px;font-weight:500;color:var(--muted);transition:color .15s}
+  .nav-links a:hover{color:var(--ink)}
+  .nav-links a.nav-cta{
+    color:var(--ink);font-weight:700;border:1.5px solid var(--line-strong);
+    padding:6px 14px;border-radius:0;
+  }
+  .nav-links a.nav-cta:hover{background:var(--ink);color:var(--cream)}
+  @media (max-width:720px){.nav-links li.hide-sm{display:none}}
+
+  /* ---------- buttons ---------- */
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:13px 26px;border-radius:0;border:1.5px solid transparent;
+    font-family:inherit;font-size:15px;font-weight:700;letter-spacing:.02em;
+    text-decoration:none;cursor:pointer;transition:transform .15s ease,background .15s ease,color .15s ease,box-shadow .15s ease;
+  }
+  .btn:active{transform:translateY(1px)}
+  .btn-primary{background:var(--blue);color:#fff}
+  .btn-primary:hover{box-shadow:0 6px 0 -2px rgba(23,21,31,.9)}
+  .btn-ghost{border-color:var(--line-strong);color:var(--ink);background:transparent}
+  .btn-ghost:hover{background:var(--ink);color:var(--cream)}
+  .btn-sm{padding:9px 18px;font-size:13.5px}
+
+  /* ---------- eyebrow / headings ---------- */
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:9px;
+    font-size:12.5px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;
+  }
+  .eyebrow::before{content:"";width:9px;height:9px;background:currentColor;flex:none}
+  h1{font-size:clamp(42px,6.6vw,74px);line-height:1.08;font-weight:800;letter-spacing:-.015em}
+  h2{font-size:clamp(30px,4.4vw,44px);line-height:1.18;font-weight:800;letter-spacing:-.01em}
+  h3{font-size:20px;font-weight:800;line-height:1.4}
+  .lead{font-size:clamp(17px,2vw,19.5px);line-height:1.8}
+
+  /* ---------- hero ---------- */
+  .hero{padding:76px 0 88px}
+  .hero-grid{display:grid;grid-template-columns:1.02fr .98fr;gap:56px;align-items:center}
+  @media (max-width:980px){.hero-grid{grid-template-columns:1fr;gap:44px}}
+  .hero .eyebrow{color:var(--ink);margin-bottom:26px}
+  .hero h1{margin-bottom:24px}
+  .hero .lead{color:var(--ink);margin-bottom:16px;max-width:34em}
+  .hero .example{color:var(--muted);font-size:15.5px;max-width:36em;margin-bottom:32px}
+  .hero .example b{color:var(--ink);font-weight:700}
+  .hero-actions{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:30px}
+  .hero-meta{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{
+    font-size:12px;font-weight:600;color:var(--muted);
+    border:1px solid var(--line);padding:5px 11px;border-radius:999px;
+    display:inline-flex;align-items:center;gap:6px;background:var(--paper);
+  }
+  .chip .dot{width:6px;height:6px;border-radius:50%;background:var(--blue)}
+
+  /* ---------- terminal ---------- */
+  .terminal{
+    background:var(--ink);border-radius:14px;overflow:hidden;
+    box-shadow:0 2px 4px rgba(23,21,31,.12),0 30px 60px -22px rgba(23,21,31,.45);
+    border:1px solid rgba(23,21,31,.9);
+  }
+  .terminal-bar{
+    display:flex;align-items:center;gap:7px;
+    padding:13px 16px;border-bottom:1px solid var(--cream-line);
+  }
+  .terminal-bar i{width:11px;height:11px;border-radius:50%;background:rgba(251,250,247,.22)}
+  .terminal-bar i:first-child{background:#FF5F57}
+  .terminal-bar i:nth-child(2){background:#FEBC2E}
+  .terminal-bar i:nth-child(3){background:#28C840}
+  .terminal-bar .terminal-title{
+    margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--cream-faint);letter-spacing:.08em;
+  }
+  .terminal-steps{display:flex;gap:6px;padding:12px 14px 0;flex-wrap:wrap}
+  .terminal-steps button{
+    font-family:inherit;font-size:12.5px;font-weight:700;letter-spacing:.04em;
+    background:transparent;color:var(--cream-faint);
+    border:1px solid var(--cream-line);border-radius:999px;
+    padding:5px 13px;cursor:pointer;transition:all .18s;
+  }
+  .terminal-steps button:hover{color:var(--cream);border-color:var(--cream-faint)}
+  .terminal-steps button.active{background:var(--blue);border-color:var(--blue);color:#fff}
+  .terminal-body{padding:18px 20px 22px;min-height:238px;font-family:var(--mono);font-size:13.5px;line-height:1.9}
+  .t-line{white-space:pre-wrap;word-break:break-all}
+  .t-prompt{color:var(--blue-light);font-weight:700;margin-right:9px}
+  .t-cmd{color:var(--cream)}
+  .t-out{color:var(--cream-faint)}
+  .t-ok{color:#3EE8C6}
+  .t-dim{color:rgba(251,250,247,.35)}
+  .t-user{color:var(--yellow)}
+  .t-note{color:var(--cream-faint);font-family:"PingFang SC","Microsoft YaHei",sans-serif;font-size:12px;margin-top:12px;padding-top:10px;border-top:1px dashed var(--cream-line)}
+  .cursor{display:inline-block;width:8px;height:15px;background:var(--blue-light);vertical-align:-2px;animation:blink 1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+  @media (prefers-reduced-motion:reduce){.cursor{animation:none}}
+
+  /* ---------- sections ---------- */
+  .section{padding:96px 0}
+  .section-head{max-width:680px;margin-bottom:52px}
+  .section-head .eyebrow{margin-bottom:20px}
+  .section-head p{color:var(--muted);margin-top:16px;font-size:16.5px}
+
+  /* yellow */
+  .section-yellow{background:var(--yellow)}
+  .section-yellow .section-head p{color:rgba(23,21,31,.72)}
+
+  /* dark */
+  .section-dark{background:var(--ink);color:var(--cream)}
+  .section-dark .eyebrow{color:var(--blue-light)}
+
+  /* ---------- journey switcher ---------- */
+  .journey-layout{display:grid;grid-template-columns:.9fr 1.1fr;gap:36px;align-items:start}
+  @media (max-width:900px){.journey-layout{grid-template-columns:1fr}}
+  .journey-list{display:flex;flex-direction:column;gap:10px}
+  .journey-btn{
+    display:flex;align-items:center;gap:14px;text-align:left;width:100%;
+    background:var(--paper);border:1.5px solid transparent;border-radius:10px;
+    padding:15px 18px;font-family:inherit;cursor:pointer;
+    transition:transform .16s ease,box-shadow .16s ease,border-color .16s;
+    box-shadow:var(--shadow-card);
+  }
+  .journey-btn:hover{transform:translateY(-2px)}
+  .journey-btn .num{
+    font-family:var(--mono);font-size:12px;font-weight:700;color:var(--muted);
+    width:30px;height:30px;border:1.5px solid var(--line);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;flex:none;transition:all .16s;
+  }
+  .journey-btn .t-name{font-size:15.5px;font-weight:700}
+  .journey-btn .t-desc{font-size:13px;color:var(--muted);margin-top:2px}
+  .journey-btn.active{border-color:var(--ink);transform:translateY(-2px)}
+  .journey-btn.active .num{background:var(--ink);border-color:var(--ink);color:var(--yellow)}
+  .journey-terminal{position:sticky;top:84px}
+  @media (max-width:900px){.journey-terminal{position:static}}
+
+  .layers{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(23,21,31,.22);border:1.5px solid var(--ink);border-radius:12px;overflow:hidden;margin-top:56px}
+  @media (max-width:820px){.layers{grid-template-columns:1fr}}
+  .layer{background:var(--yellow);padding:26px 26px 24px}
+  .layer .lv{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.14em;color:rgba(23,21,31,.55);display:block;margin-bottom:12px}
+  .layer h3{font-size:17px;margin-bottom:8px}
+  .layer p{font-size:13.5px;color:rgba(23,21,31,.72);line-height:1.7}
+  .layer code{font-family:var(--mono);font-size:12.5px;background:rgba(23,21,31,.1);padding:2px 6px;border-radius:4px}
+
+  /* ---------- scenarios ---------- */
+  .cards-3{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+  @media (max-width:900px){.cards-3{grid-template-columns:1fr}}
+  .card{
+    background:var(--paper);border:1px solid var(--line);border-radius:12px;
+    padding:30px 28px 26px;box-shadow:var(--shadow-card);
+    display:flex;flex-direction:column;
+  }
+  .card .tag-row{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:20px}
+  .tag{
+    font-size:10.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+    padding:4px 9px;border:1px solid var(--line);border-radius:4px;color:var(--muted);
+  }
+  .tag.tag-accent{background:var(--ink);color:var(--blue-light);border-color:var(--ink)}
+  .card h3{margin-bottom:12px}
+  .card p{font-size:14.5px;color:var(--muted);flex:1}
+  .card .seed{
+    margin-top:20px;padding-top:16px;border-top:1px dashed var(--line);
+    font-family:var(--mono);font-size:12px;color:var(--faint);word-break:break-all;
+  }
+  .card .seed b{color:var(--ink);font-weight:700}
+  .cards-note{margin-top:30px;font-size:13px;color:var(--faint);display:flex;align-items:center;gap:8px}
+  .cards-note::before{content:"※";color:var(--muted)}
+
+  /* ---------- statement (dark) ---------- */
+  .statement{max-width:820px}
+  .statement h2{margin-bottom:28px}
+  .statement .quote{
+    font-size:clamp(17px,2vw,19px);line-height:1.85;color:var(--cream-muted);
+    border-left:3px solid var(--blue-light);padding-left:22px;margin-bottom:52px;max-width:36em;
+  }
+  .statement .quote b{color:var(--cream)}
+  .statement .quote code{font-family:var(--mono);font-size:14px;background:rgba(251,250,247,.12);padding:2px 7px;border-radius:4px;color:var(--cream)}
+  .pillars{display:grid;grid-template-columns:repeat(3,1fr);gap:34px}
+  @media (max-width:820px){.pillars{grid-template-columns:1fr}}
+  .pillar .p-no{font-family:var(--mono);font-size:13px;color:var(--blue-light);font-weight:700;letter-spacing:.12em;display:block;margin-bottom:14px}
+  .pillar h3{color:var(--cream);margin-bottom:10px;font-size:17.5px}
+  .pillar p{font-size:14.5px;color:var(--cream-muted);line-height:1.8}
+  .pillar code{font-family:var(--mono);font-size:12.5px;background:rgba(251,250,247,.12);padding:2px 6px;border-radius:4px;color:var(--cream)}
+
+  /* ---------- facts (deep dive) ---------- */
+  .facts{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  @media (max-width:820px){.facts{grid-template-columns:1fr}}
+  .fact{background:var(--paper);padding:26px 26px 22px}
+  .fact .f-k{font-size:12px;font-weight:800;letter-spacing:.14em;color:var(--faint);text-transform:uppercase;display:block;margin-bottom:10px}
+  .fact .f-v{font-size:15.5px;font-weight:600;line-height:1.65}
+  .fact .f-v small{display:block;font-weight:400;font-size:13px;color:var(--muted);margin-top:4px}
+
+  .deep-block{margin-top:76px}
+  .deep-block>h3{margin-bottom:26px;font-size:clamp(21px,2.6vw,25px)}
+  .setup-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+  @media (max-width:820px){.setup-grid{grid-template-columns:1fr}}
+  .setup-card{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:28px;box-shadow:var(--shadow-card)}
+  .setup-card .s-step{display:inline-block;font-family:var(--mono);font-size:12px;font-weight:700;background:var(--ink);color:var(--blue-light);padding:4px 10px;border-radius:4px;margin-bottom:16px}
+  .setup-card h4{font-size:16.5px;font-weight:800;margin-bottom:8px}
+  .setup-card p{font-size:14px;color:var(--muted);margin-bottom:14px}
+  .cmdline{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    background:var(--ink);border-radius:8px;padding:12px 14px;
+    font-family:var(--mono);font-size:12.5px;color:var(--cream);word-break:break-all;
+  }
+  .cmdline .t-prompt{flex:none}
+  .copy-btn{
+    flex:none;font-family:inherit;font-size:11px;font-weight:700;letter-spacing:.08em;
+    background:transparent;color:var(--cream-faint);border:1px solid var(--cream-line);
+    border-radius:4px;padding:4px 9px;cursor:pointer;transition:all .15s;
+  }
+  .copy-btn:hover{color:var(--blue-light);border-color:var(--blue-light)}
+  .setup-note{margin-top:22px;font-size:13.5px;color:var(--muted);background:var(--paper);border:1px dashed var(--line);border-radius:10px;padding:16px 20px}
+  .setup-note b{color:var(--ink)}
+
+  .safety{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:14px 28px}
+  @media (max-width:820px){.safety{grid-template-columns:1fr}}
+  .safety li{
+    display:flex;gap:12px;font-size:14.5px;color:var(--muted);line-height:1.7;
+    padding:14px 0;border-bottom:1px solid var(--line);
+  }
+  .safety li b{color:var(--ink)}
+  .safety li::before{content:"✓";color:var(--blue);font-weight:800;flex:none}
+  .safety-warn{
+    margin-top:26px;padding:18px 22px;border-radius:10px;
+    background:rgba(245,74,69,.07);border:1px solid rgba(245,74,69,.3);
+    font-size:14px;color:var(--muted);
+  }
+  .safety-warn b{color:var(--red,#F54A45)}
+
+  /* ---------- FAQ ---------- */
+  .faq-list{max-width:780px}
+  .faq-item{background:var(--paper);border:1.5px solid var(--ink);border-radius:10px;margin-bottom:14px;overflow:hidden;box-shadow:var(--shadow-card)}
+  .faq-item summary{
+    list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:18px;
+    padding:20px 24px;font-weight:700;font-size:16px;
+  }
+  .faq-item summary::-webkit-details-marker{display:none}
+  .faq-item summary .plus{
+    flex:none;width:26px;height:26px;border:1.5px solid var(--ink);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:400;font-size:16px;line-height:1;transition:transform .2s ease,background .2s,color .2s;
+  }
+  .faq-item[open] summary .plus{background:var(--ink);color:var(--yellow);transform:rotate(45deg)}
+  .faq-item .faq-body{padding:0 24px 22px;font-size:14.5px;color:var(--muted);line-height:1.85}
+  .faq-item .faq-body b{color:var(--ink)}
+  .faq-item .faq-body code{font-family:var(--mono);font-size:12.5px;background:rgba(23,21,31,.07);padding:2px 6px;border-radius:4px;color:var(--ink)}
+
+  /* ---------- audience ---------- */
+  .aud-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+  @media (max-width:1000px){.aud-grid{grid-template-columns:1fr 1fr}}
+  @media (max-width:640px){.aud-grid{grid-template-columns:1fr}}
+  .aud-card{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:26px 24px;box-shadow:var(--shadow-card);display:flex;flex-direction:column}
+  .aud-card .a-who{font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin-bottom:12px}
+  .aud-card h3{font-size:16.5px;margin-bottom:10px}
+  .aud-card p{font-size:13.5px;color:var(--muted);flex:1;line-height:1.75}
+  .aud-card .start{
+    margin-top:16px;font-family:var(--mono);font-size:11.5px;color:#fff;
+    background:var(--blue);padding:7px 11px;border-radius:6px;word-break:break-all;
+  }
+
+  /* ---------- sources ---------- */
+  .sources-card{background:var(--ink);color:var(--cream);border-radius:16px;padding:52px 54px;max-width:860px}
+  @media (max-width:720px){.sources-card{padding:36px 26px}}
+  .sources-card .eyebrow{color:var(--yellow);margin-bottom:28px}
+  .source-item{display:flex;gap:18px;padding:16px 0;border-bottom:1px solid var(--cream-line);text-decoration:none;transition:padding-left .18s}
+  .source-item:hover{padding-left:8px}
+  .source-item:last-of-type{border-bottom:none}
+  .source-item .s-no{font-family:var(--mono);font-size:12.5px;color:var(--blue-light);font-weight:700;flex:none;padding-top:2px}
+  .source-item .s-t{font-weight:700;font-size:15.5px;color:var(--cream)}
+  .source-item .s-d{font-size:13px;color:var(--cream-faint);margin-top:3px}
+  .source-item .s-arrow{margin-left:auto;color:var(--cream-faint);flex:none;padding-top:2px}
+  .sources-note{margin-top:26px;font-size:12.5px;color:var(--cream-faint)}
+
+  /* ---------- CTA ---------- */
+  .section-cta{background:var(--blue)}
+  .cta-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:48px;align-items:center}
+  @media (max-width:820px){.cta-grid{grid-template-columns:1fr}}
+  .section-cta .eyebrow{color:rgba(255,255,255,.72);margin-bottom:22px}
+  .section-cta h2{margin-bottom:18px;color:#fff}
+  .section-cta p{color:rgba(255,255,255,.85);max-width:30em;margin-bottom:30px}
+  .cta-cmd{
+    display:flex;align-items:center;gap:12px;background:var(--ink);border-radius:10px;
+    padding:16px 18px;font-family:var(--mono);font-size:14px;color:var(--cream);
+    max-width:480px;box-shadow:0 14px 30px -12px rgba(23,21,31,.5);
+  }
+  .cta-cmd .t-prompt{color:var(--blue-light)}
+  .cta-cmd .copy-btn{color:var(--cream-muted);border-color:var(--cream-line)}
+  .cta-cmd .copy-btn:hover{color:var(--yellow);border-color:var(--yellow)}
+  .cta-art{display:flex;align-items:center;justify-content:center;gap:22px;font-family:var(--mono);font-weight:700}
+  .cta-art .q,.cta-art .v{font-size:clamp(56px,7vw,88px);line-height:1}
+  .cta-art .q{color:rgba(255,255,255,.32)}
+  .cta-art .v{color:#fff}
+  .cta-art .arrow{font-size:34px;color:rgba(255,255,255,.55)}
+  @media (max-width:820px){.cta-art{display:none}}
+
+  /* ---------- footer ---------- */
+  footer{background:var(--ink);color:var(--cream);padding:64px 0 36px}
+  .foot-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:44px;margin-bottom:52px}
+  @media (max-width:820px){.foot-grid{grid-template-columns:1fr}}
+  .foot-brand .brand{color:var(--cream);margin-bottom:16px}
+  .foot-brand .brand-mark{background:var(--blue);color:#fff}
+  .foot-brand p{font-size:13.5px;color:var(--cream-faint);max-width:26em}
+  .foot-col h4{font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--cream-faint);margin-bottom:18px}
+  .foot-col ul{list-style:none}
+  .foot-col li{margin-bottom:11px}
+  .foot-col a{font-size:14px;color:var(--cream-muted);text-decoration:none;transition:color .15s}
+  .foot-col a:hover{color:var(--cream)}
+  .foot-bottom{border-top:1px solid var(--cream-line);padding-top:26px;font-size:12.5px;color:var(--cream-faint);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+  [id]{scroll-margin-top:76px}
+</style>
+</head>
+<body>
+
+<!-- ================= NAV ================= -->
+<nav class="nav">
+  <div class="container nav-inner">
+    <a class="brand" href="#top"><span class="brand-mark">d_</span>DeepSeek Harness 是什么？</a>
+    <ul class="nav-links">
+      <li class="hide-sm"><a href="#journey">任务怎么跑</a></li>
+      <li class="hide-sm"><a href="#what">它是什么</a></li>
+      <li class="hide-sm"><a href="#start">快速开始</a></li>
+      <li class="hide-sm"><a href="#faq">常见问题</a></li>
+      <li><a class="nav-cta" href="https://github.com/deepseek-ai/deepseek-harness" target="_blank" rel="noopener">GitHub ↗</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- ================= HERO ================= -->
+<header class="hero" id="top">
+  <div class="container hero-grid">
+    <div>
+      <p class="eyebrow">给想弄懂 Agent 框架的人的实用指南</p>
+      <h1>DeepSeek Harness<br>是什么？</h1>
+      <p class="lead">DeepSeek Harness（命令行里叫 <strong>dsh</strong>）是 DeepSeek 开源的 Agent 运行框架：它包在模型外面，提供工具、会话、沙盒和插件系统——让模型不只是回答问题，而是能动手干活。</p>
+      <p class="example">比如，对它说一句<b>"每周五下午整理项目记录、生成周报"</b>，它到点自动跑完，成果以文档、表格、PDF 直接预览。官方给它的定位只有一句话：<b>Everything is a Plugin，一切皆插件</b>。</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#start">一分钟上手 ↓</a>
+        <a class="btn btn-ghost" href="https://github.com/deepseek-ai/deepseek-harness" target="_blank" rel="noopener">GitHub 仓库 ↗</a>
+      </div>
+      <div class="hero-meta">
+        <span class="chip"><i class="dot"></i>DeepSeek 官方 · MIT 开源</span>
+        <span class="chip"><i class="dot"></i>GitHub 26 万 Star</span>
+        <span class="chip"><i class="dot"></i>开发者预览 · 快速迭代</span>
+        <span class="chip"><i class="dot"></i>Web / 桌面端</span>
+      </div>
+    </div>
+
+    <div class="terminal" aria-label="DeepSeek Harness 命令演示">
+      <div class="terminal-bar"><i></i><i></i><i></i><span class="terminal-title">terminal — dsh</span></div>
+      <div class="terminal-steps" role="tablist" aria-label="演示步骤">
+        <button type="button" role="tab" data-step="0" aria-selected="true">① 启动</button>
+        <button type="button" role="tab" data-step="1" aria-selected="false">② 干活</button>
+        <button type="button" role="tab" data-step="2" aria-selected="false">③ 自动化</button>
+      </div>
+      <div class="terminal-body" id="hero-term" aria-live="polite"></div>
+    </div>
+  </div>
+</header>
+
+<!-- ================= JOURNEY (YELLOW) ================= -->
+<section class="section section-yellow" id="journey">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">体验一次任务</p>
+      <h2>一个请求，在 Harness 里怎么跑</h2>
+      <p>点击左侧环节，看官方架构文档描述的执行流程。正是这条流水线，把"会说话的模型"变成了"能干活的 Agent"。</p>
+    </div>
+
+    <div class="journey-layout">
+      <div class="journey-list" id="journey-list" role="tablist" aria-label="任务流程"></div>
+      <div class="journey-terminal">
+        <div class="terminal">
+          <div class="terminal-bar"><i></i><i></i><i></i><span class="terminal-title">session.jsonl — 事件流</span></div>
+          <div class="terminal-body" id="journey-term" aria-live="polite"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="layers reveal">
+      <div class="layer">
+        <span class="lv">PLUGIN 1 · 换脑子</span>
+        <h3>模型适配器</h3>
+        <p>开箱即接 DeepSeek 系模型（官方界面示例 DeepSeek-V41-Flash），适配器本身是插件，也能换成其他提供方的模型。</p>
+      </div>
+      <div class="layer">
+        <span class="lv">PLUGIN 2 · 给手脚</span>
+        <h3>工具与审批</h3>
+        <p>文件系统、终端、子进程、后台任务都是可插拔组件；执行要过 <code>pre-execute → execute → post-execute</code> 把关流水线。</p>
+      </div>
+      <div class="layer">
+        <span class="lv">PLUGIN 3 · 连循环</span>
+        <h3>Agent 循环与会话</h3>
+        <p>连 Agent 循环本身都是插件。会话日志是唯一事实源——<code>session.jsonl</code>，每次模型请求都能从日志完整重建。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SCENARIOS (WHITE) ================= -->
+<section class="section" id="scenarios">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">大家在用 Harness 做什么</p>
+      <h2>模型负责聪明，Harness 负责可靠</h2>
+      <p>三个官方页面演示与社区里最常见的用法。它们是典型场景，具体效果取决于你接的模型与插件配置。</p>
+    </div>
+    <div class="cards-3">
+      <article class="card reveal">
+        <div class="tag-row"><span class="tag tag-accent">自动化</span><span class="tag">定时任务</span></div>
+        <h3>每周五 17:00，周报自己长出来</h3>
+        <p>把"整理项目记录、生成周报"设成定时任务，到点后台执行，文档写好后直接在界面里预览——官方页面的同款演示。</p>
+        <div class="seed">用到 → <b>ctx.jobs</b> 后台任务 + 文档工具</div>
+      </article>
+      <article class="card reveal">
+        <div class="tag-row"><span class="tag tag-accent">代码</span><span class="tag">终端</span></div>
+        <h3>修问题、写功能、跑测试</h3>
+        <p>让它读代码、改代码、运行测试、看报错再改——终端和文件系统工具由沙盒兜底，动作全程可审计。</p>
+        <div class="seed">用到 → <b>ctx.shell</b> / <b>ctx.fs</b> + 沙盒策略</div>
+      </article>
+      <article class="card reveal">
+        <div class="tag-row"><span class="tag tag-accent">查证</span><span class="tag">文档</span></div>
+        <h3>资料查证，标注来源</h3>
+        <p>搜索、核对、给结论标注来源，输出成一篇结构化报告。整理资料、分析表格、制作汇报是官方列出的第一组用途。</p>
+        <div class="seed">用到 → <b>搜索工具</b> + 文档导出（docx / pdf）</div>
+      </article>
+    </div>
+    <p class="cards-note reveal">以上为官方演示与社区典型用法，本站未复测 · 预览期能力变化较快，以官方文档为准。</p>
+  </div>
+</section>
+
+<!-- ================= STATEMENT (DARK) ================= -->
+<section class="section section-dark" id="why">
+  <div class="container">
+    <div class="statement reveal">
+      <p class="eyebrow">为什么值得看</p>
+      <h2>没有特权内核，<br>每个部件都能被换掉。</h2>
+      <p class="quote">官方仓库的副标题就是理念：<code>Everything is a Plugin</code>——模型适配器、工具注册表、会话日志，乃至 Agent 循环本身，都是可插拔的组件。扩展方式只是"把插件挂到其他插件旁边"，卸载时注册项自动撤销。甚至有一篇论文为这套范式背书：《A Programming Paradigm for Spatiotemporal Composability》。</p>
+      <div class="pillars">
+        <div class="pillar reveal">
+          <span class="p-no">01</span>
+          <h3>一切皆插件</h3>
+          <p>由开源插件系统 Cordis 驱动：服务、类型化事件、可逆副作用。替换提供方即替换产品形态——比如把文件系统与进程指向远程沙盒。</p>
+        </div>
+        <div class="pillar reveal">
+          <span class="p-no">02</span>
+          <h3>日志是唯一事实源</h3>
+          <p>会话是只追加的事件日志（JSONL + zstd 压缩）："每个模型请求都必须能从日志重建"。取消是安全的，历史不会被悄悄改写。</p>
+        </div>
+        <div class="pillar reveal">
+          <span class="p-no">03</span>
+          <h3>生产级的配件</h3>
+          <p>审批策略、沙盒、凭据、遥测都在第一层 <code>dsh-base</code> 里，可用 patch 整体替换；执行轨迹、工具调用详情、计时信息随时可查。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= DEEP DIVE (WHITE) ================= -->
+<section class="section" id="what">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">依据与事实</p>
+      <h2>它到底是什么</h2>
+    </div>
+    <div class="facts reveal">
+      <div class="fact"><span class="f-k">出身</span><div class="f-v">DeepSeek AI 官方出品<small>2026 年 8 月开源，MIT 协议（杭州深度求索）</small></div></div>
+      <div class="fact"><span class="f-k">形态</span><div class="f-v">TypeScript 编写 · 多形态应用<small>Web UI、桌面端（macOS / Windows）、SDK、headless、ACP</small></div></div>
+      <div class="fact"><span class="f-k">架构</span><div class="f-v">Cordis 插件系统驱动<small>运行时是一棵插件树：profile → patch → overlay 逐层叠加</small></div></div>
+      <div class="fact"><span class="f-k">学术</span><div class="f-v">有设计论文背书<small>《A Programming Paradigm for Spatiotemporal Composability》(arXiv:2608.25512)</small></div></div>
+      <div class="fact"><span class="f-k">状态</span><div class="f-v">开发者预览（Developer Preview）<small>官方明说会有破坏性变更；迭代极快，提交数已超 2.3 万</small></div></div>
+      <div class="fact"><span class="f-k">热度</span><div class="f-v">GitHub 26 万 Star · 3.1 万 Fork<small>2026 年 10 月实测；有第三方报道称开源两日即破 9 万</small></div></div>
+    </div>
+
+    <div class="deep-block reveal" id="start">
+      <h3>你需要提供什么</h3>
+      <div class="setup-grid">
+        <div class="setup-card">
+          <span class="s-step">STEP 1 · 10 秒</span>
+          <h4>启动它</h4>
+          <p>装有 Node.js 就够了，一行命令起一个带完整界面的 Agent。本机会自动打开浏览器。</p>
+          <div class="cmdline"><span><span class="t-prompt">❯</span><span id="cmd-install">npx @deepseek-ai/dsh web</span></span><button class="copy-btn" data-copy="npx @deepseek-ai/dsh web">复制</button></div>
+        </div>
+        <div class="setup-card">
+          <span class="s-step">STEP 2 · 约 2 分钟</span>
+          <h4>配一次模型，直接开聊</h4>
+          <p>在设置里填模型凭据（开箱即接 DeepSeek 系模型，也能配其他提供方），然后像聊天一样布置任务。</p>
+          <div class="cmdline"><span><span class="t-prompt">❯</span>http://127.0.0.1:3080</span><button class="copy-btn" data-copy="http://127.0.0.1:3080">打开</button></div>
+        </div>
+      </div>
+      <p class="setup-note"><b>不想用命令行？</b>桌面端提供 macOS（Apple 芯片）与 Windows（64 位）安装包；想改源码就 <b style="font-family:var(--mono)">git clone</b> + <b style="font-family:var(--mono)">pnpm install</b>。官方建议运行前先读仓库里的 <b style="font-family:var(--mono)">SAFETY.zh.md</b> 安全说明。</p>
+    </div>
+
+    <div class="deep-block reveal">
+      <h3>安全与可靠性设计在哪里</h3>
+      <ul class="safety">
+        <li><span><b>审批策略</b>——工具执行前可被策略拦下，"自动授权审查"插件（实验性）帮你审 Agent 的每个动作。</span></li>
+        <li><span><b>沙盒</b>——启动进程前由沙盒包装 argv，写入根目录受限；可整体替换成远程沙盒。</span></li>
+        <li><span><b>把关流水线</b>——每个工具调用都经过 <b style="font-family:var(--mono)">pre-execute → execute → post-execute</b>，任一环节可拦截。</span></li>
+        <li><span><b>日志不可变</b>——会话事件只追加、已提交路径不重命名不删除；取消请求不会污染历史。</span></li>
+        <li><span><b>可观测</b>——开发者工具可查看执行轨迹、工具调用详情与计时信息，排查问题不用猜。</span></li>
+        <li><span><b>凭据独立</b>——设置与凭据是独立插件，不散落在配置文件里。</span></li>
+      </ul>
+      <p class="safety-warn"><b>官方的诚实提醒：</b>项目处于开发者预览阶段，"未来将出现破坏兼容性的变更"。给 Agent 的权限、接的模型、装的插件都值得审慎——生产环境建议隔离评估后再上。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FAQ (YELLOW) ================= -->
+<section class="section section-yellow" id="faq">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">接下来继续了解</p>
+      <h2>常见问题</h2>
+    </div>
+    <div class="faq-list">
+      <details class="faq-item reveal">
+        <summary>"Harness"这个词到底是什么意思？<span class="plus">+</span></summary>
+        <div class="faq-body">直译是"挽具"——套在马身上让人能驾驭马的那套装备。工程语境里指<b>包在模型外面的运行时骨架</b>：模型负责生成"下一步做什么"，harness 负责给模型工具、记住上下文、真正执行动作、并保证安全。模型是马，Harness 是那套挽具。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>它和网页版 DeepSeek / ChatGPT 有什么区别？<span class="plus">+</span></summary>
+        <div class="faq-body">网页聊天只能"说"；Harness 让模型"做"：读写文件、跑终端、后台批处理、定时任务，成果以 docx、xlsx、HTML、PDF 直接预览。而且整套东西运行在<b>你自己的机器</b>上，过程有日志、有轨迹、可审计。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>免费吗？开源吗？<span class="plus">+</span></summary>
+        <div class="faq-body">工具本身 <b>MIT 开源、完全免费</b>，运行 Harness 不花钱。模型调用按你接入的提供方计费——用 DeepSeek API 就按其 API 价格，换成别家就按别家的价格。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>只能配 DeepSeek 的模型吗？<span class="plus">+</span></summary>
+        <div class="faq-body">不是。模型适配器本身就是插件，官方支持接入<b>其他提供方的模型</b>——这正是"一切皆插件"的直接好处：换模型不动主体，改配置就行。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>和 Claude Code 这类工具有什么区别？<span class="plus">+</span></summary>
+        <div class="faq-body">定位相似（都是让模型动手干活），但路线不同：Harness 把<b>整个骨架</b>——循环、工具、审批、存储——都做成可替换插件，并提供 Web / 桌面 / SDK / headless / ACP 多种形态，还面向普通用户做了界面。有第三方评测把它与 Claude Code 对比，称其为少数"从第一性原理出发"系统化设计的开源 Agent 框架。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>现在上生产靠谱吗？怎么扩展？<span class="plus">+</span></summary>
+        <div class="faq-body">官方定位是<b>开发者预览</b>，明确警告会有破坏性变更——生产环境建议隔离评估。扩展方面：可安装现成插件（GitHub topic <code>dsh-plugin</code>）或自制插件，甚至能对话式创建——官方演示里 5 分 24 秒就做出了一个"番茄时钟"悬浮插件。</div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ================= AUDIENCE (WHITE) ================= -->
+<section class="section" id="who">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">它适合谁</p>
+      <h2>四类人，四个起点</h2>
+    </div>
+    <div class="aud-grid">
+      <div class="aud-card reveal">
+        <span class="a-who">For Everyone</span>
+        <h3>普通用户</h3>
+        <p>整理资料、分析表格、写汇报，开箱即用的 Web / 桌面界面，像聊天一样布置任务。</p>
+        <div class="start">起点 → npx @deepseek-ai/dsh web</div>
+      </div>
+      <div class="aud-card reveal">
+        <span class="a-who">For Developers</span>
+        <h3>开发者</h3>
+        <p>写插件、跑源码、接自己的模型——Cordis 生态、类型化事件与能力接缝都是标准玩法。</p>
+        <div class="start">起点 → docs/architecture.zh.md</div>
+      </div>
+      <div class="aud-card reveal">
+        <span class="a-who">For Teams</span>
+        <h3>团队</h3>
+        <p>定时自动化任务、后台批处理、可配置的审批与沙盒，把重复流程交给 Agent 并保留审计。</p>
+        <div class="start">起点 → 自动化任务面板</div>
+      </div>
+      <div class="aud-card reveal">
+        <span class="a-who">For Researchers</span>
+        <h3>研究者 / 极客</h3>
+        <p>读设计论文、替换 Agent 循环、把执行世界迁到远程沙盒——把 Agent 当可编程对象来实验。</p>
+        <div class="start">起点 → arXiv:2608.25512</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SOURCES (WHITE + DARK CARD) ================= -->
+<section class="section" id="sources" style="padding-top:24px">
+  <div class="container">
+    <div class="sources-card reveal">
+      <p class="eyebrow">来源与延伸阅读</p>
+      <a class="source-item" href="https://github.com/deepseek-ai/deepseek-harness" target="_blank" rel="noopener">
+        <span class="s-no">01</span>
+        <span><span class="s-t">GitHub · deepseek-ai/deepseek-harness</span><br><span class="s-d">官方仓库："Everything is a Plugin."，含 README 与架构文档</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="https://www.deepseek.com/zh/harness" target="_blank" rel="noopener">
+        <span class="s-no">02</span>
+        <span><span class="s-t">deepseek.com/zh/harness</span><br><span class="s-d">官方产品页："共探智能上限"，功能演示与下载入口</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="https://deepseek-harness.github.io/deepseek-harness/" target="_blank" rel="noopener">
+        <span class="s-no">03</span>
+        <span><span class="s-t">官方文档站</span><br><span class="s-d">架构文档、插件指南与 profile 说明</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="https://arxiv.org/abs/2608.25512" target="_blank" rel="noopener">
+        <span class="s-no">04</span>
+        <span><span class="s-t">arXiv:2608.25512 · 设计论文</span><br><span class="s-d">A Programming Paradigm for Spatiotemporal Composability</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="https://github.com/deepseek-ai/deepseek-harness/blob/master/SAFETY.zh.md" target="_blank" rel="noopener">
+        <span class="s-no">05</span>
+        <span><span class="s-t">SAFETY.zh.md · 安全说明</span><br><span class="s-d">官方建议运行前阅读的安全文档</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <p class="sources-note">本页内容整理自以上官方公开资料与第三方报道，更新于 2026 年 10 月。项目处于预览期，细节变化快，请以官方文档为准。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CTA (BLUE) ================= -->
+<section class="section section-cta">
+  <div class="container cta-grid">
+    <div class="reveal">
+      <p class="eyebrow">开始使用</p>
+      <h2>试着让它开始干活</h2>
+      <p>一行命令，把一个能动手的 Agent 请到你的机器上。</p>
+      <div class="cta-cmd">
+        <span class="t-prompt">❯</span>
+        <span style="flex:1;word-break:break-all">npx @deepseek-ai/dsh web</span>
+        <button class="copy-btn" data-copy="npx @deepseek-ai/dsh web">复制</button>
+      </div>
+    </div>
+    <div class="cta-art" aria-hidden="true">
+      <span class="q">?</span><span class="arrow">→</span><span class="v">✓</span>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FOOTER ================= -->
+<footer>
+  <div class="container">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <a class="brand" href="#top"><span class="brand-mark">d_</span>DeepSeek Harness 是什么？</a>
+        <p>一页讲清楚 DeepSeek 的开源 Agent 运行框架：它是什么、一次请求怎么跑、怎么开始，以及把任务交给它之前你该知道的事。</p>
+      </div>
+      <div class="foot-col">
+        <h4>本页导航</h4>
+        <ul>
+          <li><a href="#journey">一次任务怎么跑</a></li>
+          <li><a href="#why">为什么值得看</a></li>
+          <li><a href="#start">快速开始</a></li>
+          <li><a href="#faq">常见问题</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h4>本系列</h4>
+        <ul>
+          <li><a href="什么是飞书CLI.html">什么是飞书 CLI？</a></li>
+          <li><a href="index.html">🏠 知识地图（主页）</a></li>
+          <li><a href="#top">什么是 DeepSeek Harness？（本页）</a></li>
+          <li><a href="什么是AgentHarness.html">什么是 Agent Harness？</a></li>
+          <li><a href="什么是Prompt工程.html">什么是 Prompt 工程？</a></li>
+          <li><a href="什么是RAG.html">什么是 RAG？</a></li>
+          <li><a href="什么是MCP.html">什么是 MCP？</a></li>
+          <li><a href="什么是幻觉.html">什么是幻觉？</a></li>
+          <li><a href="什么是思维链.html">什么是思维链？</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h4>官方资源</h4>
+        <ul>
+          <li><a href="https://github.com/deepseek-ai/deepseek-harness" target="_blank" rel="noopener">GitHub · deepseek-harness ↗</a></li>
+          <li><a href="https://www.deepseek.com/zh/harness" target="_blank" rel="noopener">官方产品页 ↗</a></li>
+          <li><a href="https://deepseek-harness.github.io/deepseek-harness/" target="_blank" rel="noopener">官方文档站 ↗</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>本页为独立学习指南，与 DeepSeek（杭州深度求索）官方没有关联 · 内容整理自官方公开文档</span>
+      <span>更新于 2026 年 10 月</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+document.documentElement.classList.add('js');
+
+/* ---------- helpers ---------- */
+var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function el(tag, cls, text){
+  var n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text !== undefined) n.textContent = text;
+  return n;
+}
+
+/* type a command string into a span, then call done */
+function typeCmd(span, text, done){
+  if (reduceMotion){ span.textContent = text; done && done(); return; }
+  var i = 0;
+  (function tick(){
+    span.textContent = text.slice(0, ++i);
+    if (i < text.length){ setTimeout(tick, text[i-1] === ' ' ? 34 : 18); }
+    else { done && done(); }
+  })();
+}
+
+function renderTerm(container, spec){
+  container.innerHTML = '';
+  var line = el('div','t-line');
+  var prompt = el('span','t-prompt', spec.prompt || '❯');
+  var cmd = el('span','t-cmd');
+  var cur = el('span','cursor');
+  line.appendChild(prompt); line.appendChild(cmd); line.appendChild(cur);
+  container.appendChild(line);
+  typeCmd(cmd, spec.cmd, function(){
+    cur.remove();
+    (spec.out || []).forEach(function(o){
+      container.appendChild(el('div','t-line ' + (o.cls || 't-out'), o.text));
+    });
+    if (spec.note) container.appendChild(el('div','t-note', spec.note));
+  });
+}
+
+/* ---------- hero terminal steps ---------- */
+var heroSteps = [
+  {
+    cmd: 'npx @deepseek-ai/dsh web',
+    out: [
+      { text: '✓ Harness 已就绪 · profile: web', cls: 't-ok' },
+      { text: '✓ Web UI → http://127.0.0.1:3080', cls: 't-ok' },
+      { text: '（本机已自动打开浏览器）', cls: 't-dim' }
+    ],
+    note: '第 1 步 · 启动：只需 Node.js。加 --no-open 可只起服务器不开浏览器。'
+  },
+  {
+    cmd: '"把本周会议记录整理成周报"',
+    prompt: '你',
+    out: [
+      { text: 'turn/start · 输入已写入会话日志', cls: 't-dim' },
+      { text: '→ tool: fs.read  meetings/W43/*.md (6)', cls: 't-out' },
+      { text: '→ tool: fs.write 周报-W43.md', cls: 't-out' },
+      { text: '✓ turn/end · 成果已生成，可预览', cls: 't-ok' }
+    ],
+    note: '第 2 步 · 干活：模型负责思考，Harness 负责工具、会话与沙盒，一条循环跑完。'
+  },
+  {
+    cmd: '"每周五 17:00 整理项目记录，生成周报"',
+    prompt: '你',
+    out: [
+      { text: '✓ ctx.jobs：定时任务已创建', cls: 't-ok' },
+      { text: '下次运行：周五 17:00 · 后台执行', cls: 't-out' },
+      { text: '（进度随时可查）', cls: 't-dim' }
+    ],
+    note: '第 3 步 · 自动化：耗时的重复劳动交给定时任务，官方页面的同款演示。'
+  }
+];
+
+var heroTerm = document.getElementById('hero-term');
+var heroBtns = document.querySelectorAll('.terminal-steps button');
+var heroStopped = false;
+
+function showHeroStep(i){
+  heroBtns.forEach(function(b, j){
+    b.classList.toggle('active', i === j);
+    b.setAttribute('aria-selected', i === j ? 'true' : 'false');
+  });
+  renderTerm(heroTerm, heroSteps[i]);
+}
+heroBtns.forEach(function(b){
+  b.addEventListener('click', function(){
+    heroStopped = true; /* user took over, stop auto-advance */
+    showHeroStep(+b.dataset.step);
+  });
+});
+showHeroStep(0);
+/* auto-advance the demo gently; stops once the user takes over */
+(function autoAdvance(){
+  if (reduceMotion) return;
+  var idx = 0;
+  setInterval(function(){
+    if (heroStopped) return;
+    idx = (idx + 1) % heroSteps.length;
+    showHeroStep(idx);
+  }, 7000);
+})();
+
+/* ---------- journey switcher ---------- */
+var journey = [
+  {
+    name: '布置任务', desc: 'turn/start · 输入持久化',
+    spec: {
+      prompt: '你',
+      cmd: '"把本周会议记录整理成周报"',
+      out: [
+        { text: 'turn/start · claim 输入', cls: 't-dim' },
+        { text: '✓ 用户消息已提交并持久化', cls: 't-ok' }
+      ],
+      note: '每条输入都先写进会话日志——日志是唯一事实源，请求不可变，取消也不会污染历史。'
+    }
+  },
+  {
+    name: '组装请求', desc: 'agent/request · 流式响应',
+    spec: {
+      prompt: '❯',
+      cmd: 'deriveMessages(session.jsonl)',
+      out: [
+        { text: '← 从日志投影模型历史', cls: 't-dim' },
+        { text: '✓ 系统提示词组装完成', cls: 't-ok' },
+        { text: '模型已在请求前快照：deepseek-v41-flash', cls: 't-out' },
+        { text: 'agent/request · 流式响应中…', cls: 't-out' }
+      ],
+      note: '"每个模型请求都必须能从日志重建"——这句写在架构文档里，是可靠性的底座。'
+    }
+  },
+  {
+    name: '工具调用', desc: 'tools/* · 插件执行',
+    spec: {
+      prompt: '❯',
+      cmd: 'tool 调用（由插件提供）',
+      out: [
+        { text: '→ fs.read   meetings/W43/*.md (6)', cls: 't-out' },
+        { text: '→ fs.write  周报-W43.md', cls: 't-out' },
+        { text: 'step/end · 本步 2 次调用', cls: 't-dim' }
+      ],
+      note: '工具是插件，执行要过 pre-execute → execute → post-execute 流水线，任一环节都能拦截。'
+    }
+  },
+  {
+    name: '审批与沙盒', desc: 'policies · dsh-base',
+    spec: {
+      prompt: '❯',
+      cmd: 'tools/pre-execute',
+      out: [
+        { text: '⏸ 写文件命中审批策略 → 等待确认', cls: 't-out' },
+        { text: '✓ 你点了"允许"（或自动授权审查放行）', cls: 't-ok' },
+        { text: '🛡 沙盒已包装 argv · 写入根目录受限', cls: 't-ok' }
+      ],
+      note: '审批与沙盒策略属于第一层 dsh-base，可用 patch 整体替换成远程沙盒。'
+    }
+  },
+  {
+    name: '成果与日志', desc: 'turn/end · 可审计',
+    spec: {
+      prompt: '❯',
+      cmd: 'turn/end',
+      out: [
+        { text: '✓ 本轮 3 个工具调用 · 全部留痕', cls: 't-ok' },
+        { text: '📄 成果可预览：docx xlsx html pdf…', cls: 't-out' },
+        { text: '轨迹 / 调用详情 / 计时 → 开发者工具', cls: 't-dim' }
+      ],
+      note: '排查问题不用猜：执行轨迹、工具调用详情与计时信息都能看。'
+    }
+  }
+];
+
+var journeyList = document.getElementById('journey-list');
+var journeyTerm = document.getElementById('journey-term');
+journey.forEach(function(t, i){
+  var b = el('button', 'journey-btn' + (i === 0 ? ' active' : ''));
+  b.type = 'button';
+  b.setAttribute('role', 'tab');
+  b.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
+  b.appendChild(el('span', 'num', String(i + 1)));
+  var wrap = el('span');
+  wrap.appendChild(el('span', 't-name', t.name));
+  wrap.appendChild(document.createElement('br'));
+  wrap.appendChild(el('span', 't-desc', t.desc));
+  b.appendChild(wrap);
+  b.addEventListener('click', function(){
+    journeyList.querySelectorAll('.journey-btn').forEach(function(x){
+      x.classList.remove('active'); x.setAttribute('aria-selected', 'false');
+    });
+    b.classList.add('active'); b.setAttribute('aria-selected', 'true');
+    renderTerm(journeyTerm, t.spec);
+  });
+  journeyList.appendChild(b);
+});
+renderTerm(journeyTerm, journey[0].spec);
+
+/* ---------- copy buttons ---------- */
+document.querySelectorAll('.copy-btn').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    var text = btn.dataset.copy || '';
+    var done = function(){
+      var old = btn.textContent;
+      btn.textContent = '已复制 ✓';
+      setTimeout(function(){ btn.textContent = old; }, 1600);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done, function(){ fallbackCopy(text); done(); });
+    } else { fallbackCopy(text); done(); }
+  });
+});
+function fallbackCopy(text){
+  var ta = document.createElement('textarea');
+  ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); } catch(e){}
+  ta.remove();
+}
+
+/* ---------- reveal on scroll ---------- */
+var revealEls = document.querySelectorAll('.reveal');
+if ('IntersectionObserver' in window && !reduceMotion){
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if (en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); }
+    });
+  }, { threshold: 0.12 });
+  revealEls.forEach(function(n){ io.observe(n); });
+} else {
+  revealEls.forEach(function(n){ n.classList.add('in'); });
+}
+</script>
+</body>
+</html>
