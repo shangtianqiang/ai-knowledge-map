@@ -557,7 +557,7 @@
       <h3>安全与可靠性设计在哪里</h3>
       <ul class="safety">
         <li><span><b>审批策略</b>——工具执行前可被策略拦下，"自动授权审查"插件（实验性）帮你审 Agent 的每个动作。</span></li>
-        <li><span><b>沙盒</b>——启动进程前由沙盒包装 argv，写入根目录受限；可整体替换成远程沙盒。</span></li>
+        <li><span><b>沙盒</b>——启动进程前由沙盒包装 argv，写入被限制在沙盒根目录内；沙盒提供方可整体替换（如远程沙盒）。</span></li>
         <li><span><b>把关流水线</b>——每个工具调用都经过 <b style="font-family:var(--mono)">pre-execute → execute → post-execute</b>，任一环节可拦截。</span></li>
         <li><span><b>日志不可变</b>——会话事件只追加、已提交路径不重命名不删除；取消请求不会污染历史。</span></li>
         <li><span><b>可观测</b>——开发者工具可查看执行轨迹、工具调用详情与计时信息，排查问题不用猜。</span></li>
@@ -902,7 +902,7 @@ var journey = [
       out: [
         { text: '⏸ 写文件命中审批策略 → 等待确认', cls: 't-out' },
         { text: '✓ 你点了"允许"（或自动授权审查放行）', cls: 't-ok' },
-        { text: '🛡 沙盒已包装 argv · 写入根目录受限', cls: 't-ok' }
+        { text: '🛡 沙盒已包装 argv · 写入限制在沙盒根目录内', cls: 't-ok' }
       ],
       note: '审批与沙盒策略属于第一层 dsh-base，可用 patch 整体替换成远程沙盒。'
     }
