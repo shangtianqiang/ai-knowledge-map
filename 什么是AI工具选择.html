@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#FBFAF7">
+<title>AI 工具怎么选？ | 国内外常用 AI Agent 工具地图</title>
+<meta name="description" content="一页讲清楚 AI Agent 工具怎么选：编码 Agent、通用助手、自主任务、开发平台四大品类，国内外双生态盘点，加一份选型四问清单。全部产品经联网核实。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2317151F'/%3E%3Ctext x='16' y='22' font-size='15' font-family='monospace' fill='%237DD3FC' text-anchor='middle'%3E%3E_%3C/text%3E%3C/svg%3E">
+<style>
+  :root{
+    --cream:#FBFAF7;
+    --ink:#17151F;
+    --paper:#FFFFFF;
+    --yellow:#FFD166;
+    --sky:#0284C7;
+    --sky-light:#7DD3FC;
+    --muted:rgba(23,21,31,.64);
+    --faint:rgba(23,21,31,.45);
+    --line:rgba(23,21,31,.14);
+    --line-strong:rgba(23,21,31,.85);
+    --cream-muted:rgba(251,250,247,.68);
+    --cream-faint:rgba(251,250,247,.42);
+    --cream-line:rgba(251,250,247,.16);
+    --mono:"SF Mono",ui-monospace,"JetBrains Mono",Menlo,Consolas,"Liberation Mono",monospace;
+    --shadow-card:0 1px 2px rgba(23,21,31,.05),0 10px 28px -14px rgba(23,21,31,.18);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    *,*::before,*::after{animation:none!important;transition:none!important}
+  }
+  body{
+    font-family:"PingFang SC","Microsoft YaHei","Inter Variable",system-ui,sans-serif;
+    background:var(--cream);
+    color:var(--ink);
+    font-size:16px;
+    line-height:1.75;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+  }
+  ::selection{background:var(--sky);color:#fff}
+  a{color:inherit}
+  .container{max-width:1128px;margin:0 auto;padding:0 24px}
+
+  html.js .reveal{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s ease}
+  html.js .reveal.in{opacity:1;transform:none}
+  @media (prefers-reduced-motion:reduce){html.js .reveal{opacity:1;transform:none}}
+  @media print{html.js .reveal{opacity:1!important;transform:none!important}}
+
+  .nav{
+    position:sticky;top:0;z-index:50;
+    background:rgba(251,250,247,.92);
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  .nav-inner{display:flex;align-items:center;justify-content:space-between;height:60px;gap:16px}
+  .brand{display:flex;align-items:center;gap:10px;text-decoration:none;font-weight:800;font-size:15px;letter-spacing:.01em}
+  .brand-mark{
+    width:26px;height:26px;background:var(--ink);color:var(--sky-light);
+    font-family:var(--mono);font-size:12px;font-weight:700;line-height:26px;text-align:center;
+    border-radius:5px;flex:none;
+  }
+  .nav-links{display:flex;align-items:center;gap:22px;list-style:none}
+  .nav-links a{text-decoration:none;font-size:13.5px;font-weight:500;color:var(--muted);transition:color .15s}
+  .nav-links a:hover{color:var(--ink)}
+  .nav-links a.nav-cta{
+    color:var(--ink);font-weight:700;border:1.5px solid var(--line-strong);
+    padding:6px 14px;border-radius:0;
+  }
+  .nav-links a.nav-cta:hover{background:var(--ink);color:var(--cream)}
+  @media (max-width:720px){.nav-links li.hide-sm{display:none}}
+
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:13px 26px;border-radius:0;border:1.5px solid transparent;
+    font-family:inherit;font-size:15px;font-weight:700;letter-spacing:.02em;
+    text-decoration:none;cursor:pointer;transition:transform .15s ease,background .15s ease,color .15s ease,box-shadow .15s ease;
+  }
+  .btn:active{transform:translateY(1px)}
+  .btn-primary{background:var(--sky);color:#fff}
+  .btn-primary:hover{box-shadow:0 6px 0 -2px rgba(23,21,31,.9)}
+  .btn-ghost{border-color:var(--line-strong);color:var(--ink);background:transparent}
+  .btn-ghost:hover{background:var(--ink);color:var(--cream)}
+  .btn-sm{padding:9px 18px;font-size:13.5px}
+
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:9px;
+    font-size:12.5px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;
+  }
+  .eyebrow::before{content:"";width:9px;height:9px;background:currentColor;flex:none}
+  h1{font-size:clamp(42px,6.6vw,74px);line-height:1.08;font-weight:800;letter-spacing:-.015em}
+  h2{font-size:clamp(30px,4.4vw,44px);line-height:1.18;font-weight:800;letter-spacing:-.01em}
+  h3{font-size:20px;font-weight:800;line-height:1.4}
+  .lead{font-size:clamp(17px,2vw,19.5px);line-height:1.8}
+
+  .hero{padding:76px 0 88px}
+  .hero-grid{display:grid;grid-template-columns:1.02fr .98fr;gap:56px;align-items:center}
+  @media (max-width:980px){.hero-grid{grid-template-columns:1fr;gap:44px}}
+  .hero .eyebrow{color:var(--ink);margin-bottom:26px}
+  .hero h1{margin-bottom:24px}
+  .hero .lead{color:var(--ink);margin-bottom:16px;max-width:34em}
+  .hero .example{color:var(--muted);font-size:15.5px;max-width:36em;margin-bottom:32px}
+  .hero .example b{color:var(--ink);font-weight:700}
+  .hero-actions{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:30px}
+  .hero-meta{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{
+    font-size:12px;font-weight:600;color:var(--muted);
+    border:1px solid var(--line);padding:5px 11px;border-radius:999px;
+    display:inline-flex;align-items:center;gap:6px;background:var(--paper);
+  }
+  .chip .dot{width:6px;height:6px;border-radius:50%;background:var(--sky)}
+
+  .terminal{
+    background:var(--ink);border-radius:14px;overflow:hidden;
+    box-shadow:0 2px 4px rgba(23,21,31,.12),0 30px 60px -22px rgba(23,21,31,.45);
+    border:1px solid rgba(23,21,31,.9);
+  }
+  .terminal-bar{
+    display:flex;align-items:center;gap:7px;
+    padding:13px 16px;border-bottom:1px solid var(--cream-line);
+  }
+  .terminal-bar i{width:11px;height:11px;border-radius:50%;background:rgba(251,250,247,.22)}
+  .terminal-bar i:first-child{background:#FF5F57}
+  .terminal-bar i:nth-child(2){background:#FEBC2E}
+  .terminal-bar i:nth-child(3){background:#28C840}
+  .terminal-bar .terminal-title{
+    margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--cream-faint);letter-spacing:.08em;
+  }
+  .terminal-steps{display:flex;gap:6px;padding:12px 14px 0;flex-wrap:wrap}
+  .terminal-steps button{
+    font-family:inherit;font-size:12.5px;font-weight:700;letter-spacing:.04em;
+    background:transparent;color:var(--cream-faint);
+    border:1px solid var(--cream-line);border-radius:999px;
+    padding:5px 13px;cursor:pointer;transition:all .18s;
+  }
+  .terminal-steps button:hover{color:var(--cream);border-color:var(--cream-faint)}
+  .terminal-steps button.active{background:var(--sky);border-color:var(--sky);color:#fff}
+  .terminal-body{padding:18px 20px 22px;min-height:238px;font-family:var(--mono);font-size:13.5px;line-height:1.9}
+  .t-line{white-space:pre-wrap;word-break:break-all}
+  .t-prompt{color:var(--sky-light);font-weight:700;margin-right:9px}
+  .t-cmd{color:var(--cream)}
+  .t-out{color:var(--cream-faint)}
+  .t-ok{color:#3EE8C6}
+  .t-dim{color:rgba(251,250,247,.35)}
+  .t-user{color:var(--yellow)}
+  .t-note{color:var(--cream-faint);font-family:"PingFang SC","Microsoft YaHei",sans-serif;font-size:12px;margin-top:12px;padding-top:10px;border-top:1px dashed var(--cream-line)}
+  .cursor{display:inline-block;width:8px;height:15px;background:var(--sky-light);vertical-align:-2px;animation:blink 1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+  @media (prefers-reduced-motion:reduce){.cursor{animation:none}}
+
+  .section{padding:96px 0}
+  .section-head{max-width:680px;margin-bottom:52px}
+  .section-head .eyebrow{margin-bottom:20px}
+  .section-head p{color:var(--muted);margin-top:16px;font-size:16.5px}
+
+  .section-yellow{background:var(--yellow)}
+  .section-yellow .section-head p{color:rgba(23,21,31,.72)}
+
+  .section-dark{background:var(--ink);color:var(--cream)}
+  .section-dark .eyebrow{color:var(--sky-light)}
+
+  .parts-layout{display:grid;grid-template-columns:.9fr 1.1fr;gap:36px;align-items:start}
+  @media (max-width:900px){.parts-layout{grid-template-columns:1fr}}
+  .parts-list{display:flex;flex-direction:column;gap:10px}
+  .part-btn{
+    display:flex;align-items:center;gap:14px;text-align:left;width:100%;
+    background:var(--paper);border:1.5px solid transparent;border-radius:10px;
+    padding:15px 18px;font-family:inherit;cursor:pointer;
+    transition:transform .16s ease,box-shadow .16s ease,border-color .16s;
+    box-shadow:var(--shadow-card);
+  }
+  .part-btn:hover{transform:translateY(-2px)}
+  .part-btn .num{
+    font-family:var(--mono);font-size:12px;font-weight:700;color:var(--muted);
+    width:30px;height:30px;border:1.5px solid var(--line);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;flex:none;transition:all .16s;
+  }
+  .part-btn .t-name{font-size:15.5px;font-weight:700}
+  .part-btn .t-desc{font-size:13px;color:var(--muted);margin-top:2px}
+  .part-btn.active{border-color:var(--ink);transform:translateY(-2px)}
+  .part-btn.active .num{background:var(--ink);border-color:var(--ink);color:var(--sky-light)}
+  .parts-terminal{position:sticky;top:84px}
+  @media (max-width:900px){.parts-terminal{position:static}}
+
+  .layers{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(23,21,31,.22);border:1.5px solid var(--ink);border-radius:12px;overflow:hidden;margin-top:56px}
+  @media (max-width:820px){.layers{grid-template-columns:1fr}}
+  .layer{background:var(--yellow);padding:26px 26px 24px}
+  .layer .lv{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.14em;color:rgba(23,21,31,.55);display:block;margin-bottom:12px}
+  .layer h3{font-size:17px;margin-bottom:8px}
+  .layer p{font-size:13.5px;color:rgba(23,21,31,.72);line-height:1.7}
+  .layer code{font-family:var(--mono);font-size:12.5px;background:rgba(23,21,31,.1);padding:2px 6px;border-radius:4px}
+
+  .cards-3{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+  @media (max-width:900px){.cards-3{grid-template-columns:1fr}}
+  .card{
+    background:var(--paper);border:1px solid var(--line);border-radius:12px;
+    padding:30px 28px 26px;box-shadow:var(--shadow-card);
+    display:flex;flex-direction:column;
+  }
+  .card .tag-row{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:20px}
+  .tag{
+    font-size:10.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+    padding:4px 9px;border:1px solid var(--line);border-radius:4px;color:var(--muted);
+  }
+  .tag.tag-accent{background:var(--ink);color:var(--sky-light);border-color:var(--ink)}
+  .card h3{margin-bottom:12px}
+  .card p{font-size:14.5px;color:var(--muted);flex:1}
+  .card p b{color:var(--ink)}
+  .card .seed{
+    margin-top:20px;padding-top:16px;border-top:1px dashed var(--line);
+    font-family:var(--mono);font-size:12px;color:var(--faint);word-break:break-all;
+  }
+  .card .seed b{color:var(--ink);font-weight:700}
+  .cards-note{margin-top:30px;font-size:13px;color:var(--faint);display:flex;align-items:center;gap:8px}
+  .cards-note::before{content:"※";color:var(--muted)}
+
+  .statement{max-width:820px}
+  .statement h2{margin-bottom:28px}
+  .statement .quote{
+    font-size:clamp(17px,2vw,19px);line-height:1.85;color:var(--cream-muted);
+    border-left:3px solid var(--sky-light);padding-left:22px;margin-bottom:52px;max-width:36em;
+  }
+  .statement .quote b{color:var(--cream)}
+  .statement .quote code{font-family:var(--mono);font-size:14px;background:rgba(251,250,247,.12);padding:2px 7px;border-radius:4px;color:var(--cream)}
+  .pillars{display:grid;grid-template-columns:repeat(3,1fr);gap:34px}
+  @media (max-width:820px){.pillars{grid-template-columns:1fr}}
+  .pillar .p-no{font-family:var(--mono);font-size:13px;color:var(--sky-light);font-weight:700;letter-spacing:.12em;display:block;margin-bottom:14px}
+  .pillar h3{color:var(--cream);margin-bottom:10px;font-size:17.5px}
+  .pillar p{font-size:14.5px;color:var(--cream-muted);line-height:1.8}
+  .pillar code{font-family:var(--mono);font-size:12.5px;background:rgba(251,250,247,.12);padding:2px 6px;border-radius:4px;color:var(--cream)}
+
+  .facts{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  @media (max-width:820px){.facts{grid-template-columns:1fr}}
+  .fact{background:var(--paper);padding:26px 26px 22px}
+  .fact .f-k{font-size:12px;font-weight:800;letter-spacing:.14em;color:var(--faint);text-transform:uppercase;display:block;margin-bottom:10px}
+  .fact .f-v{font-size:15.5px;font-weight:600;line-height:1.65}
+  .fact .f-v small{display:block;font-weight:400;font-size:13px;color:var(--muted);margin-top:4px}
+
+  .deep-block{margin-top:76px}
+  .deep-block>h3{margin-bottom:26px;font-size:clamp(21px,2.6vw,25px)}
+
+  .timeline{list-style:none;border-left:2px solid var(--ink);margin-left:6px}
+  .timeline li{position:relative;padding:0 0 26px 28px}
+  .timeline li:last-child{padding-bottom:0}
+  .timeline li::before{
+    content:"";position:absolute;left:-7px;top:9px;width:12px;height:12px;
+    background:var(--sky);border:2px solid var(--ink);border-radius:50%;
+  }
+  .timeline .tl-year{font-family:var(--mono);font-size:12.5px;font-weight:700;letter-spacing:.1em;color:var(--faint);display:block;margin-bottom:4px}
+  .timeline .tl-t{font-weight:800;font-size:16.5px}
+  .timeline p{font-size:14px;color:var(--muted);margin-top:4px;max-width:40em}
+  .timeline code{font-family:var(--mono);font-size:12.5px;background:rgba(23,21,31,.07);padding:2px 6px;border-radius:4px;color:var(--ink)}
+
+  .tensions{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:14px 28px}
+  @media (max-width:820px){.tensions{grid-template-columns:1fr}}
+  .tensions li{
+    display:flex;gap:12px;font-size:14.5px;color:var(--muted);line-height:1.7;
+    padding:14px 0;border-bottom:1px solid var(--line);
+  }
+  .tensions li b{color:var(--ink)}
+  .tensions li::before{content:"◆";color:var(--sky);font-weight:800;flex:none;font-size:12px;padding-top:5px}
+  .tensions-warn{
+    margin-top:26px;padding:18px 22px;border-radius:10px;
+    background:rgba(2,132,199,.08);border:1px solid rgba(2,132,199,.4);
+    font-size:14px;color:var(--muted);
+  }
+  .tensions-warn b{color:var(--ink)}
+
+  .faq-list{max-width:780px}
+  .faq-item{background:var(--paper);border:1.5px solid var(--ink);border-radius:10px;margin-bottom:14px;overflow:hidden;box-shadow:var(--shadow-card)}
+  .faq-item summary{
+    list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:18px;
+    padding:20px 24px;font-weight:700;font-size:16px;
+  }
+  .faq-item summary::-webkit-details-marker{display:none}
+  .faq-item summary .plus{
+    flex:none;width:26px;height:26px;border:1.5px solid var(--ink);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:400;font-size:16px;line-height:1;transition:transform .2s ease,background .2s,color .2s;
+  }
+  .faq-item[open] summary .plus{background:var(--ink);color:var(--yellow);transform:rotate(45deg)}
+  .faq-item .faq-body{padding:0 24px 22px;font-size:14.5px;color:var(--muted);line-height:1.85}
+  .faq-item .faq-body b{color:var(--ink)}
+  .faq-item .faq-body code{font-family:var(--mono);font-size:12.5px;background:rgba(23,21,31,.07);padding:2px 6px;border-radius:4px;color:var(--ink)}
+
+  .aud-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+  @media (max-width:1000px){.aud-grid{grid-template-columns:1fr 1fr}}
+  @media (max-width:640px){.aud-grid{grid-template-columns:1fr}}
+  .aud-card{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:26px 24px;box-shadow:var(--shadow-card);display:flex;flex-direction:column}
+  .aud-card .a-who{font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin-bottom:12px}
+  .aud-card h3{font-size:16.5px;margin-bottom:10px}
+  .aud-card p{font-size:13.5px;color:var(--muted);flex:1;line-height:1.75}
+  .aud-card .start{
+    margin-top:16px;font-family:var(--mono);font-size:11.5px;color:#fff;
+    background:var(--sky);padding:7px 11px;border-radius:6px;word-break:break-all;
+  }
+
+  .sources-card{background:var(--ink);color:var(--cream);border-radius:16px;padding:52px 54px;max-width:860px}
+  @media (max-width:720px){.sources-card{padding:36px 26px}}
+  .sources-card .eyebrow{color:var(--yellow);margin-bottom:28px}
+  .source-item{display:flex;gap:18px;padding:16px 0;border-bottom:1px solid var(--cream-line);text-decoration:none;transition:padding-left .18s}
+  .source-item:hover{padding-left:8px}
+  .source-item:last-of-type{border-bottom:none}
+  .source-item .s-no{font-family:var(--mono);font-size:12.5px;color:var(--sky-light);font-weight:700;flex:none;padding-top:2px}
+  .source-item .s-t{font-weight:700;font-size:15.5px;color:var(--cream)}
+  .source-item .s-d{font-size:13px;color:var(--cream-faint);margin-top:3px}
+  .source-item .s-arrow{margin-left:auto;color:var(--cream-faint);flex:none;padding-top:2px}
+  .sources-note{margin-top:26px;font-size:12.5px;color:var(--cream-faint)}
+
+  .section-cta{background:var(--sky)}
+  .cta-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:48px;align-items:center}
+  @media (max-width:820px){.cta-grid{grid-template-columns:1fr}}
+  .section-cta .eyebrow{color:rgba(255,255,255,.72);margin-bottom:22px}
+  .section-cta h2{margin-bottom:18px;color:#fff}
+  .section-cta p{color:rgba(255,255,255,.85);max-width:30em;margin-bottom:30px}
+  .cta-cmd{
+    display:flex;align-items:flex-start;gap:12px;background:var(--ink);border-radius:10px;
+    padding:16px 18px;font-family:var(--mono);font-size:13px;line-height:1.9;color:var(--cream);
+    max-width:540px;box-shadow:0 14px 30px -12px rgba(23,21,31,.5);
+  }
+  .cta-cmd pre{font-family:inherit;white-space:pre-wrap;word-break:break-all;flex:1;margin:0}
+  .cta-cmd .t-cm{color:var(--sky-light)}
+  .copy-btn{
+    flex:none;font-family:inherit;font-size:11px;font-weight:700;letter-spacing:.08em;
+    background:transparent;color:var(--cream-faint);border:1px solid var(--cream-line);
+    border-radius:4px;padding:4px 9px;cursor:pointer;transition:all .15s;
+  }
+  .cta-cmd .copy-btn{color:var(--cream-muted);border-color:var(--cream-line)}
+  .cta-cmd .copy-btn:hover{color:var(--yellow);border-color:var(--yellow)}
+  .cta-art{display:flex;align-items:center;justify-content:center;gap:22px;font-family:var(--mono);font-weight:700}
+  .cta-art .q,.cta-art .v{font-size:clamp(56px,7vw,88px);line-height:1}
+  .cta-art .q{color:rgba(255,255,255,.32)}
+  .cta-art .v{color:#fff}
+  .cta-art .arrow{font-size:34px;color:rgba(255,255,255,.55)}
+  @media (max-width:820px){.cta-art{display:none}}
+
+  footer{background:var(--ink);color:var(--cream);padding:64px 0 36px}
+  .foot-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:44px;margin-bottom:52px}
+  @media (max-width:820px){.foot-grid{grid-template-columns:1fr}}
+  .foot-brand .brand{color:var(--cream);margin-bottom:16px}
+  .foot-brand .brand-mark{background:var(--sky);color:#fff}
+  .foot-brand p{font-size:13.5px;color:var(--cream-faint);max-width:26em}
+  .foot-col h4{font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--cream-faint);margin-bottom:18px}
+  .foot-col ul{list-style:none}
+  .foot-col li{margin-bottom:11px}
+  .foot-col a{font-size:14px;color:var(--cream-muted);text-decoration:none;transition:color .15s}
+  .foot-col a:hover{color:var(--cream)}
+  .foot-bottom{border-top:1px solid var(--cream-line);padding-top:26px;font-size:12.5px;color:var(--cream-faint);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+  [id]{scroll-margin-top:76px}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="container nav-inner">
+    <a class="brand" href="#top"><span class="brand-mark">&gt;_</span>AI 工具怎么选？</a>
+    <ul class="nav-links">
+      <li class="hide-sm"><a href="#parts">选型六问</a></li>
+      <li class="hide-sm"><a href="#makers">工具地图</a></li>
+      <li class="hide-sm"><a href="#timeline">编年史</a></li>
+      <li class="hide-sm"><a href="#faq">常见问题</a></li>
+      <li><a class="nav-cta" href="index.html">🏠 知识地图</a></li>
+    </ul>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="container hero-grid">
+    <div>
+      <p class="eyebrow">站在工具货架前的实用指南</p>
+      <h1>AI 工具<br>怎么选？</h1>
+      <p class="lead">现在的问题不是没有 AI 工具，而是太多了：编码 Agent、通用助手、自主任务、开发平台四大品类，国内外双生态。这一页给你一张<strong>经核实的产品地图</strong>和一套选型方法——先场景、后约束、再试跑。</p>
+      <p class="example">同样是"让 AI 干活"：写代码要编码 Agent（Claude Code、Codex CLI），日常问答用通用助手（DeepSeek、Kimi、ChatGPT），搭自动化用平台（扣子、Dify）。<b>选错品类，再强的工具也不顺手；选对品类，前几名都够用。</b></p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#makers">看工具地图 ↓</a>
+        <a class="btn btn-ghost" href="#parts">学选型六问</a>
+      </div>
+      <div class="hero-meta">
+        <span class="chip"><i class="dot"></i>四大品类</span>
+        <span class="chip"><i class="dot"></i>国内外双生态</span>
+        <span class="chip"><i class="dot"></i>只列已核实产品</span>
+        <span class="chip"><i class="dot"></i>不排行 · 不背书</span>
+      </div>
+    </div>
+
+    <div class="terminal" aria-label="选型流程演示">
+      <div class="terminal-bar"><i></i><i></i><i></i><span class="terminal-title">tool-select — 流程演示</span></div>
+      <div class="terminal-steps" role="tablist" aria-label="演示步骤">
+        <button type="button" role="tab" data-step="0" aria-selected="true">① 先问场景</button>
+        <button type="button" role="tab" data-step="1" aria-selected="false">② 再看约束</button>
+        <button type="button" role="tab" data-step="2" aria-selected="false">③ 同题试跑</button>
+      </div>
+      <div class="terminal-body" id="hero-term" aria-live="polite"></div>
+    </div>
+  </div>
+</header>
+
+<section class="section section-yellow" id="parts">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">选型六问</p>
+      <h2>六个问题，问完就知道买哪个</h2>
+      <p>工具评测月月变，选型逻辑不常变。点击左侧每一问，右侧看它筛掉什么、留下什么。</p>
+    </div>
+
+    <div class="parts-layout">
+      <div class="parts-list" id="parts-list" role="tablist" aria-label="选型问题"></div>
+      <div class="parts-terminal">
+        <div class="terminal">
+          <div class="terminal-bar"><i></i><i></i><i></i><span class="terminal-title">tool-select — 内部视角</span></div>
+          <div class="terminal-body" id="parts-term" aria-live="polite"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="layers reveal">
+      <div class="layer">
+        <span class="lv">趋势一</span>
+        <h3>编码 Agent 品类化</h3>
+        <p>从"补全插件"进化为"终端里的同事"：Claude Code、Codex CLI、Gemini CLI 三强并立，开源与闭源路线清晰。</p>
+      </div>
+      <div class="layer">
+        <span class="lv">趋势二</span>
+        <h3>平台低代码化</h3>
+        <p>搭 Agent 不一定要会编程：扣子、百炼、千帆主打零代码拖拽；Dify 面向要私有化的团队。</p>
+      </div>
+      <div class="layer">
+        <span class="lv">趋势三</span>
+        <h3>协议可组合化</h3>
+        <p>MCP 统一了工具接口，Skill 沉淀了流程——换一个 Agent，插头和手艺都能带走，锁定在变弱。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="makers">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">工具地图</p>
+      <h2>四大品类，国内外双生态</h2>
+      <p>下面每个产品都经联网核实（官网或权威报道），只标注"它是什么"，不排座次——能力对比以各家最新评测为准，本页不背书。</p>
+    </div>
+    <div class="cards-3">
+      <article class="card reveal">
+        <div class="tag-row"><span class="tag tag-accent">品类一</span><span class="tag">编码 Agent</span></div>
+        <h3>写代码：终端与 IDE</h3>
+        <p><b>国际</b>：Claude Code（Anthropic，闭源，复杂任务见长）、Codex CLI（OpenAI，开源）、Gemini CLI（Google，开源，有免费额度）、Cursor 与 GitHub Copilot（IDE 内）。<b>国内</b>：Qwen Code（阿里开源终端 Agent，配 Qwen3-Coder）。开源社区另有 OpenCode、Aider 等。</p>
+        <div class="seed">共同形态 → <b>终端 CLI / IDE 插件 + MCP 支持</b></div>
+      </article>
+      <article class="card reveal">
+        <div class="tag-row"><span class="tag tag-accent">品类二</span><span class="tag">通用助手</span><span class="tag">自主任务</span></div>
+        <h3>问答与深度研究</h3>
+        <p><b>国际</b>：ChatGPT、Claude、Gemini、Perplexity（各家均有 Deep Research 式深度研究）。<b>国内</b>：DeepSeek、Kimi、豆包（字节）、腾讯元宝、通义、智谱清言。<b>自主任务</b>：Manus（蝴蝶效应出品，2025 年爆火出圈，与通义团队合作）为代表。</p>
+        <div class="seed">共同形态 → <b>对话入口 + 联网 + 任务执行</b></div>
+      </article>
+      <article class="card reveal">
+        <div class="tag-row"><span class="tag tag-accent">品类三</span><span class="tag">开发平台</span></div>
+        <h3>自己搭：低代码与框架</h3>
+        <p><b>低代码平台</b>：扣子 Coze（字节，零代码，可发布到飞书/微信）、阿里百炼、百度千帆。<b>开源自建</b>：Dify（私有化部署见长）。<b>框架</b>：Qwen-Agent、LangGraph、AutoGen；运行时见本系列 DeepSeek Harness、OpenHands。</p>
+        <div class="seed">共同形态 → <b>工作流编排 + 知识库 + 发布渠道</b></div>
+      </article>
+    </div>
+    <p class="cards-note reveal">工具格局月月更新 · 本页仅收录经核实的产品 · 具体能力与价格以官网为准，榜单类说法本站未复测。</p>
+  </div>
+</section>
+
+<section class="section section-dark" id="why">
+  <div class="container">
+    <div class="statement reveal">
+      <p class="eyebrow">为什么这样选</p>
+      <h2>没有最好的工具，<br>只有匹配场景的工具。</h2>
+      <p class="quote">排行榜测的是<b>通用基准</b>，你的任务长在具体场景里：写代码的人在意终端与仓库，做运营的人在意发布渠道，管数据的人第一问是合规。工具是放大器——<b>工作流不行，换十个工具也白搭</b>。协议化时代（MCP、Skill）还有个新原则：优先选可迁移的，别把自己锁死在单品里。</p>
+      <div class="pillars">
+        <div class="pillar reveal">
+          <span class="p-no">01</span>
+          <h3>场景优先</h3>
+          <p>先定品类再挑产品：编码、问答、自主任务、自建平台四选一，错品类无解，对品类内前几名都够用。</p>
+        </div>
+        <div class="pillar reveal">
+          <span class="p-no">02</span>
+          <h3>组合优于单品</h3>
+          <p>MCP 让工具可拼装、Skill 让手艺可携带——常见配置是"通用助手日常用 + 编码 Agent 干活 + 平台搭自动化"。</p>
+        </div>
+        <div class="pillar reveal">
+          <span class="p-no">03</span>
+          <h3>保持可迁移</h3>
+          <p>把提示词、技能、MCP 配置这些"资产"放在工具外——换工具时资产带走，迁移成本趋近于零。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="what">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">依据与事实</p>
+      <h2>先说清楚这张地图</h2>
+    </div>
+    <div class="facts reveal">
+      <div class="fact"><span class="f-k">品类</span><div class="f-v">编码 Agent · 通用助手 · 自主任务 · 开发平台<small>按"输出是什么"划分：代码 / 回答 / 完成任务 / 应用</small></div></div>
+      <div class="fact"><span class="f-k">双生态</span><div class="f-v">国际与国内并行<small>能力在收敛，差异集中在合规、网络与本地化</small></div></div>
+      <div class="fact"><span class="f-k">开源格局</span><div class="f-v">编码 CLI 三开源<small>Codex CLI、Gemini CLI、Qwen Code 开源；Claude Code 闭源</small></div></div>
+      <div class="fact"><span class="f-k">协议</span><div class="f-v">MCP + Skill 让工具可组合<small>接插件的标准与带手艺的标准（见本系列专页）</small></div></div>
+      <div class="fact"><span class="f-k">选型四维</span><div class="f-v">场景 · 合规 · 成本 · 生态<small>顺序也是优先级：先场景，后约束</small></div></div>
+      <div class="fact"><span class="f-k">本页立场</span><div class="f-v">只列核实产品 · 不排行<small>快照数字会过期，地图按季度重审一次</small></div></div>
+    </div>
+
+    <div class="deep-block reveal" id="timeline">
+      <h3>一段工具编年史</h3>
+      <ul class="timeline">
+        <li>
+          <span class="tl-year">2021–2022</span>
+          <span class="tl-t">辅助时代</span>
+          <p>GitHub Copilot 让"AI 补全"进入日常；ChatGPT 上线，通用助手品类从此被定义。</p>
+        </li>
+        <li>
+          <span class="tl-year">2024</span>
+          <span class="tl-t">自主任务登场</span>
+          <p>Devin 打出"AI 软件工程师"概念，Computer Use 让 AI 直接操作电脑——"给目标不给步骤"成为新品类。</p>
+        </li>
+        <li>
+          <span class="tl-year">2025 · 上半年</span>
+          <span class="tl-t">编码 Agent 元年</span>
+          <p>Claude Code（2 月）之后，Codex CLI、Gemini CLI、Qwen Code 相继开源发布；Manus 出圈引爆通用 Agent 讨论；各家上线深度研究。</p>
+        </li>
+        <li>
+          <span class="tl-year">2025 · 下半年</span>
+          <span class="tl-t">平台与协议成熟</span>
+          <p>扣子、Dify、百炼等平台普及低代码搭建；MCP 被各大厂采纳，工具生态开始可组合。</p>
+        </li>
+        <li>
+          <span class="tl-year">2026</span>
+          <span class="tl-t">品类细分与趋同</span>
+          <p>各品类头部趋同，差异转向工作流与生态；选型从"哪家最强"变成"哪套组合适合我"。</p>
+        </li>
+      </ul>
+    </div>
+
+    <div class="deep-block reveal">
+      <h3>选型张力与常见误解</h3>
+      <ul class="tensions">
+        <li><span><b>国际 vs 国内</b>——能力在收敛；决策变量是数据合规、网络环境与中文场景适配。</span></li>
+        <li><span><b>闭源订阅 vs 开源自建</b>——订阅省心上限高；自建可控可审计，但要养人和算力。</span></li>
+        <li><span><b>通用 vs 垂直</b>——通用助手什么都行，垂直工具在窄场景更深；先通用补齐，再按痛点上垂直。</span></li>
+        <li><span><b>订阅包月 vs 按量付费</b>——重度用户包月划算，轻度用户按量灵活；先按量试，再决定包月。</span></li>
+        <li><span><b>一站式平台 vs 命令行组合</b>——平台给非程序员生产力，CLI 给开发者自由；别用错人群。</span></li>
+        <li><span><b>尝鲜 vs 稳定</b>——生产环境求稳，个人环境尽可尝鲜；用"资产外置"降低尝鲜成本。</span></li>
+      </ul>
+      <p class="tensions-warn"><b>三个常见误解：</b>① "榜单第一 = 最适合我"——榜单测通用基准，你的场景才是考场；② "工具决定上限"——工具是放大器，工作流和方法才是杠杆（本系列前 11 课都是方法）；③ "选定就用一辈子"——格局月月变，季度重审 + 资产可迁移才是正解。</p>
+    </div>
+  </div>
+</section>
+
+<section class="section section-yellow" id="faq">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">接下来继续了解</p>
+      <h2>常见问题</h2>
+    </div>
+    <div class="faq-list">
+      <details class="faq-item reveal">
+        <summary>零基础该从哪个开始？<span class="plus">+</span></summary>
+        <div class="faq-body">从<b>通用助手</b>开始（国内 DeepSeek、Kimi、豆包，国际 ChatGPT、Gemini）：免安装、免费额度够用、立刻见效。用满一个月，你会自然知道自己需要什么——那时候再看编码 Agent 还是平台。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>编码 Agent 选哪个？<span class="plus">+</span></summary>
+        <div class="faq-body">没有唯一答案，社区常见做法是<b>同题试跑</b>：拿同一个真实任务分别跑 Claude Code、Codex CLI、Gemini CLI（前两家开源可自托管，Gemini CLI 有免费额度；国内团队可加试 Qwen Code）。跑一周，看你最在意的是质量、速度还是价格。别信榜单，信自己的仓库。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>企业数据敏感，怎么办？<span class="plus">+</span></summary>
+        <div class="faq-body">三条路按敏感度递进：选国内合规产品；开源自建（Dify + 开放权重模型，数据不出内网）；编码场景用本地 CLI + 私有化模型。原则只有一条：<b>数据分级，敏感数据不进公网服务</b>。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>免费额度够用吗？<span class="plus">+</span></summary>
+        <div class="faq-body">轻度使用基本够：通用助手各家都有免费层，Gemini CLI 这类也提供每日免费请求额度。重度使用（每天大量编码、批量任务）迟早要付费——先免费用出依赖，再为真实工作流付费，顺序别反。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>要不要自己搭一套？<span class="plus">+</span></summary>
+        <div class="faq-body">看需求：只是想用，<b>别自建</b>——成熟产品迭代比你快；有定制、合规、成本三重需求再自建（Dify 起步最稳）。自建的真实成本不在搭建在维护：模型升级、权限、评测都要人管。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>多久重新评估一次工具？<span class="plus">+</span></summary>
+        <div class="faq-body"><b>季度重审</b>足够：每季度用同一组真实任务把在用工具和两个候选各跑一遍，按结果决定去留。配合"资产外置"（提示词、技能、MCP 配置放在工具外），迁移成本很低，随时能换。</div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="who">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">它适合谁</p>
+      <h2>四类人，四个起点</h2>
+    </div>
+    <div class="aud-grid">
+      <div class="aud-card reveal">
+        <span class="a-who">For Beginners</span>
+        <h3>零基础新手</h3>
+        <p>别研究工具，先用起来：任选一个通用助手，用满一个月再说选型。</p>
+        <div class="start">起点 → 品类二 通用助手</div>
+      </div>
+      <div class="aud-card reveal">
+        <span class="a-who">For Devs</span>
+        <h3>开发者</h3>
+        <p>同题试跑编码 CLI 三强，一个真实任务跑一周，比读十篇横评都准。</p>
+        <div class="start">起点 → 品类一 编码 Agent</div>
+      </div>
+      <div class="aud-card reveal">
+        <span class="a-who">For Teams</span>
+        <h3>企业团队</h3>
+        <p>先画数据分级表，再选工具：合规优先于能力，自建是敏感数据的兜底。</p>
+        <div class="start">起点 → 选型六问 ③ 合规</div>
+      </div>
+      <div class="aud-card reveal">
+        <span class="a-who">For Builders</span>
+        <h3>builder / 极客</h3>
+        <p>低代码起步验证流程，验证通过再下沉到开源框架——Dify 到 LangGraph 是常见路径。</p>
+        <div class="start">起点 → 品类三 开发平台</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="sources" style="padding-top:24px">
+  <div class="container">
+    <div class="sources-card reveal">
+      <p class="eyebrow">来源与延伸阅读</p>
+      <a class="source-item" href="https://www.anthropic.com/claude-code" target="_blank" rel="noopener">
+        <span class="s-no">01</span>
+        <span><span class="s-t">Anthropic · Claude Code 官方页</span><br><span class="s-d">编码 Agent 品类的代表产品</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="https://github.com/openai/codex" target="_blank" rel="noopener">
+        <span class="s-no">02</span>
+        <span><span class="s-t">GitHub · openai/codex（Codex CLI）</span><br><span class="s-d">OpenAI 开源编码 Agent</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="https://github.com/google-gemini/gemini-cli" target="_blank" rel="noopener">
+        <span class="s-no">03</span>
+        <span><span class="s-t">GitHub · google-gemini/gemini-cli</span><br><span class="s-d">Google 开源 CLI，Apache 2.0</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="https://github.com/QwenLM/qwen-code" target="_blank" rel="noopener">
+        <span class="s-no">04</span>
+        <span><span class="s-t">GitHub · QwenLM/qwen-code</span><br><span class="s-d">阿里开源终端编码 Agent，配 Qwen3-Coder</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="https://www.coze.cn" target="_blank" rel="noopener">
+        <span class="s-no">05</span>
+        <span><span class="s-t">扣子 Coze 官网</span><br><span class="s-d">字节跳动零代码智能体平台</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="https://github.com/langgenius/dify" target="_blank" rel="noopener">
+        <span class="s-no">06</span>
+        <span><span class="s-t">GitHub · langgenius/dify</span><br><span class="s-d">开源自建平台，私有化部署见长</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="https://www.reuters.com/technology/artificial-intelligence/chinas-manus-ai-announces-partnership-with-alibabas-qwen-team-2025-03-11/" target="_blank" rel="noopener">
+        <span class="s-no">07</span>
+        <span><span class="s-t">Reuters · Manus AI 与通义团队合作（2025-03）</span><br><span class="s-d">Manus 出品方与合作关系的权威报道</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="什么是Agent.html">
+        <span class="s-no">08</span>
+        <span><span class="s-t">姊妹篇 · 什么是 AI Agent？</span><br><span class="s-d">先懂 Agent 是什么，再挑工具（本系列）</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <p class="sources-note">本页产品均经联网核实（官网或权威媒体），更新于 2026 年 10 月；工具格局变化快，能力与价格以各家官网为准。本页不构成任何采购建议。</p>
+    </div>
+  </div>
+</section>
+
+<section class="section section-cta">
+  <div class="container cta-grid">
+    <div class="reveal">
+      <p class="eyebrow">开始动手</p>
+      <h2>选型四问，问完再掏钱</h2>
+      <p>把这张清单贴在选型会上——四个问题答完，答案自己会浮出来。</p>
+      <div class="cta-cmd">
+        <pre><span class="t-cm">① 场景：</span>我的输出是代码 / 回答 / 任务 / 应用？
+<span class="t-cm">② 合规：</span>数据能出公网吗？要不要私有化？
+<span class="t-cm">③ 成本：</span>包月还是按量？团队几人用？
+<span class="t-cm">④ 迁移：</span>提示词/技能/MCP 资产能带走吗？</pre>
+        <button class="copy-btn" data-copy="① 场景：我的输出是代码 / 回答 / 任务 / 应用？&#10;② 合规：数据能出公网吗？要不要私有化？&#10;③ 成本：包月还是按量？团队几人用？&#10;④ 迁移：提示词/技能/MCP 资产能带走吗？">复制</button>
+      </div>
+    </div>
+    <div class="cta-art" aria-hidden="true">
+      <span class="q">?</span><span class="arrow">→</span><span class="v">✓</span>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <a class="brand" href="#top"><span class="brand-mark">&gt;_</span>AI 工具怎么选？</a>
+        <p>第 17 课：四大品类、国内外双生态的工具地图，加一套"先场景、后约束、再试跑"的选型方法。</p>
+      </div>
+      <div class="foot-col">
+        <h4>本页导航</h4>
+        <ul>
+          <li><a href="#parts">选型六问</a></li>
+          <li><a href="#makers">工具地图</a></li>
+          <li><a href="#timeline">编年史</a></li>
+          <li><a href="#faq">常见问题</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h4>本系列</h4>
+        <ul>
+          <li><a href="index.html">🏠 知识地图（主页）</a></li>
+          <li><a href="什么是大模型.html">什么是大模型？</a></li>
+          <li><a href="什么是思维链.html">什么是思维链？</a></li>
+          <li><a href="什么是Prompt工程.html">什么是 Prompt 工程？</a></li>
+          <li><a href="什么是幻觉.html">什么是幻觉？</a></li>
+          <li><a href="什么是RAG.html">什么是 RAG？</a></li>
+          <li><a href="什么是Agent.html">什么是 AI Agent？</a></li>
+          <li><a href="什么是Skill.html">什么是 Skill？</a></li>
+          <li><a href="什么是MCP.html">什么是 MCP？</a></li>
+          <li><a href="什么是AgentHarness.html">什么是 Agent Harness？</a></li>
+          <li><a href="什么是DeepSeekHarness.html">什么是 DeepSeek Harness？</a></li>
+          <li><a href="什么是飞书CLI.html">什么是飞书 CLI？</a></li>
+          <li><a href="什么是微调.html">什么是微调？</a></li>
+          <li><a href="什么是提示注入.html">什么是提示注入？</a></li>
+          <li><a href="什么是多模态.html">什么是多模态？</a></li>
+          <li><a href="什么是记忆.html">什么是记忆？</a></li>
+          <li><a href="什么是多智能体.html">什么是多智能体？</a></li>
+          <li><a href="#top">AI 工具怎么选？（本页）</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>本页为独立学习指南，与所提及的各家公司没有关联 · 产品信息整理自公开资料，不构成采购建议</span>
+      <span>更新于 2026 年 10 月</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+document.documentElement.classList.add('js');
+
+var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function el(tag, cls, text){
+  var n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text !== undefined) n.textContent = text;
+  return n;
+}
+
+function typeCmd(span, text, done){
+  if (reduceMotion){ span.textContent = text; done && done(); return; }
+  var i = 0;
+  (function tick(){
+    span.textContent = text.slice(0, ++i);
+    if (i < text.length){ setTimeout(tick, text[i-1] === ' ' ? 34 : 18); }
+    else { done && done(); }
+  })();
+}
+
+function renderTerm(container, spec){
+  container.innerHTML = '';
+  var line = el('div','t-line');
+  var prompt = el('span','t-prompt', spec.prompt || '❯');
+  var cmd = el('span','t-cmd');
+  var cur = el('span','cursor');
+  line.appendChild(prompt); line.appendChild(cmd); line.appendChild(cur);
+  container.appendChild(line);
+  typeCmd(cmd, spec.cmd, function(){
+    cur.remove();
+    (spec.out || []).forEach(function(o){
+      container.appendChild(el('div','t-line ' + (o.cls || 't-out'), o.text));
+    });
+    if (spec.note) container.appendChild(el('div','t-note', spec.note));
+  });
+}
+
+var heroSteps = [
+  {
+    cmd: '我的输出是什么？',
+    prompt: '问自己',
+    out: [
+      { text: '代码   → 品类一：编码 Agent', cls: 't-out' },
+      { text: '回答   → 品类二：通用助手 / 深度研究', cls: 't-out' },
+      { text: '任务   → 品类二：自主任务型产品', cls: 't-out' },
+      { text: '应用   → 品类三：低代码平台 / 自建框架', cls: 't-out' },
+      { text: '✓ 品类定错，后面全白费', cls: 't-ok' }
+    ],
+    note: '第一问永远问场景：你要的是它"产出什么"。'
+  },
+  {
+    cmd: '约束清单：合规 · 网络 · 预算 · 团队',
+    out: [
+      { text: '→ 数据不能出公网？→ 国内产品或自建', cls: 't-out' },
+      { text: '→ 访问受限？→ 国内生态优先', cls: 't-out' },
+      { text: '→ 重度用户包月，轻度按量', cls: 't-out' },
+      { text: '✓ 约束筛掉一半候选', cls: 't-ok' }
+    ],
+    note: '第二问看约束：合规 > 网络 > 预算，顺序别乱。'
+  },
+  {
+    cmd: '同一个真实任务 → 各跑一周',
+    out: [
+      { text: '→ 候选 2-3 个，同题试跑', cls: 't-out' },
+      { text: '→ 记录：质量 · 速度 · 成本 · 顺手度', cls: 't-out' },
+      { text: '→ 别信榜单，信自己的任务', cls: 't-out' },
+      { text: '✓ 季度重审一次，资产保持可迁移', cls: 't-ok' }
+    ],
+    note: '第三问才动手试：同题试跑一周，胜过读十篇横评。'
+  }
+];
+
+var heroTerm = document.getElementById('hero-term');
+var heroBtns = document.querySelectorAll('.terminal-steps button');
+var heroStopped = false;
+
+function showHeroStep(i){
+  heroBtns.forEach(function(b, j){
+    b.classList.toggle('active', i === j);
+    b.setAttribute('aria-selected', i === j ? 'true' : 'false');
+  });
+  renderTerm(heroTerm, heroSteps[i]);
+}
+heroBtns.forEach(function(b){
+  b.addEventListener('click', function(){
+    heroStopped = true;
+    showHeroStep(+b.dataset.step);
+  });
+});
+showHeroStep(0);
+(function autoAdvance(){
+  if (reduceMotion) return;
+  var idx = 0;
+  setInterval(function(){
+    if (heroStopped) return;
+    idx = (idx + 1) % heroSteps.length;
+    showHeroStep(idx);
+  }, 7000);
+})();
+
+var parts = [
+  {
+    name: '① 场景匹配', desc: '我要它产出什么',
+    spec: {
+      cmd: 'output ∈ {代码, 回答, 任务, 应用}',
+      out: [
+        { text: '→ 代码：编码 Agent（终端 / IDE）', cls: 't-out' },
+        { text: '→ 回答：通用助手 / 深度研究', cls: 't-out' },
+        { text: '→ 任务：自主任务型产品', cls: 't-out' },
+        { text: '→ 应用：低代码平台或框架', cls: 't-ok' }
+      ],
+      note: '品类对了，前几名都够用；品类错了，第一名也白搭。'
+    }
+  },
+  {
+    name: '② 模型与能力', desc: '引擎决定上限',
+    spec: {
+      cmd: 'model = 工具的引擎',
+      out: [
+        { text: '→ 换模型如换引擎：同一工具常可切模型', cls: 't-out' },
+        { text: '→ 复杂任务看推理模型，日常看速度与价格', cls: 't-out' },
+        { text: '✓ 先看能力是否覆盖你的硬需求', cls: 't-ok' }
+      ],
+      note: '别只比工具壳，要看里面的模型与你任务的匹配度。'
+    }
+  },
+  {
+    name: '③ 数据与合规', desc: '第一道硬闸',
+    spec: {
+      cmd: 'data: 能出公网吗？',
+      out: [
+        { text: '→ 敏感数据：国内合规产品 / 私有化', cls: 't-out' },
+        { text: '→ 开源自建：Dify + 开放权重模型', cls: 't-out' },
+        { text: '✓ 数据分级表先画，工具后选', cls: 't-ok' }
+      ],
+      note: '合规不通过，能力再强也一票否决。'
+    }
+  },
+  {
+    name: '④ 生态与集成', desc: 'MCP / Skill / 渠道',
+    spec: {
+      cmd: '支持 MCP？能接我的系统吗？',
+      out: [
+        { text: '→ MCP 支持 = 能插你现有的工具链', cls: 't-out' },
+        { text: '→ Skill 生态 = 现成的手艺可装', cls: 't-out' },
+        { text: '→ 平台类还要看发布渠道（飞书/微信…）', cls: 't-out' },
+        { text: '✓ 生态决定它是孤岛还是积木', cls: 't-ok' }
+      ],
+      note: '协议化时代，可组合性是选型加分项（见 MCP / Skill 专页）。'
+    }
+  },
+  {
+    name: '⑤ 成本结构', desc: '包月 vs 按量 vs 自建',
+    spec: {
+      cmd: 'cost = f(用量, 人数, 频率)',
+      out: [
+        { text: '→ 轻度：免费层 + 按量', cls: 't-out' },
+        { text: '→ 重度：包月 / 企业席位', cls: 't-out' },
+        { text: '→ 自建：显性省钱，隐性养人养卡', cls: 't-out' },
+        { text: '✓ 先按量试，试出依赖再付费', cls: 't-ok' }
+      ],
+      note: '自建的真实成本在维护：升级、权限、评测都要人。'
+    }
+  },
+  {
+    name: '⑥ 迁移与锁定', desc: '资产放在工具外',
+    spec: {
+      cmd: '提示词 / 技能 / MCP 配置 → 外置',
+      out: [
+        { text: '→ 资产可迁移 = 换工具成本趋零', cls: 't-out' },
+        { text: '→ 数据导出、格式开放优先', cls: 't-out' },
+        { text: '→ 季度重审，不被单品锁死', cls: 't-out' },
+        { text: '✓ 锁定越弱，议价越强', cls: 't-ok' }
+      ],
+      note: '格局月月变：选可迁移的，而不是最流行的。'
+    }
+  }
+];
+
+var partsList = document.getElementById('parts-list');
+var partsTerm = document.getElementById('parts-term');
+parts.forEach(function(t, i){
+  var b = el('button', 'part-btn' + (i === 0 ? ' active' : ''));
+  b.type = 'button';
+  b.setAttribute('role', 'tab');
+  b.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
+  b.appendChild(el('span', 'num', String(i + 1)));
+  var wrap = el('span');
+  wrap.appendChild(el('span', 't-name', t.name));
+  wrap.appendChild(document.createElement('br'));
+  wrap.appendChild(el('span', 't-desc', t.desc));
+  b.appendChild(wrap);
+  b.addEventListener('click', function(){
+    partsList.querySelectorAll('.part-btn').forEach(function(x){
+      x.classList.remove('active'); x.setAttribute('aria-selected', 'false');
+    });
+    b.classList.add('active'); b.setAttribute('aria-selected', 'true');
+    renderTerm(partsTerm, t.spec);
+  });
+  partsList.appendChild(b);
+});
+renderTerm(partsTerm, parts[0].spec);
+
+document.querySelectorAll('.copy-btn').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    var text = btn.dataset.copy || '';
+    var done = function(){
+      var old = btn.textContent;
+      btn.textContent = '已复制 ✓';
+      setTimeout(function(){ btn.textContent = old; }, 1600);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done, function(){ fallbackCopy(text); done(); });
+    } else { fallbackCopy(text); done(); }
+  });
+});
+function fallbackCopy(text){
+  var ta = document.createElement('textarea');
+  ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); } catch(e){}
+  ta.remove();
+}
+
+var revealEls = document.querySelectorAll('.reveal');
+if ('IntersectionObserver' in window && !reduceMotion){
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if (en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); }
+    });
+  }, { threshold: 0.12 });
+  revealEls.forEach(function(n){ io.observe(n); });
+} else {
+  revealEls.forEach(function(n){ n.classList.add('in'); });
+}
+</script>
+</body>
+</html>
