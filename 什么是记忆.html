@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#FBFAF7">
+<title>记忆是什么？ | 让 AI 跨会话记住你</title>
+<meta name="description" content="一页讲清楚 AI 记忆（Memory）：短期记忆=上下文窗口、长期记忆=外部存储，ChatGPT Memory、Claude memory tool、mem0，以及写入、检索、遗忘的设计难点。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2317151F'/%3E%3Ctext x='16' y='22' font-size='15' font-family='monospace' fill='%23A3E635' text-anchor='middle'%3E%3C_%3C/text%3E%3C/svg%3E">
+<style>
+  :root{
+    --cream:#FBFAF7;
+    --ink:#17151F;
+    --paper:#FFFFFF;
+    --yellow:#FFD166;
+    --accent:#4D7C0F;
+    --accent-light:#A3E635;
+    --muted:rgba(23,21,31,.64);
+    --faint:rgba(23,21,31,.45);
+    --line:rgba(23,21,31,.14);
+    --line-strong:rgba(23,21,31,.85);
+    --cream-muted:rgba(251,250,247,.68);
+    --cream-faint:rgba(251,250,247,.42);
+    --cream-line:rgba(251,250,247,.16);
+    --mono:"SF Mono",ui-monospace,"JetBrains Mono",Menlo,Consolas,"Liberation Mono",monospace;
+    --shadow-card:0 1px 2px rgba(23,21,31,.05),0 10px 28px -14px rgba(23,21,31,.18);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    *,*::before,*::after{animation:none!important;transition:none!important}
+  }
+  body{
+    font-family:"PingFang SC","Microsoft YaHei","Inter Variable",system-ui,sans-serif;
+    background:var(--cream);
+    color:var(--ink);
+    font-size:16px;
+    line-height:1.75;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+  }
+  ::selection{background:#4D7C0F;color:#fff}
+  a{color:inherit}
+  .container{max-width:1128px;margin:0 auto;padding:0 24px}
+
+  html.js .reveal{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s ease}
+  html.js .reveal.in{opacity:1;transform:none}
+  @media (prefers-reduced-motion:reduce){html.js .reveal{opacity:1;transform:none}}
+  @media print{html.js .reveal{opacity:1!important;transform:none!important}}
+
+  .nav{
+    position:sticky;top:0;z-index:50;
+    background:rgba(251,250,247,.92);
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  .nav-inner{display:flex;align-items:center;justify-content:space-between;height:60px;gap:16px}
+  .brand{display:flex;align-items:center;gap:10px;text-decoration:none;font-weight:800;font-size:15px;letter-spacing:.01em}
+  .brand-mark{
+    width:26px;height:26px;background:var(--ink);color:var(--accent-light);
+    font-family:var(--mono);font-size:12px;font-weight:700;line-height:26px;text-align:center;
+    border-radius:5px;flex:none;
+  }
+  .nav-links{display:flex;align-items:center;gap:22px;list-style:none}
+  .nav-links a{text-decoration:none;font-size:13.5px;font-weight:500;color:var(--muted);transition:color .15s}
+  .nav-links a:hover{color:var(--ink)}
+  .nav-links a.nav-cta{
+    color:var(--ink);font-weight:700;border:1.5px solid var(--line-strong);
+    padding:6px 14px;border-radius:0;
+  }
+  .nav-links a.nav-cta:hover{background:var(--ink);color:var(--cream)}
+  @media (max-width:720px){.nav-links li.hide-sm{display:none}}
+
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:13px 26px;border-radius:0;border:1.5px solid transparent;
+    font-family:inherit;font-size:15px;font-weight:700;letter-spacing:.02em;
+    text-decoration:none;cursor:pointer;transition:transform .15s ease,background .15s ease,color .15s ease,box-shadow .15s ease;
+  }
+  .btn:active{transform:translateY(1px)}
+  .btn-primary{background:var(--accent);color:#fff}
+  .btn-primary:hover{box-shadow:0 6px 0 -2px rgba(23,21,31,.9)}
+  .btn-ghost{border-color:var(--line-strong);color:var(--ink);background:transparent}
+  .btn-ghost:hover{background:var(--ink);color:var(--cream)}
+  .btn-sm{padding:9px 18px;font-size:13.5px}
+
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:9px;
+    font-size:12.5px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;
+  }
+  .eyebrow::before{content:"";width:9px;height:9px;background:currentColor;flex:none}
+  h1{font-size:clamp(42px,6.6vw,74px);line-height:1.08;font-weight:800;letter-spacing:-.015em}
+  h2{font-size:clamp(30px,4.4vw,44px);line-height:1.18;font-weight:800;letter-spacing:-.01em}
+  h3{font-size:20px;font-weight:800;line-height:1.4}
+  .lead{font-size:clamp(17px,2vw,19.5px);line-height:1.8}
+
+  .hero{padding:76px 0 88px}
+  .hero-grid{display:grid;grid-template-columns:1.02fr .98fr;gap:56px;align-items:center}
+  @media (max-width:980px){.hero-grid{grid-template-columns:1fr;gap:44px}}
+  .hero .eyebrow{color:var(--ink);margin-bottom:26px}
+  .hero h1{margin-bottom:24px}
+  .hero .lead{color:var(--ink);margin-bottom:16px;max-width:34em}
+  .hero .example{color:var(--muted);font-size:15.5px;max-width:36em;margin-bottom:32px}
+  .hero .example b{color:var(--ink);font-weight:700}
+  .hero-actions{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:30px}
+  .hero-meta{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{
+    font-size:12px;font-weight:600;color:var(--muted);
+    border:1px solid var(--line);padding:5px 11px;border-radius:999px;
+    display:inline-flex;align-items:center;gap:6px;background:var(--paper);
+  }
+  .chip .dot{width:6px;height:6px;border-radius:50%;background:var(--accent)}
+
+  .terminal{
+    background:var(--ink);border-radius:14px;overflow:hidden;
+    box-shadow:0 2px 4px rgba(23,21,31,.12),0 30px 60px -22px rgba(23,21,31,.45);
+    border:1px solid rgba(23,21,31,.9);
+  }
+  .terminal-bar{
+    display:flex;align-items:center;gap:7px;
+    padding:13px 16px;border-bottom:1px solid var(--cream-line);
+  }
+  .terminal-bar i{width:11px;height:11px;border-radius:50%;background:rgba(251,250,247,.22)}
+  .terminal-bar i:first-child{background:#FF5F57}
+  .terminal-bar i:nth-child(2){background:#FEBC2E}
+  .terminal-bar i:nth-child(3){background:#28C840}
+  .terminal-bar .terminal-title{
+    margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--cream-faint);letter-spacing:.08em;
+  }
+  .terminal-steps{display:flex;gap:6px;padding:12px 14px 0;flex-wrap:wrap}
+  .terminal-steps button{
+    font-family:inherit;font-size:12.5px;font-weight:700;letter-spacing:.04em;
+    background:transparent;color:var(--cream-faint);
+    border:1px solid var(--cream-line);border-radius:999px;
+    padding:5px 13px;cursor:pointer;transition:all .18s;
+  }
+  .terminal-steps button:hover{color:var(--cream);border-color:var(--cream-faint)}
+  .terminal-steps button.active{background:var(--accent);border-color:var(--accent);color:#fff}
+  .terminal-body{padding:18px 20px 22px;min-height:238px;font-family:var(--mono);font-size:13.5px;line-height:1.9}
+  .t-line{white-space:pre-wrap;word-break:break-all}
+  .t-prompt{color:var(--accent-light);font-weight:700;margin-right:9px}
+  .t-cmd{color:var(--cream)}
+  .t-out{color:var(--cream-faint)}
+  .t-ok{color:#3EE8C6}
+  .t-dim{color:rgba(251,250,247,.35)}
+  .t-user{color:var(--yellow)}
+  .t-note{color:var(--cream-faint);font-family:"PingFang SC","Microsoft YaHei",sans-serif;font-size:12px;margin-top:12px;padding-top:10px;border-top:1px dashed var(--cream-line)}
+  .cursor{display:inline-block;width:8px;height:15px;background:var(--accent-light);vertical-align:-2px;animation:blink 1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+  @media (prefers-reduced-motion:reduce){.cursor{animation:none}}
+
+  .section{padding:96px 0}
+  .section-head{max-width:680px;margin-bottom:52px}
+  .section-head .eyebrow{margin-bottom:20px}
+  .section-head p{color:var(--muted);margin-top:16px;font-size:16.5px}
+
+  .section-yellow{background:var(--yellow)}
+  .section-yellow .section-head p{color:rgba(23,21,31,.72)}
+
+  .section-dark{background:var(--ink);color:var(--cream)}
+  .section-dark .eyebrow{color:var(--accent-light)}
+
+  .parts-layout{display:grid;grid-template-columns:.9fr 1.1fr;gap:36px;align-items:start}
+  @media (max-width:900px){.parts-layout{grid-template-columns:1fr}}
+  .parts-list{display:flex;flex-direction:column;gap:10px}
+  .part-btn{
+    display:flex;align-items:center;gap:14px;text-align:left;width:100%;
+    background:var(--paper);border:1.5px solid transparent;border-radius:10px;
+    padding:15px 18px;font-family:inherit;cursor:pointer;
+    transition:transform .16s ease,box-shadow .16s ease,border-color .16s;
+    box-shadow:var(--shadow-card);
+  }
+  .part-btn:hover{transform:translateY(-2px)}
+  .part-btn .num{
+    font-family:var(--mono);font-size:12px;font-weight:700;color:var(--muted);
+    width:30px;height:30px;border:1.5px solid var(--line);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;flex:none;transition:all .16s;
+  }
+  .part-btn .t-name{font-size:15.5px;font-weight:700}
+  .part-btn .t-desc{font-size:13px;color:var(--muted);margin-top:2px}
+  .part-btn.active{border-color:var(--ink);transform:translateY(-2px)}
+  .part-btn.active .num{background:var(--ink);border-color:var(--ink);color:var(--accent-light)}
+  .parts-terminal{position:sticky;top:84px}
+  @media (max-width:900px){.parts-terminal{position:static}}
+
+  .layers{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(23,21,31,.22);border:1.5px solid var(--ink);border-radius:12px;overflow:hidden;margin-top:56px}
+  @media (max-width:820px){.layers{grid-template-columns:1fr}}
+  .layer{background:var(--yellow);padding:26px 26px 24px}
+  .layer .lv{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.14em;color:rgba(23,21,31,.55);display:block;margin-bottom:12px}
+  .layer h3{font-size:17px;margin-bottom:8px}
+  .layer p{font-size:13.5px;color:rgba(23,21,31,.72);line-height:1.7}
+  .layer code{font-family:var(--mono);font-size:12.5px;background:rgba(23,21,31,.1);padding:2px 6px;border-radius:4px}
+
+  .cards-3{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+  @media (max-width:900px){.cards-3{grid-template-columns:1fr}}
+  .card{
+    background:var(--paper);border:1px solid var(--line);border-radius:12px;
+    padding:30px 28px 26px;box-shadow:var(--shadow-card);
+    display:flex;flex-direction:column;
+  }
+  .card .tag-row{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:20px}
+  .tag{
+    font-size:10.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+    padding:4px 9px;border:1px solid var(--line);border-radius:4px;color:var(--muted);
+  }
+  .tag.tag-accent{background:var(--ink);color:var(--accent-light);border-color:var(--ink)}
+  .card h3{margin-bottom:12px}
+  .card p{font-size:14.5px;color:var(--muted);flex:1}
+  .card .seed{
+    margin-top:20px;padding-top:16px;border-top:1px dashed var(--line);
+    font-family:var(--mono);font-size:12px;color:var(--faint);word-break:break-all;
+  }
+  .card .seed b{color:var(--ink);font-weight:700}
+  .cards-note{margin-top:30px;font-size:13px;color:var(--faint);display:flex;align-items:center;gap:8px}
+  .cards-note::before{content:"※";color:var(--muted)}
+
+  .statement{max-width:820px}
+  .statement h2{margin-bottom:28px}
+  .statement .quote{
+    font-size:clamp(17px,2vw,19px);line-height:1.85;color:var(--cream-muted);
+    border-left:3px solid var(--accent-light);padding-left:22px;margin-bottom:52px;max-width:36em;
+  }
+  .statement .quote b{color:var(--cream)}
+  .statement .quote code{font-family:var(--mono);font-size:14px;background:rgba(251,250,247,.12);padding:2px 7px;border-radius:4px;color:var(--cream)}
+  .pillars{display:grid;grid-template-columns:repeat(3,1fr);gap:34px}
+  @media (max-width:820px){.pillars{grid-template-columns:1fr}}
+  .pillar .p-no{font-family:var(--mono);font-size:13px;color:var(--accent-light);font-weight:700;letter-spacing:.12em;display:block;margin-bottom:14px}
+  .pillar h3{color:var(--cream);margin-bottom:10px;font-size:17.5px}
+  .pillar p{font-size:14.5px;color:var(--cream-muted);line-height:1.8}
+  .pillar code{font-family:var(--mono);font-size:12.5px;background:rgba(251,250,247,.12);padding:2px 6px;border-radius:4px;color:var(--cream)}
+
+  .facts{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  @media (max-width:820px){.facts{grid-template-columns:1fr}}
+  .fact{background:var(--paper);padding:26px 26px 22px}
+  .fact .f-k{font-size:12px;font-weight:800;letter-spacing:.14em;color:var(--faint);text-transform:uppercase;display:block;margin-bottom:10px}
+  .fact .f-v{font-size:15.5px;font-weight:600;line-height:1.65}
+  .fact .f-v small{display:block;font-weight:400;font-size:13px;color:var(--muted);margin-top:4px}
+
+  .deep-block{margin-top:76px}
+  .deep-block>h3{margin-bottom:26px;font-size:clamp(21px,2.6vw,25px)}
+
+  .timeline{list-style:none;border-left:2px solid var(--ink);margin-left:6px}
+  .timeline li{position:relative;padding:0 0 26px 28px}
+  .timeline li:last-child{padding-bottom:0}
+  .timeline li::before{
+    content:"";position:absolute;left:-7px;top:9px;width:12px;height:12px;
+    background:var(--accent);border:2px solid var(--ink);border-radius:50%;
+  }
+  .timeline .tl-year{font-family:var(--mono);font-size:12.5px;font-weight:700;letter-spacing:.1em;color:var(--faint);display:block;margin-bottom:4px}
+  .timeline .tl-t{font-weight:800;font-size:16.5px}
+  .timeline p{font-size:14px;color:var(--muted);margin-top:4px;max-width:40em}
+  .timeline code{font-family:var(--mono);font-size:12.5px;background:rgba(23,21,31,.07);padding:2px 6px;border-radius:4px;color:var(--ink)}
+
+  .tensions{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:14px 28px}
+  @media (max-width:820px){.tensions{grid-template-columns:1fr}}
+  .tensions li{
+    display:flex;gap:12px;font-size:14.5px;color:var(--muted);line-height:1.7;
+    padding:14px 0;border-bottom:1px solid var(--line);
+  }
+  .tensions li b{color:var(--ink)}
+  .tensions li::before{content:"◆";color:var(--accent);font-weight:800;flex:none;font-size:12px;padding-top:5px}
+  .tensions-warn{
+    margin-top:26px;padding:18px 22px;border-radius:10px;
+    background:rgba(77,124,15,.08);border:1px solid rgba(77,124,15,.4);
+    font-size:14px;color:var(--muted);
+  }
+  .tensions-warn b{color:var(--ink)}
+
+  .faq-list{max-width:780px}
+  .faq-item{background:var(--paper);border:1.5px solid var(--ink);border-radius:10px;margin-bottom:14px;overflow:hidden;box-shadow:var(--shadow-card)}
+  .faq-item summary{
+    list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:18px;
+    padding:20px 24px;font-weight:700;font-size:16px;
+  }
+  .faq-item summary::-webkit-details-marker{display:none}
+  .faq-item summary .plus{
+    flex:none;width:26px;height:26px;border:1.5px solid var(--ink);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:400;font-size:16px;line-height:1;transition:transform .2s ease,background .2s,color .2s;
+  }
+  .faq-item[open] summary .plus{background:var(--ink);color:var(--yellow);transform:rotate(45deg)}
+  .faq-item .faq-body{padding:0 24px 22px;font-size:14.5px;color:var(--muted);line-height:1.85}
+  .faq-item .faq-body b{color:var(--ink)}
+  .faq-item .faq-body code{font-family:var(--mono);font-size:12.5px;background:rgba(23,21,31,.07);padding:2px 6px;border-radius:4px;color:var(--ink)}
+
+  .aud-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+  @media (max-width:1000px){.aud-grid{grid-template-columns:1fr 1fr}}
+  @media (max-width:640px){.aud-grid{grid-template-columns:1fr}}
+  .aud-card{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:26px 24px;box-shadow:var(--shadow-card);display:flex;flex-direction:column}
+  .aud-card .a-who{font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin-bottom:12px}
+  .aud-card h3{font-size:16.5px;margin-bottom:10px}
+  .aud-card p{font-size:13.5px;color:var(--muted);flex:1;line-height:1.75}
+  .aud-card .start{
+    margin-top:16px;font-family:var(--mono);font-size:11.5px;color:#fff;
+    background:var(--accent);padding:7px 11px;border-radius:6px;word-break:break-all;
+  }
+
+  .sources-card{background:var(--ink);color:var(--cream);border-radius:16px;padding:52px 54px;max-width:860px}
+  @media (max-width:720px){.sources-card{padding:36px 26px}}
+  .sources-card .eyebrow{color:var(--yellow);margin-bottom:28px}
+  .source-item{display:flex;gap:18px;padding:16px 0;border-bottom:1px solid var(--cream-line);text-decoration:none;transition:padding-left .18s}
+  .source-item:hover{padding-left:8px}
+  .source-item:last-of-type{border-bottom:none}
+  .source-item .s-no{font-family:var(--mono);font-size:12.5px;color:var(--accent-light);font-weight:700;flex:none;padding-top:2px}
+  .source-item .s-t{font-weight:700;font-size:15.5px;color:var(--cream)}
+  .source-item .s-d{font-size:13px;color:var(--cream-faint);margin-top:3px}
+  .source-item .s-arrow{margin-left:auto;color:var(--cream-faint);flex:none;padding-top:2px}
+  .sources-note{margin-top:26px;font-size:12.5px;color:var(--cream-faint)}
+
+  .section-cta{background:var(--accent)}
+  .cta-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:48px;align-items:center}
+  @media (max-width:820px){.cta-grid{grid-template-columns:1fr}}
+  .section-cta .eyebrow{color:rgba(255,255,255,.72);margin-bottom:22px}
+  .section-cta h2{margin-bottom:18px;color:#fff}
+  .section-cta p{color:rgba(255,255,255,.85);max-width:30em;margin-bottom:30px}
+  .cta-cmd{
+    display:flex;align-items:flex-start;gap:12px;background:var(--ink);border-radius:10px;
+    padding:16px 18px;font-family:var(--mono);font-size:13px;line-height:1.9;color:var(--cream);
+    max-width:540px;box-shadow:0 14px 30px -12px rgba(23,21,31,.5);
+  }
+  .cta-cmd pre{font-family:inherit;white-space:pre-wrap;word-break:break-all;flex:1;margin:0}
+  .cta-cmd .t-cm{color:var(--accent-light)}
+  .copy-btn{
+    flex:none;font-family:inherit;font-size:11px;font-weight:700;letter-spacing:.08em;
+    background:transparent;color:var(--cream-faint);border:1px solid var(--cream-line);
+    border-radius:4px;padding:4px 9px;cursor:pointer;transition:all .15s;
+  }
+  .cta-cmd .copy-btn{color:var(--cream-muted);border-color:var(--cream-line)}
+  .cta-cmd .copy-btn:hover{color:var(--yellow);border-color:var(--yellow)}
+  .cta-art{display:flex;align-items:center;justify-content:center;gap:22px;font-family:var(--mono);font-weight:700}
+  .cta-art .q,.cta-art .v{font-size:clamp(56px,7vw,88px);line-height:1}
+  .cta-art .q{color:rgba(255,255,255,.32)}
+  .cta-art .v{color:#fff}
+  .cta-art .arrow{font-size:34px;color:rgba(255,255,255,.55)}
+  @media (max-width:820px){.cta-art{display:none}}
+
+  footer{background:var(--ink);color:var(--cream);padding:64px 0 36px}
+  .foot-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:44px;margin-bottom:52px}
+  @media (max-width:820px){.foot-grid{grid-template-columns:1fr}}
+  .foot-brand .brand{color:var(--cream);margin-bottom:16px}
+  .foot-brand .brand-mark{background:var(--accent);color:#fff}
+  .foot-brand p{font-size:13.5px;color:var(--cream-faint);max-width:26em}
+  .foot-col h4{font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--cream-faint);margin-bottom:18px}
+  .foot-col ul{list-style:none}
+  .foot-col li{margin-bottom:11px}
+  .foot-col a{font-size:14px;color:var(--cream-muted);text-decoration:none;transition:color .15s}
+  .foot-col a:hover{color:var(--cream)}
+  .foot-bottom{border-top:1px solid var(--cream-line);padding-top:26px;font-size:12.5px;color:var(--cream-faint);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+  [id]{scroll-margin-top:76px}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="container nav-inner">
+    <a class="brand" href="#top"><span class="brand-mark">&gt;_</span>记忆是什么？</a>
+    <ul class="nav-links">
+      <li class="hide-sm"><a href="#parts">拆解记忆</a></li>
+      <li class="hide-sm"><a href="#timeline">编年史</a></li>
+      <li class="hide-sm"><a href="#makers">谁在做</a></li>
+      <li class="hide-sm"><a href="#faq">常见问题</a></li>
+      <li><a class="nav-cta" href="index.html">🏠 知识地图</a></li>
+    </ul>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="container hero-grid">
+    <div>
+      <p class="eyebrow">给想让 AI 记住你的人的实用指南</p>
+      <h1>记忆<br>是什么？</h1>
+      <p class="lead">记忆（Memory）是让 AI 跨会话记住事实与偏好的机制：短期记忆就是上下文窗口——关掉就忘；长期记忆靠外部存储——把重要的事存下来、下次对话取回来。一句话：<b>窗口是工作台，记忆是抽屉。</b></p>
+      <p class="example">比如<b>第二次聊天</b>时它还记得你是素食者、项目用 React、报告要周报体——不用每次自我介绍。这些"关于你的事实"存在模型之外的抽屉里，每次对话开始时再取回工作台。</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#parts">拆解记忆 ↓</a>
+        <a class="btn btn-ghost" href="index.html">🏠 知识地图</a>
+      </div>
+      <div class="hero-meta">
+        <span class="chip"><i class="dot"></i>短期 = 窗口</span>
+        <span class="chip"><i class="dot"></i>长期 = 外挂</span>
+        <span class="chip"><i class="dot"></i>2024 · ChatGPT Memory</span>
+        <span class="chip"><i class="dot"></i>2025 · memory tool 与 mem0</span>
+      </div>
+    </div>
+
+    <div class="terminal" aria-label="记忆机制演示">
+      <div class="terminal-bar"><i></i><i></i><i></i><span class="terminal-title">memory — 对比演示</span></div>
+      <div class="terminal-steps" role="tablist" aria-label="演示步骤">
+        <button type="button" role="tab" data-step="0" aria-selected="true">① 没有记忆</button>
+        <button type="button" role="tab" data-step="1" aria-selected="false">② 短期：窗口与压缩</button>
+        <button type="button" role="tab" data-step="2" aria-selected="false">③ 长期：写入-检索-遗忘</button>
+      </div>
+      <div class="terminal-body" id="hero-term" aria-live="polite"></div>
+    </div>
+  </div>
+</header>
+
+<section class="section section-yellow" id="parts">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">拆解记忆</p>
+      <h2>六个零件，一套抽屉</h2>
+      <p>记忆系统的全部构件。点击左侧零件，右侧看它的样子——本质是一套"写入-存储-检索-遗忘"的外挂工程。</p>
+    </div>
+
+    <div class="parts-layout">
+      <div class="parts-list" id="parts-list" role="tablist" aria-label="零件列表"></div>
+      <div class="parts-terminal">
+        <div class="terminal">
+          <div class="terminal-bar"><i></i><i></i><i></i><span class="terminal-title">memory — 内部视角</span></div>
+          <div class="terminal-body" id="parts-term" aria-live="polite"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="layers reveal">
+      <div class="layer">
+        <span class="lv">2022–23 · 手工时代</span>
+        <h3>把历史对话塞回提示词</h3>
+        <p>大家发现把关键信息手动拼回 <code>prompt</code> 有效，但各造各的轮子：手动拼接、手动摘要，没有标准件。</p>
+      </div>
+      <div class="layer">
+        <span class="lv">2024 · 产品化</span>
+        <h3>ChatGPT Memory 上线</h3>
+        <p>OpenAI 把记忆做成消费级功能：自动记、可查看、可删除——"AI 记住你"第一次到达亿级用户。</p>
+      </div>
+      <div class="layer">
+        <span class="lv">2025–26 · 工具化</span>
+        <h3>记忆成为标准件</h3>
+        <p>Claude <code>memory tool</code>、mem0、MCP memory server：记忆从产品功能变成开发组件，谁都能给 Agent 装抽屉。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="makers">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">谁在做</p>
+      <h2>从产品功能到开发标准件</h2>
+      <p>记忆的三层玩家：产品厂把它做给亿级用户，模型厂把它做给开发者，开源社区把它做成标准件。</p>
+    </div>
+    <div class="cards-3">
+      <article class="card reveal">
+        <div class="tag-row"><span class="tag tag-accent">OpenAI</span><span class="tag">消费级 · 2024</span></div>
+        <h3>ChatGPT Memory</h3>
+        <p>2024 年 2 月上线：跨对话自动记住偏好与事实；设置里可逐条查看、删除，也可整体关闭——"AI 记住你"第一次成为亿级用户的默认体验。</p>
+        <div class="seed">入口 → <b>openai.com · ChatGPT 设置</b></div>
+      </article>
+      <article class="card reveal">
+        <div class="tag-row"><span class="tag tag-accent">Anthropic</span><span class="tag">开发侧 · 2025</span></div>
+        <h3>Claude memory tool</h3>
+        <p>给 Agent 一个记忆文件工具：在 <b>/memories</b> 目录里创建、读取、更新、删除记忆，存储留在客户端手里——企业可控、可审计，记忆成了开发组件。</p>
+        <div class="seed">入口 → <b>docs.anthropic.com · memory tool</b></div>
+      </article>
+      <article class="card reveal">
+        <div class="tag-row"><span class="tag tag-accent">开源</span><span class="tag">生态 · 标准件</span></div>
+        <h3>开源记忆生态</h3>
+        <p>mem0（开源记忆层，附 arXiv 论文）、LangGraph 持久化（checkpointer + store）、MCP memory server（知识图谱式跨应用记忆）——生态演进很快，选型前先小规模试跑。</p>
+        <div class="seed">入口 → <b>github.com/mem0ai/mem0</b></div>
+      </article>
+    </div>
+    <p class="cards-note reveal">生态规模与格局变化很快 · 第三方对比数据本站未复测，以各官方文档为准。</p>
+  </div>
+</section>
+
+<section class="section section-dark" id="why">
+  <div class="container">
+    <div class="statement reveal">
+      <p class="eyebrow">为什么重要</p>
+      <h2>没有记忆的 AI，<br>每一次对话都是初次见面。</h2>
+      <p class="quote">记忆本质是个<b>检索问题</b>——与 RAG 同源：<b>RAG 检索的是"文档知识"，记忆检索的是"关于你的事实"</b>。真正难的不是存——向量库、文件、数据库都是现成的；难的是决定写什么、何时更新、如何遗忘——以及用户对"它知道我什么"的掌控感。</p>
+      <div class="pillars">
+        <div class="pillar reveal">
+          <span class="p-no">01</span>
+          <h3>记忆是检索问题</h3>
+          <p>同一套"存-找-注入"的技术栈：<code>RAG</code> 对着文档库，记忆对着用户档案。做过 RAG，记忆就懂了一半。</p>
+        </div>
+        <div class="pillar reveal">
+          <span class="p-no">02</span>
+          <h3>写什么比存什么难</h3>
+          <p>存储是现成商品；写入决策才是难题：什么值得记、记多久、和旧记忆怎么合并、错了怎么撤。</p>
+        </div>
+        <div class="pillar reveal">
+          <span class="p-no">03</span>
+          <h3>遗忘与隐私是一等公民</h3>
+          <p>过期、纠错、一键删除不是"以后再加"的功能。没有掌控感的记忆系统，用户不敢用、企业不敢上。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="what">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">依据与事实</p>
+      <h2>先说清楚这个机制</h2>
+    </div>
+    <div class="facts reveal">
+      <div class="fact"><span class="f-k">短期记忆</span><div class="f-v">上下文窗口本身<small>会话内的工作台，关掉就忘——不需要额外建设</small></div></div>
+      <div class="fact"><span class="f-k">长期记忆</span><div class="f-v">外部存储（外挂）<small>向量库 + 结构化档案，跨会话写入与取回</small></div></div>
+      <div class="fact"><span class="f-k">产品化</span><div class="f-v">2024 · ChatGPT Memory<small>2 月上线：自动记、可查看、可删除</small></div></div>
+      <div class="fact"><span class="f-k">工具化</span><div class="f-v">2025 · memory tool 与 mem0<small>记忆成为开发组件与开源标准件</small></div></div>
+      <div class="fact"><span class="f-k">与 RAG 的关系</span><div class="f-v">同一技术，不同内容<small>RAG 检索文档知识，记忆检索"关于你"</small></div></div>
+      <div class="fact"><span class="f-k">关键难点</span><div class="f-v">写入决策与冲突处理<small>写什么、何时更新、新旧信息打架怎么办</small></div></div>
+    </div>
+
+    <div class="deep-block reveal" id="timeline">
+      <h3>记忆机制的编年史</h3>
+      <ul class="timeline">
+        <li>
+          <span class="tl-year">2023</span>
+          <span class="tl-t">向量库当记忆</span>
+          <p>RAG 兴起，同一套"嵌入 + 检索"顺手被用来存关于用户的信息——记忆与 RAG 从此同源，各家手工拼装。</p>
+        </li>
+        <li>
+          <span class="tl-year">2024 · 2</span>
+          <span class="tl-t">ChatGPT Memory 产品化</span>
+          <p>OpenAI 上线跨对话记忆：自动记、可查看、可删除——"记得你的 AI"第一次到达亿级用户。</p>
+        </li>
+        <li>
+          <span class="tl-year">2025</span>
+          <span class="tl-t">memory tool + mem0 论文</span>
+          <p>Anthropic 推出 memory tool（<code>/memories</code> 文件目录）；mem0 发论文（<code>arXiv:2504.19413</code>）并成为最热的开源记忆层——记忆进入工具化。</p>
+        </li>
+        <li>
+          <span class="tl-year">2026</span>
+          <span class="tl-t">记忆标准化</span>
+          <p>MCP memory server 等可插拔组件普及；跨应用、跨 Agent 的"随身记忆"被广泛讨论。</p>
+        </li>
+      </ul>
+    </div>
+
+    <div class="deep-block reveal">
+      <h3>设计张力与常见误解</h3>
+      <ul class="tensions">
+        <li><span><b>记多 vs 记准</b>——噪声记忆污染回答：错记一条偏见，之后每一次回答都带着它。</span></li>
+        <li><span><b>自动 vs 授权</b>——自动记忆体验顺滑，隐私法规与用户掌控却要求知情、可拒、可删。</span></li>
+        <li><span><b>共享 vs 隔离</b>——工作记忆与私人记忆要不要分开？混在同一个抽屉里就是事故素材。</span></li>
+        <li><span><b>成本</b>——每轮检索都花 token：记忆越多，回答越贵、越慢，要算经济账。</span></li>
+        <li><span><b>新鲜 vs 稳定</b>——事实会变：住所、工作、偏好都不是常量，记忆要不要跟着变、怎么变。</span></li>
+        <li><span><b>透明 vs 黑箱</b>——能查看它记了什么，是信任的底线；黑箱记忆没人敢长期用。</span></li>
+      </ul>
+      <p class="tensions-warn"><b>三个常见误解：</b>① "模型自己会记住"——窗口关了就忘，长期记忆全是外挂工程，不是模型天赋；② "记得越多越好"——错记一条偏见，次次回答都歪：噪声记忆是污染源；③ "记忆 = 历史聊天记录"——那是原始日志，记忆是从日志里提炼出来的事实档案。</p>
+    </div>
+  </div>
+</section>
+
+<section class="section section-yellow" id="faq">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">接下来继续了解</p>
+      <h2>常见问题</h2>
+    </div>
+    <div class="faq-list">
+      <details class="faq-item reveal">
+        <summary>记忆和 RAG 是一回事吗？<span class="plus">+</span></summary>
+        <div class="faq-body">技术同源，对象不同：都走"存储-检索-注入"，但 <b>RAG 检索的是文档知识</b>（外部世界），<b>记忆检索的是关于你的事实</b>（用户状态）。工程上常共用一套向量库设施，但写入策略完全不同：RAG 的库由你喂进去，记忆的库从对话里自己长出来。前半套技术见姊妹篇《什么是 RAG？》。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>它会记错吗？怎么纠正？<span class="plus">+</span></summary>
+        <div class="faq-body">会。自动抽取会误解、会过时、会把一次玩笑当事实。纠正路径：直接说<b>"你记错了，应该是……"</b>，多数系统会据此更新记忆；ChatGPT 可在设置里逐条编辑或删除。更稳的做法是把"用户纠正"当作最高优先级的写入信号。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>怎么删除它记的东西？<span class="plus">+</span></summary>
+        <div class="faq-body">消费级产品都有一键入口：<b>ChatGPT 设置 → 个性化 → 记忆</b>，可逐条删、全部清除，也能整体关闭功能。开发侧（memory tool、mem0）因为存储在你自己手里，删除就是删文件、删记录——这也是自建记忆在合规上的天然优势。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>多人、多设备怎么同步？<span class="plus">+</span></summary>
+        <div class="faq-body">关键是把记忆放在<b>服务端</b>而不是端上：按用户 ID 隔离的向量库或数据库，任何设备登录都读同一份。要小心的是隔离边界——用户之间绝不能串；同一用户的工作与私人上下文，也建议分 <code>namespace</code> 存。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>企业落地要注意什么？<span class="plus">+</span></summary>
+        <div class="faq-body">四件事：<b>授权</b>（记什么要让用户知情同意）、<b>隔离</b>（租户 / 用户 / 场景三层隔离）、<b>可审计</b>（谁写的、何时写的、改过什么要有日志）、<b>可删除</b>（法规级的删除权）。企业场景里，"可控"的优先级高于"聪明"。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>本地能玩吗？<span class="plus">+</span></summary>
+        <div class="faq-body">能，而且门槛很低：MCP memory server（<code>npx @modelcontextprotocol/server-memory</code>）给本地 Agent 配知识图谱记忆；mem0 开源可自托管；Claude Code 的 <code>CLAUDE.md</code> 则是最朴素的"文件记忆"。想试什么口味都跑得起来。</div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="who">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">它适合谁</p>
+      <h2>四类读者，四个入口</h2>
+    </div>
+    <div class="aud-grid">
+      <div class="aud-card reveal">
+        <span class="a-who">For Users</span>
+        <h3>普通用户</h3>
+        <p>想让 AI 记住你？先去设置里看它已经记了什么——查看、纠正、删除，三个按键掌握主动权。</p>
+        <div class="start">起点 → 设置 → 记忆管理</div>
+      </div>
+      <div class="aud-card reveal">
+        <span class="a-who">For Devs</span>
+        <h3>开发者</h3>
+        <p>给自己的 Agent 装抽屉：memory tool、mem0、LangGraph checkpointer——写入、检索、遗忘三件套自己搭。</p>
+        <div class="start">起点 → 零件 ④ 写入时机</div>
+      </div>
+      <div class="aud-card reveal">
+        <span class="a-who">For PMs</span>
+        <h3>产品经理</h3>
+        <p>记忆是差异化体验，也是合规雷区：授权、隔离、删除权，需求评审里就要有它们的一席。</p>
+        <div class="start">起点 → 张力 ② 自动 vs 授权</div>
+      </div>
+      <div class="aud-card reveal">
+        <span class="a-who">For Curious</span>
+        <h3>好奇者</h3>
+        <p>为什么它记得你上次说的话？答案不在模型里，在旁边那个外挂存储里——去编年史看看它怎么长出来的。</p>
+        <div class="start">起点 → 编年史 ↓</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="sources" style="padding-top:24px">
+  <div class="container">
+    <div class="sources-card reveal">
+      <p class="eyebrow">来源与延伸阅读</p>
+      <a class="source-item" href="https://openai.com/index/memory-and-new-controls-for-chatgpt" target="_blank" rel="noopener">
+        <span class="s-no">01</span>
+        <span><span class="s-t">OpenAI · Memory and new controls for ChatGPT</span><br><span class="s-d">2024-02-13 官方发布公告</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="https://help.openai.com/en/articles/8590148-memory-in-chatgpt" target="_blank" rel="noopener">
+        <span class="s-no">02</span>
+        <span><span class="s-t">OpenAI 帮助中心 · Memory in ChatGPT</span><br><span class="s-d">官方帮助文档：查看、管理与删除记忆</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="https://docs.anthropic.com/en/docs/agents-and-tools/tool-use/memory-tool" target="_blank" rel="noopener">
+        <span class="s-no">03</span>
+        <span><span class="s-t">Anthropic Docs · Memory tool 官方文档</span><br><span class="s-d">/memories 目录：跨会话读写记忆文件</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="https://arxiv.org/abs/2504.19413" target="_blank" rel="noopener">
+        <span class="s-no">04</span>
+        <span><span class="s-t">mem0 论文 · arXiv:2504.19413</span><br><span class="s-d">《Mem0: Building Production-Ready AI Agents with Scalable Long-Term Memory》</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="https://docs.langchain.com/oss/python/langgraph/persistence" target="_blank" rel="noopener">
+        <span class="s-no">05</span>
+        <span><span class="s-t">LangChain Docs · LangGraph Persistence</span><br><span class="s-d">记忆概念与 checkpointing 持久化（checkpointer / store）</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="什么是RAG.html">
+        <span class="s-no">06</span>
+        <span><span class="s-t">姊妹篇 · 什么是 RAG？</span><br><span class="s-d">同源技术：检索的是文档知识而非关于你的事实（本系列）</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <p class="sources-note">本页内容整理自以上公开资料，更新于 2026 年 10 月。第三方对比数据本站未复测，生态演进很快，以各官方文档为准。</p>
+    </div>
+  </div>
+</section>
+
+<section class="section section-cta">
+  <div class="container cta-grid">
+    <div class="reveal">
+      <p class="eyebrow">开始动手</p>
+      <h2>记忆设计三问</h2>
+      <p>写入记忆前先过这三关——三问答不上来，就先别记。</p>
+      <div class="cta-cmd">
+        <pre><span class="t-cm">① 这条信息值得长期记吗？</span>稳定且未来有用
+<span class="t-cm">② 谁有权读它？</span>隔离与授权——工作记忆 ≠ 私人记忆
+<span class="t-cm">③ 用户能查看、纠正、删除吗？</span>掌控感是底线
+<span class="t-cm">※ 三问答不上来，就先别记</span></pre>
+        <button class="copy-btn" data-copy="① 这条信息值得长期记吗？——稳定且未来有用，一次性的事别进抽屉&#10;② 谁有权读它？——隔离与授权：工作记忆 ≠ 私人记忆&#10;③ 用户能查看、纠正、删除吗？——掌控感是底线&#10;※ 三问答不上来，就先别记">复制</button>
+      </div>
+    </div>
+    <div class="cta-art" aria-hidden="true">
+      <span class="q">忘</span><span class="arrow">→</span><span class="v">记</span>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <a class="brand" href="#top"><span class="brand-mark">&gt;_</span>记忆是什么？</a>
+        <p>第 15 课：让 AI 跨会话记住你——短期窗口、长期外挂，以及"写入-检索-遗忘"的设计难题。</p>
+      </div>
+      <div class="foot-col">
+        <h4>本页导航</h4>
+        <ul>
+          <li><a href="#parts">拆解记忆</a></li>
+          <li><a href="#timeline">编年史</a></li>
+          <li><a href="#makers">谁在做</a></li>
+          <li><a href="#faq">常见问题</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h4>本系列</h4>
+        <ul>
+          <li><a href="index.html">🏠 知识地图（主页）</a></li>
+          <li><a href="什么是大模型.html">什么是大模型？</a></li>
+          <li><a href="什么是思维链.html">什么是思维链？</a></li>
+          <li><a href="什么是Prompt工程.html">什么是 Prompt 工程？</a></li>
+          <li><a href="什么是幻觉.html">什么是幻觉？</a></li>
+          <li><a href="什么是RAG.html">什么是 RAG？</a></li>
+          <li><a href="什么是Agent.html">什么是 AI Agent？</a></li>
+          <li><a href="什么是Skill.html">什么是 Skill？</a></li>
+          <li><a href="什么是MCP.html">什么是 MCP？</a></li>
+          <li><a href="什么是AgentHarness.html">什么是 Agent Harness？</a></li>
+          <li><a href="什么是DeepSeekHarness.html">什么是 DeepSeek Harness？</a></li>
+          <li><a href="什么是飞书CLI.html">什么是飞书 CLI？</a></li>
+          <li><a href="什么是微调.html">什么是微调？</a></li>
+          <li><a href="什么是提示注入.html">什么是提示注入？</a></li>
+          <li><a href="什么是多模态.html">什么是多模态？</a></li>
+          <li><a href="#top">什么是记忆？（本页）</a></li>
+          <li><a href="什么是多智能体.html">什么是多智能体？</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>本页为独立学习指南，与所提及的各家公司没有关联 · 内容整理自公开资料</span>
+      <span>更新于 2026 年 10 月</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+document.documentElement.classList.add('js');
+
+var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function el(tag, cls, text){
+  var n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text !== undefined) n.textContent = text;
+  return n;
+}
+
+function typeCmd(span, text, done){
+  if (reduceMotion){ span.textContent = text; done && done(); return; }
+  var i = 0;
+  (function tick(){
+    span.textContent = text.slice(0, ++i);
+    if (i < text.length){ setTimeout(tick, text[i-1] === ' ' ? 34 : 18); }
+    else { done && done(); }
+  })();
+}
+
+function renderTerm(container, spec){
+  container.innerHTML = '';
+  var line = el('div','t-line');
+  var prompt = el('span','t-prompt', spec.prompt || '❯');
+  var cmd = el('span','t-cmd');
+  var cur = el('span','cursor');
+  line.appendChild(prompt); line.appendChild(cmd); line.appendChild(cur);
+  container.appendChild(line);
+  typeCmd(cmd, spec.cmd, function(){
+    cur.remove();
+    (spec.out || []).forEach(function(o){
+      container.appendChild(el('div','t-line ' + (o.cls || 't-out'), o.text));
+    });
+    if (spec.note) container.appendChild(el('div','t-note', spec.note));
+  });
+}
+
+var heroSteps = [
+  {
+    cmd: '"我是素食者，项目用 React"',
+    prompt: '你',
+    out: [
+      { text: '→ AI 认真记下，本轮回答很贴心', cls: 't-out' },
+      { text: '✗ 新开对话，它又问：您有什么忌口？', cls: 't-out' },
+      { text: '✗ 每一次对话都是初次见面', cls: 't-dim' }
+    ],
+    note: '模型本身不会跨会话记住你——窗口关了就忘，长期记忆全靠外挂。'
+  },
+  {
+    cmd: '窗口 [系统·历史·本轮] → 快满 → 压缩',
+    prompt: '⚙',
+    out: [
+      { text: '① 短期记忆 = 上下文窗口（工作台）', cls: 't-out' },
+      { text: '② 超窗 → 摘要压缩（compaction）续命', cls: 't-out' },
+      { text: '✗ 会话结束，工作台照样清空', cls: 't-dim' }
+    ],
+    note: '窗口再大也是"桌面"：空间有限、用完即弃——它不是抽屉。'
+  },
+  {
+    cmd: 'memory.write() → search() → forget()',
+    out: [
+      { text: '① 写入：抽取值得长期记的事实', cls: 't-out' },
+      { text: '② 检索：下次对话取回相关记忆', cls: 't-out' },
+      { text: '③ 遗忘：过期 · 纠错 · 用户删除', cls: 't-out' },
+      { text: '✓ 第二次聊天就像老朋友', cls: 't-ok' }
+    ],
+    note: '长期记忆 = 外挂存储：写入-检索-遗忘，一个都不能少。'
+  }
+];
+
+var heroTerm = document.getElementById('hero-term');
+var heroBtns = document.querySelectorAll('.terminal-steps button');
+var heroStopped = false;
+
+function showHeroStep(i){
+  heroBtns.forEach(function(b, j){
+    b.classList.toggle('active', i === j);
+    b.setAttribute('aria-selected', i === j ? 'true' : 'false');
+  });
+  renderTerm(heroTerm, heroSteps[i]);
+}
+heroBtns.forEach(function(b){
+  b.addEventListener('click', function(){
+    heroStopped = true;
+    showHeroStep(+b.dataset.step);
+  });
+});
+showHeroStep(0);
+(function autoAdvance(){
+  if (reduceMotion) return;
+  var idx = 0;
+  setInterval(function(){
+    if (heroStopped) return;
+    idx = (idx + 1) % heroSteps.length;
+    showHeroStep(idx);
+  }, 7000);
+})();
+
+var parts = [
+  {
+    name: '短期记忆', desc: '上下文窗口，会话内有效',
+    spec: {
+      cmd: 'context: [系统提示 | 历史 | 本轮]',
+      out: [
+        { text: '→ 窗口 = 会话内的"工作台"', cls: 't-out' },
+        { text: '→ 装满后，最早的内容先被挤出去', cls: 't-out' },
+        { text: '✗ 关掉会话，整张桌子清空', cls: 't-dim' }
+      ],
+      note: '短期记忆不用"建设"——它就是上下文窗口本身。'
+    }
+  },
+  {
+    name: '历史与压缩', desc: '超窗摘要 compaction',
+    spec: {
+      cmd: '40k tokens 历史 → 2k tokens 摘要',
+      out: [
+        { text: '→ 窗口快满：旧对话压成摘要保留', cls: 't-out' },
+        { text: '→ 省下空间，代价是细节与原文', cls: 't-out' },
+        { text: '✓ 多聊几十轮也不至于失忆', cls: 't-ok' }
+      ],
+      note: '压缩是短期记忆的续命术：压掉的部分不保证还在。'
+    }
+  },
+  {
+    name: '长期记忆存储', desc: '向量库 + 结构化档案',
+    spec: {
+      cmd: 'store: vector-db / profile',
+      out: [
+        { text: '① 向量库：语义检索"关于你的事实"', cls: 't-out' },
+        { text: '② 档案：键值或图谱，改得精确', cls: 't-out' },
+        { text: '✓ 与 RAG 同源：存的是你，不是文档', cls: 't-ok' }
+      ],
+      note: '向量库胜在"想起相关"，档案胜在"改得干净"——常搭配使用。'
+    }
+  },
+  {
+    name: '写入时机', desc: '自动抽取 vs 显式"记住我"',
+    spec: {
+      cmd: 'memory.write() 由谁触发？',
+      out: [
+        { text: '① 自动抽取：无感，但会记错记多', cls: 't-out' },
+        { text: '② 显式指令："记住我是素食者"', cls: 't-out' },
+        { text: '✗ 自动写入的噪声会污染之后的回答', cls: 't-dim' }
+      ],
+      note: '写什么比存什么难——记忆系统的第一设计难题。'
+    }
+  },
+  {
+    name: '检索与冲突', desc: '取回什么 · 新旧信息打架',
+    spec: {
+      cmd: 'memory.search("饮食偏好")',
+      out: [
+        { text: '→ 只取与本次相关的几条，不全量倒回', cls: 't-out' },
+        { text: '✗ 冲突："住北京" vs "刚搬上海"', cls: 't-dim' },
+        { text: '✓ 策略：新值覆盖 / 双记并注明时间', cls: 't-ok' }
+      ],
+      note: '检索是排序问题，冲突处理决定它"记事"还是"记仇"。'
+    }
+  },
+  {
+    name: '遗忘与隐私', desc: '过期 · 纠错 · 删除权',
+    spec: {
+      cmd: 'memory.forget() / memory.clear()',
+      out: [
+        { text: '① 过期：一年前的偏好还作数吗', cls: 't-out' },
+        { text: '② 纠错：它记错了，用户要能改', cls: 't-out' },
+        { text: '③ 删除权：一键清空（可逐条删）', cls: 't-out' },
+        { text: '✓ 没有删除权的记忆上不了生产', cls: 't-ok' }
+      ],
+      note: '遗忘不是附加题——隐私与掌控感是一等公民需求。'
+    }
+  }
+];
+
+var partsList = document.getElementById('parts-list');
+var partsTerm = document.getElementById('parts-term');
+parts.forEach(function(t, i){
+  var b = el('button', 'part-btn' + (i === 0 ? ' active' : ''));
+  b.type = 'button';
+  b.setAttribute('role', 'tab');
+  b.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
+  b.appendChild(el('span', 'num', String(i + 1)));
+  var wrap = el('span');
+  wrap.appendChild(el('span', 't-name', t.name));
+  wrap.appendChild(document.createElement('br'));
+  wrap.appendChild(el('span', 't-desc', t.desc));
+  b.appendChild(wrap);
+  b.addEventListener('click', function(){
+    partsList.querySelectorAll('.part-btn').forEach(function(x){
+      x.classList.remove('active'); x.setAttribute('aria-selected', 'false');
+    });
+    b.classList.add('active'); b.setAttribute('aria-selected', 'true');
+    renderTerm(partsTerm, t.spec);
+  });
+  partsList.appendChild(b);
+});
+renderTerm(partsTerm, parts[0].spec);
+
+document.querySelectorAll('.copy-btn').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    var text = btn.dataset.copy || '';
+    var done = function(){
+      var old = btn.textContent;
+      btn.textContent = '已复制 ✓';
+      setTimeout(function(){ btn.textContent = old; }, 1600);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done, function(){ fallbackCopy(text); done(); });
+    } else { fallbackCopy(text); done(); }
+  });
+});
+function fallbackCopy(text){
+  var ta = document.createElement('textarea');
+  ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); } catch(e){}
+  ta.remove();
+}
+
+var revealEls = document.querySelectorAll('.reveal');
+if ('IntersectionObserver' in window && !reduceMotion){
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if (en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); }
+    });
+  }, { threshold: 0.12 });
+  revealEls.forEach(function(n){ io.observe(n); });
+} else {
+  revealEls.forEach(function(n){ n.classList.add('in'); });
+}
+</script>
+</body>
+</html>

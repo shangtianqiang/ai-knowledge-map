@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#FBFAF7">
+<title>多模态是什么？ | 会看图的 AI 实用指南</title>
+<meta name="description" content="一页讲清楚多模态（Multimodal）：ViT 与 CLIP 打地基、GPT-4V 到 GPT-4o 与 Gemini 的原生多模态路线、文生图与语音生成，以及看图也会幻觉、图片能藏注入的边界。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2317151F'/%3E%3Ctext x='16' y='22' font-size='15' font-family='monospace' fill='%23EAB308' text-anchor='middle'%3E%3C/text%3E%3C/svg%3E">
+<style>
+  :root{
+    --cream:#FBFAF7;
+    --ink:#17151F;
+    --paper:#FFFFFF;
+    --yellow:#FFD166;
+    --accent:#A16207;
+    --accent-light:#EAB308;
+    --muted:rgba(23,21,31,.64);
+    --faint:rgba(23,21,31,.45);
+    --line:rgba(23,21,31,.14);
+    --line-strong:rgba(23,21,31,.85);
+    --cream-muted:rgba(251,250,247,.68);
+    --cream-faint:rgba(251,250,247,.42);
+    --cream-line:rgba(251,250,247,.16);
+    --mono:"SF Mono",ui-monospace,"JetBrains Mono",Menlo,Consolas,"Liberation Mono",monospace;
+    --shadow-card:0 1px 2px rgba(23,21,31,.05),0 10px 28px -14px rgba(23,21,31,.18);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    *,*::before,*::after{animation:none!important;transition:none!important}
+  }
+  body{
+    font-family:"PingFang SC","Microsoft YaHei","Inter Variable",system-ui,sans-serif;
+    background:var(--cream);
+    color:var(--ink);
+    font-size:16px;
+    line-height:1.75;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+  }
+  ::selection{background:var(--accent);color:#fff}
+  a{color:inherit}
+  .container{max-width:1128px;margin:0 auto;padding:0 24px}
+
+  html.js .reveal{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s ease}
+  html.js .reveal.in{opacity:1;transform:none}
+  @media (prefers-reduced-motion:reduce){html.js .reveal{opacity:1;transform:none}}
+  @media print{html.js .reveal{opacity:1!important;transform:none!important}}
+
+  .nav{
+    position:sticky;top:0;z-index:50;
+    background:rgba(251,250,247,.92);
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  .nav-inner{display:flex;align-items:center;justify-content:space-between;height:60px;gap:16px}
+  .brand{display:flex;align-items:center;gap:10px;text-decoration:none;font-weight:800;font-size:15px;letter-spacing:.01em}
+  .brand-mark{
+    width:26px;height:26px;background:var(--ink);color:var(--accent-light);
+    font-family:var(--mono);font-size:12px;font-weight:700;line-height:26px;text-align:center;
+    border-radius:5px;flex:none;
+  }
+  .nav-links{display:flex;align-items:center;gap:22px;list-style:none}
+  .nav-links a{text-decoration:none;font-size:13.5px;font-weight:500;color:var(--muted);transition:color .15s}
+  .nav-links a:hover{color:var(--ink)}
+  .nav-links a.nav-cta{
+    color:var(--ink);font-weight:700;border:1.5px solid var(--line-strong);
+    padding:6px 14px;border-radius:0;
+  }
+  .nav-links a.nav-cta:hover{background:var(--ink);color:var(--cream)}
+  @media (max-width:720px){.nav-links li.hide-sm{display:none}}
+
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:13px 26px;border-radius:0;border:1.5px solid transparent;
+    font-family:inherit;font-size:15px;font-weight:700;letter-spacing:.02em;
+    text-decoration:none;cursor:pointer;transition:transform .15s ease,background .15s ease,color .15s ease,box-shadow .15s ease;
+  }
+  .btn:active{transform:translateY(1px)}
+  .btn-primary{background:var(--accent);color:#fff}
+  .btn-primary:hover{box-shadow:0 6px 0 -2px rgba(23,21,31,.9)}
+  .btn-ghost{border-color:var(--line-strong);color:var(--ink);background:transparent}
+  .btn-ghost:hover{background:var(--ink);color:var(--cream)}
+  .btn-sm{padding:9px 18px;font-size:13.5px}
+
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:9px;
+    font-size:12.5px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;
+  }
+  .eyebrow::before{content:"";width:9px;height:9px;background:currentColor;flex:none}
+  h1{font-size:clamp(42px,6.6vw,74px);line-height:1.08;font-weight:800;letter-spacing:-.015em}
+  h2{font-size:clamp(30px,4.4vw,44px);line-height:1.18;font-weight:800;letter-spacing:-.01em}
+  h3{font-size:20px;font-weight:800;line-height:1.4}
+  .lead{font-size:clamp(17px,2vw,19.5px);line-height:1.8}
+
+  .hero{padding:76px 0 88px}
+  .hero-grid{display:grid;grid-template-columns:1.02fr .98fr;gap:56px;align-items:center}
+  @media (max-width:980px){.hero-grid{grid-template-columns:1fr;gap:44px}}
+  .hero .eyebrow{color:var(--ink);margin-bottom:26px}
+  .hero h1{margin-bottom:24px}
+  .hero .lead{color:var(--ink);margin-bottom:16px;max-width:34em}
+  .hero .example{color:var(--muted);font-size:15.5px;max-width:36em;margin-bottom:32px}
+  .hero .example b{color:var(--ink);font-weight:700}
+  .hero-actions{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:30px}
+  .hero-meta{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{
+    font-size:12px;font-weight:600;color:var(--muted);
+    border:1px solid var(--line);padding:5px 11px;border-radius:999px;
+    display:inline-flex;align-items:center;gap:6px;background:var(--paper);
+  }
+  .chip .dot{width:6px;height:6px;border-radius:50%;background:var(--accent)}
+
+  .terminal{
+    background:var(--ink);border-radius:14px;overflow:hidden;
+    box-shadow:0 2px 4px rgba(23,21,31,.12),0 30px 60px -22px rgba(23,21,31,.45);
+    border:1px solid rgba(23,21,31,.9);
+  }
+  .terminal-bar{
+    display:flex;align-items:center;gap:7px;
+    padding:13px 16px;border-bottom:1px solid var(--cream-line);
+  }
+  .terminal-bar i{width:11px;height:11px;border-radius:50%;background:rgba(251,250,247,.22)}
+  .terminal-bar i:first-child{background:#FF5F57}
+  .terminal-bar i:nth-child(2){background:#FEBC2E}
+  .terminal-bar i:nth-child(3){background:#28C840}
+  .terminal-bar .terminal-title{
+    margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--cream-faint);letter-spacing:.08em;
+  }
+  .terminal-steps{display:flex;gap:6px;padding:12px 14px 0;flex-wrap:wrap}
+  .terminal-steps button{
+    font-family:inherit;font-size:12.5px;font-weight:700;letter-spacing:.04em;
+    background:transparent;color:var(--cream-faint);
+    border:1px solid var(--cream-line);border-radius:999px;
+    padding:5px 13px;cursor:pointer;transition:all .18s;
+  }
+  .terminal-steps button:hover{color:var(--cream);border-color:var(--cream-faint)}
+  .terminal-steps button.active{background:var(--accent);border-color:var(--accent);color:#fff}
+  .terminal-body{padding:18px 20px 22px;min-height:238px;font-family:var(--mono);font-size:13.5px;line-height:1.9}
+  .t-line{white-space:pre-wrap;word-break:break-all}
+  .t-prompt{color:var(--accent-light);font-weight:700;margin-right:9px}
+  .t-cmd{color:var(--cream)}
+  .t-out{color:var(--cream-faint)}
+  .t-ok{color:#3EE8C6}
+  .t-dim{color:rgba(251,250,247,.35)}
+  .t-user{color:var(--yellow)}
+  .t-note{color:var(--cream-faint);font-family:"PingFang SC","Microsoft YaHei",sans-serif;font-size:12px;margin-top:12px;padding-top:10px;border-top:1px dashed var(--cream-line)}
+  .cursor{display:inline-block;width:8px;height:15px;background:var(--accent-light);vertical-align:-2px;animation:blink 1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+  @media (prefers-reduced-motion:reduce){.cursor{animation:none}}
+
+  .section{padding:96px 0}
+  .section-head{max-width:680px;margin-bottom:52px}
+  .section-head .eyebrow{margin-bottom:20px}
+  .section-head p{color:var(--muted);margin-top:16px;font-size:16.5px}
+
+  .section-yellow{background:var(--yellow)}
+  .section-yellow .section-head p{color:rgba(23,21,31,.72)}
+
+  .section-dark{background:var(--ink);color:var(--cream)}
+  .section-dark .eyebrow{color:var(--accent-light)}
+
+  .parts-layout{display:grid;grid-template-columns:.9fr 1.1fr;gap:36px;align-items:start}
+  @media (max-width:900px){.parts-layout{grid-template-columns:1fr}}
+  .parts-list{display:flex;flex-direction:column;gap:10px}
+  .part-btn{
+    display:flex;align-items:center;gap:14px;text-align:left;width:100%;
+    background:var(--paper);border:1.5px solid transparent;border-radius:10px;
+    padding:15px 18px;font-family:inherit;cursor:pointer;
+    transition:transform .16s ease,box-shadow .16s ease,border-color .16s;
+    box-shadow:var(--shadow-card);
+  }
+  .part-btn:hover{transform:translateY(-2px)}
+  .part-btn .num{
+    font-family:var(--mono);font-size:12px;font-weight:700;color:var(--muted);
+    width:30px;height:30px;border:1.5px solid var(--line);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;flex:none;transition:all .16s;
+  }
+  .part-btn .t-name{font-size:15.5px;font-weight:700}
+  .part-btn .t-desc{font-size:13px;color:var(--muted);margin-top:2px}
+  .part-btn.active{border-color:var(--ink);transform:translateY(-2px)}
+  .part-btn.active .num{background:var(--ink);border-color:var(--ink);color:var(--accent-light)}
+  .parts-terminal{position:sticky;top:84px}
+  @media (max-width:900px){.parts-terminal{position:static}}
+
+  .layers{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(23,21,31,.22);border:1.5px solid var(--ink);border-radius:12px;overflow:hidden;margin-top:56px}
+  @media (max-width:820px){.layers{grid-template-columns:1fr}}
+  .layer{background:var(--yellow);padding:26px 26px 24px}
+  .layer .lv{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.14em;color:rgba(23,21,31,.55);display:block;margin-bottom:12px}
+  .layer h3{font-size:17px;margin-bottom:8px}
+  .layer p{font-size:13.5px;color:rgba(23,21,31,.72);line-height:1.7}
+  .layer code{font-family:var(--mono);font-size:12.5px;background:rgba(23,21,31,.1);padding:2px 6px;border-radius:4px}
+
+  .cards-3{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+  @media (max-width:900px){.cards-3{grid-template-columns:1fr}}
+  .card{
+    background:var(--paper);border:1px solid var(--line);border-radius:12px;
+    padding:30px 28px 26px;box-shadow:var(--shadow-card);
+    display:flex;flex-direction:column;
+  }
+  .card .tag-row{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:20px}
+  .tag{
+    font-size:10.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+    padding:4px 9px;border:1px solid var(--line);border-radius:4px;color:var(--muted);
+  }
+  .tag.tag-accent{background:var(--ink);color:var(--accent-light);border-color:var(--ink)}
+  .card h3{margin-bottom:12px}
+  .card p{font-size:14.5px;color:var(--muted);flex:1}
+  .card .seed{
+    margin-top:20px;padding-top:16px;border-top:1px dashed var(--line);
+    font-family:var(--mono);font-size:12px;color:var(--faint);word-break:break-all;
+  }
+  .card .seed b{color:var(--ink);font-weight:700}
+  .cards-note{margin-top:30px;font-size:13px;color:var(--faint);display:flex;align-items:center;gap:8px}
+  .cards-note::before{content:"※";color:var(--muted)}
+
+  .statement{max-width:820px}
+  .statement h2{margin-bottom:28px}
+  .statement .quote{
+    font-size:clamp(17px,2vw,19px);line-height:1.85;color:var(--cream-muted);
+    border-left:3px solid var(--accent-light);padding-left:22px;margin-bottom:52px;max-width:36em;
+  }
+  .statement .quote b{color:var(--cream)}
+  .statement .quote code{font-family:var(--mono);font-size:14px;background:rgba(251,250,247,.12);padding:2px 7px;border-radius:4px;color:var(--cream)}
+  .pillars{display:grid;grid-template-columns:repeat(3,1fr);gap:34px}
+  @media (max-width:820px){.pillars{grid-template-columns:1fr}}
+  .pillar .p-no{font-family:var(--mono);font-size:13px;color:var(--accent-light);font-weight:700;letter-spacing:.12em;display:block;margin-bottom:14px}
+  .pillar h3{color:var(--cream);margin-bottom:10px;font-size:17.5px}
+  .pillar p{font-size:14.5px;color:var(--cream-muted);line-height:1.8}
+  .pillar code{font-family:var(--mono);font-size:12.5px;background:rgba(251,250,247,.12);padding:2px 6px;border-radius:4px;color:var(--cream)}
+
+  .facts{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  @media (max-width:820px){.facts{grid-template-columns:1fr}}
+  .fact{background:var(--paper);padding:26px 26px 22px}
+  .fact .f-k{font-size:12px;font-weight:800;letter-spacing:.14em;color:var(--faint);text-transform:uppercase;display:block;margin-bottom:10px}
+  .fact .f-v{font-size:15.5px;font-weight:600;line-height:1.65}
+  .fact .f-v small{display:block;font-weight:400;font-size:13px;color:var(--muted);margin-top:4px}
+
+  .deep-block{margin-top:76px}
+  .deep-block>h3{margin-bottom:26px;font-size:clamp(21px,2.6vw,25px)}
+
+  .timeline{list-style:none;border-left:2px solid var(--ink);margin-left:6px}
+  .timeline li{position:relative;padding:0 0 26px 28px}
+  .timeline li:last-child{padding-bottom:0}
+  .timeline li::before{
+    content:"";position:absolute;left:-7px;top:9px;width:12px;height:12px;
+    background:var(--accent);border:2px solid var(--ink);border-radius:50%;
+  }
+  .timeline .tl-year{font-family:var(--mono);font-size:12.5px;font-weight:700;letter-spacing:.1em;color:var(--faint);display:block;margin-bottom:4px}
+  .timeline .tl-t{font-weight:800;font-size:16.5px}
+  .timeline p{font-size:14px;color:var(--muted);margin-top:4px;max-width:40em}
+  .timeline code{font-family:var(--mono);font-size:12.5px;background:rgba(23,21,31,.07);padding:2px 6px;border-radius:4px;color:var(--ink)}
+
+  .tensions{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:14px 28px}
+  @media (max-width:820px){.tensions{grid-template-columns:1fr}}
+  .tensions li{
+    display:flex;gap:12px;font-size:14.5px;color:var(--muted);line-height:1.7;
+    padding:14px 0;border-bottom:1px solid var(--line);
+  }
+  .tensions li b{color:var(--ink)}
+  .tensions li::before{content:"◆";color:var(--accent);font-weight:800;flex:none;font-size:12px;padding-top:5px}
+  .tensions-warn{
+    margin-top:26px;padding:18px 22px;border-radius:10px;
+    background:rgba(161,98,7,.08);border:1px solid rgba(161,98,7,.4);
+    font-size:14px;color:var(--muted);
+  }
+  .tensions-warn b{color:var(--ink)}
+
+  .faq-list{max-width:780px}
+  .faq-item{background:var(--paper);border:1.5px solid var(--ink);border-radius:10px;margin-bottom:14px;overflow:hidden;box-shadow:var(--shadow-card)}
+  .faq-item summary{
+    list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:18px;
+    padding:20px 24px;font-weight:700;font-size:16px;
+  }
+  .faq-item summary::-webkit-details-marker{display:none}
+  .faq-item summary .plus{
+    flex:none;width:26px;height:26px;border:1.5px solid var(--ink);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:400;font-size:16px;line-height:1;transition:transform .2s ease,background .2s,color .2s;
+  }
+  .faq-item[open] summary .plus{background:var(--ink);color:var(--yellow);transform:rotate(45deg)}
+  .faq-item .faq-body{padding:0 24px 22px;font-size:14.5px;color:var(--muted);line-height:1.85}
+  .faq-item .faq-body b{color:var(--ink)}
+  .faq-item .faq-body code{font-family:var(--mono);font-size:12.5px;background:rgba(23,21,31,.07);padding:2px 6px;border-radius:4px;color:var(--ink)}
+
+  .aud-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+  @media (max-width:1000px){.aud-grid{grid-template-columns:1fr 1fr}}
+  @media (max-width:640px){.aud-grid{grid-template-columns:1fr}}
+  .aud-card{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:26px 24px;box-shadow:var(--shadow-card);display:flex;flex-direction:column}
+  .aud-card .a-who{font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin-bottom:12px}
+  .aud-card h3{font-size:16.5px;margin-bottom:10px}
+  .aud-card p{font-size:13.5px;color:var(--muted);flex:1;line-height:1.75}
+  .aud-card .start{
+    margin-top:16px;font-family:var(--mono);font-size:11.5px;color:#fff;
+    background:var(--accent);padding:7px 11px;border-radius:6px;word-break:break-all;
+  }
+
+  .sources-card{background:var(--ink);color:var(--cream);border-radius:16px;padding:52px 54px;max-width:860px}
+  @media (max-width:720px){.sources-card{padding:36px 26px}}
+  .sources-card .eyebrow{color:var(--yellow);margin-bottom:28px}
+  .source-item{display:flex;gap:18px;padding:16px 0;border-bottom:1px solid var(--cream-line);text-decoration:none;transition:padding-left .18s}
+  .source-item:hover{padding-left:8px}
+  .source-item:last-of-type{border-bottom:none}
+  .source-item .s-no{font-family:var(--mono);font-size:12.5px;color:var(--accent-light);font-weight:700;flex:none;padding-top:2px}
+  .source-item .s-t{font-weight:700;font-size:15.5px;color:var(--cream)}
+  .source-item .s-d{font-size:13px;color:var(--cream-faint);margin-top:3px}
+  .source-item .s-arrow{margin-left:auto;color:var(--cream-faint);flex:none;padding-top:2px}
+  .sources-note{margin-top:26px;font-size:12.5px;color:var(--cream-faint)}
+
+  .section-cta{background:var(--accent)}
+  .cta-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:48px;align-items:center}
+  @media (max-width:820px){.cta-grid{grid-template-columns:1fr}}
+  .section-cta .eyebrow{color:rgba(255,255,255,.72);margin-bottom:22px}
+  .section-cta h2{margin-bottom:18px;color:#fff}
+  .section-cta p{color:rgba(255,255,255,.85);max-width:30em;margin-bottom:30px}
+  .cta-cmd{
+    display:flex;align-items:flex-start;gap:12px;background:var(--ink);border-radius:10px;
+    padding:16px 18px;font-family:var(--mono);font-size:13px;line-height:1.9;color:var(--cream);
+    max-width:540px;box-shadow:0 14px 30px -12px rgba(23,21,31,.5);
+  }
+  .cta-cmd pre{font-family:inherit;white-space:pre-wrap;word-break:break-all;flex:1;margin:0}
+  .cta-cmd .t-cm{color:var(--accent-light)}
+  .copy-btn{
+    flex:none;font-family:inherit;font-size:11px;font-weight:700;letter-spacing:.08em;
+    background:transparent;color:var(--cream-faint);border:1px solid var(--cream-line);
+    border-radius:4px;padding:4px 9px;cursor:pointer;transition:all .15s;
+  }
+  .cta-cmd .copy-btn{color:var(--cream-muted);border-color:var(--cream-line)}
+  .cta-cmd .copy-btn:hover{color:var(--yellow);border-color:var(--yellow)}
+  .cta-art{display:flex;align-items:center;justify-content:center;gap:22px;font-family:var(--mono);font-weight:700}
+  .cta-art .q,.cta-art .v{font-size:clamp(56px,7vw,88px);line-height:1}
+  .cta-art .q{color:rgba(255,255,255,.32)}
+  .cta-art .v{color:#fff}
+  .cta-art .arrow{font-size:34px;color:rgba(255,255,255,.55)}
+  @media (max-width:820px){.cta-art{display:none}}
+
+  footer{background:var(--ink);color:var(--cream);padding:64px 0 36px}
+  .foot-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:44px;margin-bottom:52px}
+  @media (max-width:820px){.foot-grid{grid-template-columns:1fr}}
+  .foot-brand .brand{color:var(--cream);margin-bottom:16px}
+  .foot-brand .brand-mark{background:var(--accent);color:#fff}
+  .foot-brand p{font-size:13.5px;color:var(--cream-faint);max-width:26em}
+  .foot-col h4{font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--cream-faint);margin-bottom:18px}
+  .foot-col ul{list-style:none}
+  .foot-col li{margin-bottom:11px}
+  .foot-col a{font-size:14px;color:var(--cream-muted);text-decoration:none;transition:color .15s}
+  .foot-col a:hover{color:var(--cream)}
+  .foot-bottom{border-top:1px solid var(--cream-line);padding-top:26px;font-size:12.5px;color:var(--cream-faint);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+  [id]{scroll-margin-top:76px}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="container nav-inner">
+    <a class="brand" href="#top"><span class="brand-mark">&gt;_</span>多模态是什么？</a>
+    <ul class="nav-links">
+      <li class="hide-sm"><a href="#parts">拆解多模态</a></li>
+      <li class="hide-sm"><a href="#timeline">编年史</a></li>
+      <li class="hide-sm"><a href="#makers">代表玩家</a></li>
+      <li class="hide-sm"><a href="#faq">常见问题</a></li>
+      <li><a class="nav-cta" href="index.html">🏠 知识地图</a></li>
+    </ul>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="container hero-grid">
+    <div>
+      <p class="eyebrow">给想看懂"会看图的 AI"的人的实用指南</p>
+      <h1>多模态<br>是什么？</h1>
+      <p class="lead">多模态（Multimodal）指模型能同时理解和生成文字之外的信息——<strong>图片、音频、视频</strong>。做法的关键一句话：<b>把一切模态都切成 token，塞进同一个 Transformer。</b></p>
+      <p class="example">比如 <b>拍照问菜谱、截图问报错、语音自然对话、看视频总结要点</b>——这些日常功能背后都是多模态模型：图像切块成 token、音频分帧成序列，和文字走同一套架构。</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#parts">拆解多模态 ↓</a>
+        <a class="btn btn-ghost" href="index.html">🏠 知识地图</a>
+      </div>
+      <div class="hero-meta">
+        <span class="chip"><i class="dot"></i>2020 · ViT</span>
+        <span class="chip"><i class="dot"></i>2021 · CLIP 对齐</span>
+        <span class="chip"><i class="dot"></i>2023 · GPT-4V</span>
+        <span class="chip"><i class="dot"></i>看图也会幻觉</span>
+      </div>
+    </div>
+
+    <div class="terminal" aria-label="多模态机制演示">
+      <div class="terminal-bar"><i></i><i></i><i></i><span class="terminal-title">multimodal — 三步看懂</span></div>
+      <div class="terminal-steps" role="tablist" aria-label="演示步骤">
+        <button type="button" role="tab" data-step="0" aria-selected="true">① 从只读文字到看见图像</button>
+        <button type="button" role="tab" data-step="1" aria-selected="false">② 一切皆 token</button>
+        <button type="button" role="tab" data-step="2" aria-selected="false">③ 理解与生成都多模态</button>
+      </div>
+      <div class="terminal-body" id="hero-term" aria-live="polite"></div>
+    </div>
+  </div>
+</header>
+
+<section class="section section-yellow" id="parts">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">拆解多模态</p>
+      <h2>六个零件，看懂会看图的 AI</h2>
+      <p>多模态的技术拼图。点击左侧零件，右侧看它的内部视角——从图像切块，到图片里藏指令。</p>
+    </div>
+
+    <div class="parts-layout">
+      <div class="parts-list" id="parts-list" role="tablist" aria-label="零件列表"></div>
+      <div class="parts-terminal">
+        <div class="terminal">
+          <div class="terminal-bar"><i></i><i></i><i></i><span class="terminal-title">multimodal — 内部视角</span></div>
+          <div class="terminal-body" id="parts-term" aria-live="polite"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="layers reveal">
+      <div class="layer">
+        <span class="lv">2020–21 · 地基</span>
+        <h3>视觉进 Transformer</h3>
+        <p><code>ViT</code> 把图像切块成 token 序列；<code>CLIP</code> 把图文对齐到同一向量空间——今天的看图模型几乎都站在这两块基石上。</p>
+      </div>
+      <div class="layer">
+        <span class="lv">2023 · 产品化</span>
+        <h3>GPT-4V 发布</h3>
+        <p>2023 年 9 月 OpenAI 向 ChatGPT 开放看图对话，"拍照问 AI"走进日常；Qwen-VL 等开源 VLM 同期跟进。</p>
+      </div>
+      <div class="layer">
+        <span class="lv">2024–26 · 旗舰标配</span>
+        <h3>原生多模态</h3>
+        <p>GPT-4o、Gemini 从训练之初就混合多种模态——实时语音、视频理解成为旗舰模型标配。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="makers">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">代表玩家</p>
+      <h2>谁在把多模态做进产品</h2>
+      <p>三条路线：OpenAI 的产品化节奏、Google 的原生训练路线、中文与开源的开放权重生态。</p>
+    </div>
+    <div class="cards-3">
+      <article class="card reveal">
+        <div class="tag-row"><span class="tag tag-accent">OpenAI</span><span class="tag">产品化 · 2023→</span></div>
+        <h3>GPT-4V → GPT-4o</h3>
+        <p>2023 年 9 月 GPT-4V 让 ChatGPT 学会看图；2024 年 5 月 GPT-4o 走向原生多模态——文本、音频、图像统一处理，实时语音对话成为可能。</p>
+        <div class="seed">发布 → <b>openai.com/index/hello-gpt-4o</b></div>
+      </article>
+      <article class="card reveal">
+        <div class="tag-row"><span class="tag tag-accent">Google</span><span class="tag">原生路线 · 2023→</span></div>
+        <h3>Gemini：训练即混合模态</h3>
+        <p>技术报告明确"原生多模态"：预训练阶段就在文本、图像、音频、视频上联合训练，而非给文本模型外挂视觉——视频理解是它的强项。</p>
+        <div class="seed">报告 → <b>arxiv.org/abs/2312.11805</b></div>
+      </article>
+      <article class="card reveal">
+        <div class="tag-row"><span class="tag tag-accent">开源与中文</span><span class="tag">开放权重</span></div>
+        <h3>Qwen-VL、GLM-4V 等</h3>
+        <p>阿里 Qwen-VL（2023 年 8 月起开放权重）、智谱 GLM-4V 等撑起开放生态，中小团队可本地部署 VLM；能力以各家技术报告为准。</p>
+        <div class="seed">权重 → <b>huggingface.co/Qwen</b></div>
+      </article>
+    </div>
+    <p class="cards-note reveal">各家能力对比本站未复测 · 以官方论文与技术报告为准。</p>
+  </div>
+</section>
+
+<section class="section section-dark" id="why">
+  <div class="container">
+    <div class="statement reveal">
+      <p class="eyebrow">为什么重要</p>
+      <h2>世界不是文字组成的，<br>模型终于睁开了眼睛。</h2>
+      <p class="quote">多模态把 AI 的输入带宽从"打字"扩展到<b>"所见所闻"</b>，也把它推向真实世界——但要注意<b>理解 ≠ 生成</b>（会看图的模型不一定会画图），且图像同样是攻击面（<b>图片可以藏注入指令</b>）。</p>
+      <div class="pillars">
+        <div class="pillar reveal">
+          <span class="p-no">01</span>
+          <h3>一切皆 token</h3>
+          <p>文字、图像、音频统一切成序列，才能塞进同一个 Transformer——统一架构是这一切的前提。</p>
+        </div>
+        <div class="pillar reveal">
+          <span class="p-no">02</span>
+          <h3>理解 ≠ 生成</h3>
+          <p>会看图的模型不一定会画图，会听声音的模型不一定会克隆音色——两条能力线各自成熟，评价时别混为一谈。</p>
+        </div>
+        <div class="pillar reveal">
+          <span class="p-no">03</span>
+          <h3>更多模态更多风险</h3>
+          <p>深伪视频、声音诈骗、随手拍照上传的隐私、图片里藏的注入指令——带宽变大，攻击面也变大。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="what">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">依据与事实</p>
+      <h2>先说清楚这件事</h2>
+    </div>
+    <div class="facts reveal">
+      <div class="fact"><span class="f-k">定义</span><div class="f-v">多模态（Multimodal）<small>模型同时理解与生成文字之外的信息：图片、音频、视频</small></div></div>
+      <div class="fact"><span class="f-k">底座</span><div class="f-v">2020 ViT + 2021 CLIP<small>图像切块成 token 序列；图文对齐到同一向量空间</small></div></div>
+      <div class="fact"><span class="f-k">产品化</span><div class="f-v">2023 · GPT-4V<small>2023-09-25 OpenAI 向 ChatGPT 开放看图对话</small></div></div>
+      <div class="fact"><span class="f-k">原生路线</span><div class="f-v">GPT-4o 与 Gemini<small>2024-05 / 2023-12：训练之初就混合多种模态</small></div></div>
+      <div class="fact"><span class="f-k">生成侧</span><div class="f-v">文生图与语音<small>2022 Stable Diffusion 开源爆发；语音合成与克隆普及</small></div></div>
+      <div class="fact"><span class="f-k">边界</span><div class="f-v">看图也会幻觉<small>图像理解会出错，图片还能携带注入指令</small></div></div>
+    </div>
+
+    <div class="deep-block reveal" id="timeline">
+      <h3>会看图的 AI 编年史</h3>
+      <ul class="timeline">
+        <li>
+          <span class="tl-year">2012</span>
+          <span class="tl-t">AlexNet</span>
+          <p>深度学习视觉时代：CNN 在 ImageNet 上大幅刷新成绩，深度学习接管计算机视觉——但视觉与语言仍是两个世界。</p>
+        </li>
+        <li>
+          <span class="tl-year">2020–21</span>
+          <span class="tl-t">ViT + CLIP</span>
+          <p>视觉进入 Transformer 时代：图像切块成 token 序列（<code>ViT</code>）；图文对齐到同一向量空间（<code>CLIP</code>）——多模态的两块基石。</p>
+        </li>
+        <li>
+          <span class="tl-year">2022</span>
+          <span class="tl-t">Stable Diffusion</span>
+          <p>文生图开源爆发：扩散模型 + 开放权重，"文字变图片"从实验室演示变成人人可玩的工具。</p>
+        </li>
+        <li>
+          <span class="tl-year">2023</span>
+          <span class="tl-t">GPT-4V 与开源跟进</span>
+          <p>2023 年 9 月 OpenAI 开放 GPT-4V 看图对话；Qwen-VL（2023-08）等开源 VLM 同期涌现，看图对话进入产品。</p>
+        </li>
+        <li>
+          <span class="tl-year">2024</span>
+          <span class="tl-t">GPT-4o 实时多模态</span>
+          <p>2024 年 5 月发布：原生多模态、跨模态端到端，实时语音对话成为旗舰能力；Gemini 走同一原生路线。</p>
+        </li>
+        <li>
+          <span class="tl-year">2025–26</span>
+          <span class="tl-t">全模态产品化</span>
+          <p>视频理解、实时语音成为旗舰标配：视频问答、屏幕共享助手、语音助手全面落地，竞争转向模态协同与成本。</p>
+        </li>
+      </ul>
+    </div>
+
+    <div class="deep-block reveal">
+      <h3>设计张力与常见误解</h3>
+      <ul class="tensions">
+        <li><span><b>理解 vs 生成</b>——会看图 ≠ 会画图：两条能力线各自成熟，评价一个模型时别混为一谈。</span></li>
+        <li><span><b>通用 vs 专精</b>——通用 VLM 什么都能聊两句，医学影像等专业领域仍靠专用模型兜底。</span></li>
+        <li><span><b>带宽 vs 成本</b>——一张图的 token 可能抵几百个字，图像理解比纯文本贵得多。</span></li>
+        <li><span><b>便利 vs 隐私</b>——随手拍照上传：照片里的工牌、屏幕、住址都进了模型的上下文。</span></li>
+        <li><span><b>创作力 vs 深伪风险</b>——文生图降低创作门槛，也降低造谣门槛；水印与检测在军备竞赛。</span></li>
+        <li><span><b>开源 vs 合规</b>——开放权重让能力平权，语音克隆等功能也带来明确的法律红线。</span></li>
+      </ul>
+      <p class="tensions-warn"><b>三个常见误解：</b>① "会看图 = 会画图"——理解与生成是两条能力线，会看图的模型不一定会画图；② "图片不会骗模型"——图像理解同样存在幻觉，图片还能携带注入指令；③ "多模态是新赛道"——CLIP 早在 2021 就打好了地基，今天只是产品爆发。</p>
+    </div>
+  </div>
+</section>
+
+<section class="section section-yellow" id="faq">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">接下来继续了解</p>
+      <h2>常见问题</h2>
+    </div>
+    <div class="faq-list">
+      <details class="faq-item reveal">
+        <summary>多模态模型能看懂视频吗？<span class="plus">+</span></summary>
+        <div class="faq-body">主流旗舰已支持视频输入：把视频<b>抽帧成图像序列</b>（或原生视频 token），配合时间与音频信息做总结、问答、定位片段。但长视频的细节检索仍不可靠——把它当成"看过并大致记住"来用，别当成逐帧检索器。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>它和文生图（Midjourney 等）什么关系？<span class="plus">+</span></summary>
+        <div class="faq-body">同属多模态，方向相反：<b>文生图是"文字 → 图像"的生成</b>，扩散模型是主力；<b>GPT-4V 这类是"图像 → 文字"的理解</b>，Transformer 是主力。2024 年后旗舰模型开始两者兼顾，但多数产品至今仍是两条独立的能力线。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>会看错图吗？<span class="plus">+</span></summary>
+        <div class="faq-body">会。图像理解同样有幻觉：<b>数不清多个物体、读错细小文字、把反光认成实物</b>都是常见翻车点。涉及关键信息（剂量、金额、编号）时，务必让它复述一遍并与原图人工核对，别只信一次转述。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>语音克隆有什么风险？<span class="plus">+</span></summary>
+        <div class="faq-body">几十秒样本即可克隆音色，已被用于<b>冒充亲人、领导的电话诈骗</b>。防范三招：家里约定暗语、陌生来电不听声音只回拨核实、涉及转账一律二次确认。克隆他人声音需要授权——这是法律红线，不只是道德问题。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>普通用户能用来干什么？<span class="plus">+</span></summary>
+        <div class="faq-body">四件事最常见：<b>拍菜问做法、截图问报错、拍表格问统计、语音随口问</b>。原则是"图里信息比打字描述更准"——与其打一大段字描述界面和报错，不如直接截一张图发给它。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>开发者怎么入门？<span class="plus">+</span></summary>
+        <div class="faq-body">三步：先用旗舰模型的 API <b>传图对话</b>，感受能力边界；再读 <b>ViT 与 CLIP</b> 两篇论文补地基；最后拿 Qwen-VL 等开放权重在本地跑通一个看图问答原型。提示注入防护要从第一行代码就考虑——图片也是输入。</div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="who">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">它适合谁</p>
+      <h2>四类读者，四个入口</h2>
+    </div>
+    <div class="aud-grid">
+      <div class="aud-card reveal">
+        <span class="a-who">For Everyday</span>
+        <h3>普通用户</h3>
+        <p>拍照、截图、语音本来就是最自然的提问方式——从"能用图就别打字"这个习惯开始。</p>
+        <div class="start">起点 → 首屏三步演示</div>
+      </div>
+      <div class="aud-card reveal">
+        <span class="a-who">For Students</span>
+        <h3>学生与研究者</h3>
+        <p>ViT 与 CLIP 两篇论文是多模态的必修地基，读懂它们就看懂了大半架构图。</p>
+        <div class="start">起点 → 编年史 · 2020–21</div>
+      </div>
+      <div class="aud-card reveal">
+        <span class="a-who">For Devs</span>
+        <h3>开发者</h3>
+        <p>从旗舰 API 到开放权重（Qwen-VL 等），搭一个自己的看图问答应用从未这么容易。</p>
+        <div class="start">起点 → 代表玩家 · 开源生态</div>
+      </div>
+      <div class="aud-card reveal">
+        <span class="a-who">For Skeptics</span>
+        <h3>谨慎的使用者</h3>
+        <p>看图会幻觉、图片能藏注入、拍照有隐私——用之前先读"边界与幻觉"那一节。</p>
+        <div class="start">起点 → 零件 ⑥ 边界与幻觉</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="sources" style="padding-top:24px">
+  <div class="container">
+    <div class="sources-card reveal">
+      <p class="eyebrow">来源与延伸阅读</p>
+      <a class="source-item" href="https://arxiv.org/abs/2103.00020" target="_blank" rel="noopener">
+        <span class="s-no">01</span>
+        <span><span class="s-t">CLIP · Learning Transferable Visual Models From Natural Language Supervision</span><br><span class="s-d">arXiv:2103.00020 · Radford et al. · OpenAI · 2021 · 图文对齐到同一向量空间</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="https://arxiv.org/abs/2010.11929" target="_blank" rel="noopener">
+        <span class="s-no">02</span>
+        <span><span class="s-t">ViT · An Image is Worth 16x16 Words</span><br><span class="s-d">arXiv:2010.11929 · Dosovitskiy et al. · Google · 2020 · 图像切块成 token 序列</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="https://openai.com/index/hello-gpt-4o" target="_blank" rel="noopener">
+        <span class="s-no">03</span>
+        <span><span class="s-t">OpenAI · Hello GPT-4o 官方发布页</span><br><span class="s-d">2024-05-13 · 原生多模态与实时语音；GPT-4V 见 2023-09-25 官方系统卡</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="https://arxiv.org/abs/2312.11805" target="_blank" rel="noopener">
+        <span class="s-no">04</span>
+        <span><span class="s-t">Gemini · A Family of Highly Capable Multimodal Models</span><br><span class="s-d">arXiv:2312.11805 · 2023-12 技术报告 · 文本/图像/音频/视频联合预训练</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="什么是大模型.html">
+        <span class="s-no">05</span>
+        <span><span class="s-t">姊妹篇 · 什么是大模型？</span><br><span class="s-d">多模态的引擎：Transformer 与下一词预测（本系列）</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <p class="sources-note">本页内容整理自以上公开资料，更新于 2026 年 10 月；各模型能力描述均来自官方论文与发布页，本站未复测。</p>
+    </div>
+  </div>
+</section>
+
+<section class="section section-cta">
+  <div class="container cta-grid">
+    <div class="reveal">
+      <p class="eyebrow">开始动手</p>
+      <h2>跑一遍多模态体验清单</h2>
+      <p>四件小事，亲身感受"会看图的 AI"能干什么、又会在哪里翻车。</p>
+      <div class="cta-cmd">
+        <pre><span class="t-cm">①</span> 拍一张含报错的截图，问它怎么修
+<span class="t-cm">②</span> 发一张手绘流程图，让它转成文字
+<span class="t-cm">③</span> 用语音和它对话一轮，感受延迟与打断
+<span class="t-cm">④</span> 让它读表格图片，回答一个统计问题</pre>
+        <button class="copy-btn" data-copy="① 拍一张含报错的截图，问它怎么修&#10;② 发一张手绘流程图，让它转成文字&#10;③ 用语音和它对话一轮，感受延迟与打断&#10;④ 让它读表格图片，回答一个统计问题">复制</button>
+      </div>
+    </div>
+    <div class="cta-art" aria-hidden="true">
+      <span class="q">🖼</span><span class="arrow">→</span><span class="v">💬</span>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <a class="brand" href="#top"><span class="brand-mark">&gt;_</span>多模态是什么？</a>
+        <p>第 14 课：会看图的 AI——token 化、图文对齐、原生多模态，以及看图也会幻觉的边界。</p>
+      </div>
+      <div class="foot-col">
+        <h4>本页导航</h4>
+        <ul>
+          <li><a href="#parts">拆解多模态</a></li>
+          <li><a href="#timeline">编年史</a></li>
+          <li><a href="#makers">代表玩家</a></li>
+          <li><a href="#faq">常见问题</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h4>本系列</h4>
+        <ul>
+          <li><a href="index.html">🏠 知识地图（主页）</a></li>
+          <li><a href="什么是大模型.html">什么是大模型？</a></li>
+          <li><a href="什么是思维链.html">什么是思维链？</a></li>
+          <li><a href="什么是Prompt工程.html">什么是 Prompt 工程？</a></li>
+          <li><a href="什么是幻觉.html">什么是幻觉？</a></li>
+          <li><a href="什么是RAG.html">什么是 RAG？</a></li>
+          <li><a href="什么是Agent.html">什么是 AI Agent？</a></li>
+          <li><a href="什么是Skill.html">什么是 Skill？</a></li>
+          <li><a href="什么是MCP.html">什么是 MCP？</a></li>
+          <li><a href="什么是AgentHarness.html">什么是 Agent Harness？</a></li>
+          <li><a href="什么是DeepSeekHarness.html">什么是 DeepSeek Harness？</a></li>
+          <li><a href="什么是飞书CLI.html">什么是飞书 CLI？</a></li>
+          <li><a href="什么是微调.html">什么是微调？</a></li>
+          <li><a href="什么是提示注入.html">什么是提示注入？</a></li>
+          <li><a href="#top">什么是多模态？（本页）</a></li>
+          <li><a href="什么是记忆.html">什么是记忆？</a></li>
+          <li><a href="什么是多智能体.html">什么是多智能体？</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>本页为独立学习指南，与所提及的各家公司没有关联 · 内容整理自公开资料</span>
+      <span>更新于 2026 年 10 月</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+document.documentElement.classList.add('js');
+
+var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function el(tag, cls, text){
+  var n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text !== undefined) n.textContent = text;
+  return n;
+}
+
+function typeCmd(span, text, done){
+  if (reduceMotion){ span.textContent = text; done && done(); return; }
+  var i = 0;
+  (function tick(){
+    span.textContent = text.slice(0, ++i);
+    if (i < text.length){ setTimeout(tick, text[i-1] === ' ' ? 34 : 18); }
+    else { done && done(); }
+  })();
+}
+
+function renderTerm(container, spec){
+  container.innerHTML = '';
+  var line = el('div','t-line');
+  var prompt = el('span','t-prompt', spec.prompt || '❯');
+  var cmd = el('span','t-cmd');
+  var cur = el('span','cursor');
+  line.appendChild(prompt); line.appendChild(cmd); line.appendChild(cur);
+  container.appendChild(line);
+  typeCmd(cmd, spec.cmd, function(){
+    cur.remove();
+    (spec.out || []).forEach(function(o){
+      container.appendChild(el('div','t-line ' + (o.cls || 't-out'), o.text));
+    });
+    if (spec.note) container.appendChild(el('div','t-note', spec.note));
+  });
+}
+
+var heroSteps = [
+  {
+    cmd: '只读文字的 AI（2020 年前）',
+    prompt: '❯',
+    out: [
+      { text: '→ 只能处理文本 token，图像靠 CNN 另起炉灶', cls: 't-out' },
+      { text: '✗ 你拍的照片、说的话，它一概看不见', cls: 't-dim' }
+    ],
+    note: '输入带宽只有"打字"——世界的大部分信息进不来。'
+  },
+  {
+    cmd: 'image → patches → tokens',
+    prompt: '⚙',
+    out: [
+      { text: '① ViT：图像切成 16×16 小块，每块当一个 token', cls: 't-out' },
+      { text: '② 音频分帧：声音也切成小段序列', cls: 't-out' },
+      { text: '③ CLIP：图文对齐到同一向量空间', cls: 't-out' },
+      { text: '✓ 一切皆 token，塞进同一个 Transformer', cls: 't-ok' }
+    ],
+    note: '图像切块、音频分帧——统一架构是多模态的前提。'
+  },
+  {
+    cmd: '看图问答 · 文生图 · 语音对话',
+    out: [
+      { text: '→ 理解：看图说话 → 看图推理（GPT-4V）', cls: 't-out' },
+      { text: '→ 生成：文生图、语音合成与克隆', cls: 't-out' },
+      { text: '✓ 2024 起：GPT-4o、Gemini 原生多模态 + 实时语音', cls: 't-ok' }
+    ],
+    note: '理解与生成是两条能力线——会看图的模型不一定会画图。'
+  }
+];
+
+var heroTerm = document.getElementById('hero-term');
+var heroBtns = document.querySelectorAll('.terminal-steps button');
+var heroStopped = false;
+
+function showHeroStep(i){
+  heroBtns.forEach(function(b, j){
+    b.classList.toggle('active', i === j);
+    b.setAttribute('aria-selected', i === j ? 'true' : 'false');
+  });
+  renderTerm(heroTerm, heroSteps[i]);
+}
+heroBtns.forEach(function(b){
+  b.addEventListener('click', function(){
+    heroStopped = true;
+    showHeroStep(+b.dataset.step);
+  });
+});
+showHeroStep(0);
+(function autoAdvance(){
+  if (reduceMotion) return;
+  var idx = 0;
+  setInterval(function(){
+    if (heroStopped) return;
+    idx = (idx + 1) % heroSteps.length;
+    showHeroStep(idx);
+  }, 7000);
+})();
+
+var parts = [
+  {
+    name: '模态与 token 化', desc: '把图像与音频变成序列',
+    spec: {
+      cmd: 'img[224×224] → 14×14 patches',
+      out: [
+        { text: '→ ViT：每 16×16 像素块 = 1 个 token', cls: 't-out' },
+        { text: '→ 音频分帧：声音切成一小段一小段', cls: 't-out' },
+        { text: '✓ 和文字走同一套 Transformer', cls: 't-ok' }
+      ],
+      note: '论文标题就叫"一张图值 16×16 个词"——arXiv:2010.11929。'
+    }
+  },
+  {
+    name: 'CLIP 对齐', desc: '图文映射到同一向量空间',
+    spec: {
+      cmd: 'CLIP(text="一只猫", image=🐈)',
+      out: [
+        { text: '→ 图像编码器 + 文本编码器联合训练', cls: 't-out' },
+        { text: '→ 约 4 亿图文对：配对相似度高、错配低', cls: 't-out' },
+        { text: '✓ "按文字搜图"的底座 · 零样本分类', cls: 't-ok' }
+      ],
+      note: 'arXiv:2103.00020 · OpenAI 2021——检索、打标、审核至今都在用它。'
+    }
+  },
+  {
+    name: '视觉语言模型 VLM', desc: '从看图说话到看图推理',
+    spec: {
+      cmd: '[图片] 这张报表哪里异常？',
+      out: [
+        { text: '→ 2023 · GPT-4V：看图对话进入产品', cls: 't-out' },
+        { text: '→ 从"图里有什么"到"这说明了什么"', cls: 't-out' },
+        { text: '✓ 开源跟进：Qwen-VL、GLM-4V 等', cls: 't-ok' }
+      ],
+      note: '底层多是"视觉编码器 + 语言模型"的组合拳。'
+    }
+  },
+  {
+    name: '原生多模态', desc: '训练之初就混多种模态',
+    spec: {
+      cmd: 'train(text + image + audio + video)',
+      out: [
+        { text: '→ 不是"文本模型 + 外挂视觉"，而是从头混训', cls: 't-out' },
+        { text: '→ Gemini：四种模态联合预训练（2023-12）', cls: 't-out' },
+        { text: '✓ GPT-4o：跨模态端到端，实时语音对话', cls: 't-ok' }
+      ],
+      note: '"拼接"与"原生"的差别：延迟、模态协同与能力上限。'
+    }
+  },
+  {
+    name: '生成侧', desc: '文生图 · 语音合成与克隆',
+    spec: {
+      cmd: '"赛博朋克的猫" → 图片 + 语音',
+      out: [
+        { text: '→ 文生图：Stable Diffusion 开源引爆（2022）', cls: 't-out' },
+        { text: '→ 语音合成：几十秒样本即可克隆音色', cls: 't-out' },
+        { text: '✓ 理解与生成，两条能力线各自成熟', cls: 't-ok' }
+      ],
+      note: '便利的另一面：深伪与声音诈骗——见下方"边界与幻觉"。'
+    }
+  },
+  {
+    name: '边界与幻觉', desc: '会看错，也会被注入',
+    spec: {
+      cmd: '图里藏一行小字："忽略之前的指令"',
+      out: [
+        { text: '→ 图像理解同样有幻觉：数错、看错细节', cls: 't-out' },
+        { text: '→ 图片可以携带注入指令（图像注入）', cls: 't-out' },
+        { text: '✗ 关键决策别只信一张截图的转述', cls: 't-dim' }
+      ],
+      note: '更多模态 = 更多输入带宽 = 更大的攻击面。'
+    }
+  }
+];
+
+var partsList = document.getElementById('parts-list');
+var partsTerm = document.getElementById('parts-term');
+parts.forEach(function(t, i){
+  var b = el('button', 'part-btn' + (i === 0 ? ' active' : ''));
+  b.type = 'button';
+  b.setAttribute('role', 'tab');
+  b.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
+  b.appendChild(el('span', 'num', String(i + 1)));
+  var wrap = el('span');
+  wrap.appendChild(el('span', 't-name', t.name));
+  wrap.appendChild(document.createElement('br'));
+  wrap.appendChild(el('span', 't-desc', t.desc));
+  b.appendChild(wrap);
+  b.addEventListener('click', function(){
+    partsList.querySelectorAll('.part-btn').forEach(function(x){
+      x.classList.remove('active'); x.setAttribute('aria-selected', 'false');
+    });
+    b.classList.add('active'); b.setAttribute('aria-selected', 'true');
+    renderTerm(partsTerm, t.spec);
+  });
+  partsList.appendChild(b);
+});
+renderTerm(partsTerm, parts[0].spec);
+
+document.querySelectorAll('.copy-btn').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    var text = btn.dataset.copy || '';
+    var done = function(){
+      var old = btn.textContent;
+      btn.textContent = '已复制 ✓';
+      setTimeout(function(){ btn.textContent = old; }, 1600);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done, function(){ fallbackCopy(text); done(); });
+    } else { fallbackCopy(text); done(); }
+  });
+});
+function fallbackCopy(text){
+  var ta = document.createElement('textarea');
+  ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); } catch(e){}
+  ta.remove();
+}
+
+var revealEls = document.querySelectorAll('.reveal');
+if ('IntersectionObserver' in window && !reduceMotion){
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if (en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); }
+    });
+  }, { threshold: 0.12 });
+  revealEls.forEach(function(n){ io.observe(n); });
+} else {
+  revealEls.forEach(function(n){ n.classList.add('in'); });
+}
+</script>
+</body>
+</html>

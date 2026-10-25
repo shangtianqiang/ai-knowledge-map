@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#FBFAF7">
-<title>AI 大模型知识地图 | 十一个专题，从怎么问到怎么动手</title>
-<meta name="description" content="一套中文 AI 知识手册：大模型、思维链、Prompt 工程、幻觉、RAG、AI Agent、Skill、MCP、Agent Harness、DeepSeek Harness、飞书 CLI——十一个专题页与 40+ 术语速查，全部整理自公开资料。">
+<title>AI 大模型知识地图 | 16 个专题，从入门到进阶</title>
+<meta name="description" content="一套中文 AI 知识手册：大模型、思维链、Prompt 工程、幻觉、RAG、AI Agent、Skill、MCP、Agent Harness 等主修 11 课，加微调、提示注入、多模态、记忆、多智能体五个进阶专题与 40+ 术语速查，全部整理自公开资料。">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2317151F'/%3E%3Ctext x='16' y='22' font-size='15' font-family='monospace' fill='%23FFD166' text-anchor='middle'%3E%3E_%3C/text%3E%3C/svg%3E">
 <style>
   :root{
@@ -265,14 +265,14 @@
     <div>
       <p class="eyebrow">一套正在生长的中文知识手册</p>
       <h1>AI 大模型<br>知识地图</h1>
-      <p class="lead">十一个高频术语，一页一个：从"怎么问"到"怎么动手"。每一页都是单文件、零依赖、可离线阅读的独立指南——内容整理自官方文档与论文，不作任何背书。</p>
-      <p class="example">不知道从哪开始？<b>按 01 → 11 的顺序读</b>：先懂它是什么、怎么"想"（大模型、思维链），你怎么"问"（Prompt 工程），再看它会怎么"错"（幻觉）、知识怎么"补"（RAG），然后认识"会做"的 Agent（Skill、MCP、Harness），最后看真实产品。</p>
+      <p class="lead">主修十一课 + 进阶五专题，一页一个：从"怎么问"到"怎么动手"。每一页都是单文件、零依赖、可离线阅读的独立指南——内容整理自官方文档与论文，不作任何背书。</p>
+      <p class="example">不知道从哪开始？<b>主修按 01 → 11 的顺序读</b>：先懂它是什么、怎么"想"（大模型、思维链），你怎么"问"（Prompt 工程），再看它会怎么"错"（幻觉）、知识怎么"补"（RAG），然后认识"会做"的 Agent（Skill、MCP、Harness），最后看真实产品。<b>学完主线，再按角色选修进阶专题</b>：定制、安全、感官、记忆、协作。</p>
       <div class="hero-actions">
         <a class="btn btn-primary" href="#path">查看学习路径 ↓</a>
         <a class="btn btn-ghost" href="什么是大模型.html">直接开始第 01 课 →</a>
       </div>
       <div class="hero-meta">
-        <span class="chip"><i class="dot"></i>11 个专题页</span>
+        <span class="chip"><i class="dot"></i>16 个专题页</span>
         <span class="chip"><i class="dot"></i>40+ 术语速查</span>
         <span class="chip"><i class="dot"></i>单文件 · 离线可读</span>
         <span class="chip"><i class="dot"></i>更新于 2026 年 10 月</span>
@@ -290,7 +290,7 @@
 <section class="section section-yellow" id="path">
   <div class="container">
     <div class="section-head reveal">
-      <p class="eyebrow">学习路径</p>
+      <p class="eyebrow">学习路径 · 主修</p>
       <h2>十一站，一条主线</h2>
       <p>顺序不是随意的：先懂模型是什么、怎么"想"，你怎么"问"，再看它会怎么"错"、知识怎么"补"，然后认识"会做"的 Agent，最后是"动手"的能力与真实的产品。点击任意卡片进入专题页。</p>
     </div>
@@ -367,6 +367,51 @@
   </div>
 </section>
 
+<!-- ================= ADVANCED (WHITE) ================= -->
+<section class="section" id="advanced" style="padding-top:0">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">进阶专题</p>
+      <h2>五个方向，任选深入</h2>
+      <p>主修之后，按你的角色与兴趣选修：定制、安全、感官、长期记忆与团队协作——每个方向都可单独阅读，不设先后。</p>
+    </div>
+
+    <div class="path-grid">
+      <a class="path-card reveal" href="什么是微调.html" style="--pc:#7E22CE">
+        <span class="p-top"><span class="p-no">12</span><span class="p-tag">定制</span></span>
+        <h3>微调</h3>
+        <p>在预训练模型上继续训练——改的是行为与风格，不是知识库。先提示、后 RAG、再微调。</p>
+        <span class="p-go">开始阅读 <span class="p-time">≈ 6 min</span></span>
+      </a>
+      <a class="path-card reveal" href="什么是提示注入.html" style="--pc:#991B1B">
+        <span class="p-top"><span class="p-no">13</span><span class="p-tag">安全</span></span>
+        <h3>提示注入</h3>
+        <p>把恶意指令藏进 AI 会读的内容里——Agent 时代的头号安全威胁，没有银弹，只有纵深防御。</p>
+        <span class="p-go">开始阅读 <span class="p-time">≈ 6 min</span></span>
+      </a>
+      <a class="path-card reveal" href="什么是多模态.html" style="--pc:#A16207">
+        <span class="p-top"><span class="p-no">14</span><span class="p-tag">感官</span></span>
+        <h3>多模态</h3>
+        <p>把图像、音频、视频都切成 token——AI 睁开眼睛、竖起耳朵的统一架构。</p>
+        <span class="p-go">开始阅读 <span class="p-time">≈ 6 min</span></span>
+      </a>
+      <a class="path-card reveal" href="什么是记忆.html" style="--pc:#4D7C0F">
+        <span class="p-top"><span class="p-no">15</span><span class="p-tag">长期</span></span>
+        <h3>记忆</h3>
+        <p>窗口是工作台，记忆是抽屉——让 AI 跨会话记住你，也学会如何遗忘。</p>
+        <span class="p-go">开始阅读 <span class="p-time">≈ 6 min</span></span>
+      </a>
+      <a class="path-card reveal" href="什么是多智能体.html" style="--pc:#1E3A8A">
+        <span class="p-top"><span class="p-no">16</span><span class="p-tag">协作</span></span>
+        <h3>多智能体</h3>
+        <p>主 Agent 拆解派发、子 Agent 并行执行——组队买的是分治与并行，不是更聪明。</p>
+        <span class="p-go">开始阅读 <span class="p-time">≈ 6 min</span></span>
+      </a>
+    </div>
+    <p class="path-note reveal">进阶专题不设先后 · 按需取用。</p>
+  </div>
+</section>
+
 <!-- ================= GLOSSARY (WHITE) ================= -->
 <section class="section" id="glossary">
   <div class="container">
@@ -382,12 +427,12 @@
         <div class="gl-rows">
           <div class="gl-row"><span class="g-term">Token 词元</span><span class="g-def">模型读文本的最小单位，一个汉字约 1–2 个 token；计费、限速、上下文上限都按它算。<a href="什么是大模型.html">有专页 ↗</a></span></div>
           <div class="gl-row"><span class="g-term">上下文窗口</span><span class="g-def">模型一次能"看到"的内容上限（如 128K、1M token），超了就要靠压缩或检索。<a href="什么是大模型.html">有专页 ↗</a></span></div>
-          <div class="gl-row"><span class="g-term">预训练 / 微调</span><span class="g-def">先"读遍互联网"打基础（Pre-training），再用专业数据调教出特定能力（Fine-tuning / SFT）。<a href="什么是大模型.html">有专页 ↗</a></span></div>
+          <div class="gl-row"><span class="g-term">预训练 / 微调</span><span class="g-def">先"读遍互联网"打基础（Pre-training），再用专业数据调教出特定能力（Fine-tuning / SFT）。<a href="什么是微调.html">有专页 ↗</a></span></div>
           <div class="gl-row"><span class="g-term">RLHF</span><span class="g-def">人类反馈强化学习：让人给回答打分，模型据此"学乖"——ChatGPT 好好说话的关键一步。</span></div>
           <div class="gl-row"><span class="g-term">MoE 混合专家</span><span class="g-def">大模型内部分成很多"专家"，每次只唤醒几个——DeepSeek V3 的标志性设计。</span></div>
           <div class="gl-row"><span class="g-term">蒸馏</span><span class="g-def">让小模型模仿大模型的输出来变强，"以师徒制降本"。</span></div>
           <div class="gl-row"><span class="g-term">量化</span><span class="g-def">把模型参数从高精度压成低精度，换更小内存与更快速度，牺牲一点智商。</span></div>
-          <div class="gl-row"><span class="g-term">多模态</span><span class="g-def">能同时处理文字、图片、音频、视频的模型。</span></div>
+          <div class="gl-row"><span class="g-term">多模态</span><span class="g-def">能同时处理文字、图片、音频、视频的模型。<a href="什么是多模态.html">有专页 ↗</a></span></div>
         </div>
       </details>
 
@@ -398,7 +443,7 @@
           <div class="gl-row"><span class="g-term">温度 Temperature</span><span class="g-def">随机性旋钮：调低稳定保守，调高有创意也易跑偏。</span></div>
           <div class="gl-row"><span class="g-term">对齐 Alignment</span><span class="g-def">让模型行为符合人类意图与价值观的总称。</span></div>
           <div class="gl-row"><span class="g-term">越狱 Jailbreak</span><span class="g-def">绕过安全限制，骗模型输出违禁内容的攻击手法。</span></div>
-          <div class="gl-row"><span class="g-term">提示注入</span><span class="g-def">把恶意指令藏进网页、文档里等 AI 去读——Agent 时代最著名的安全威胁。</span></div>
+          <div class="gl-row"><span class="g-term">提示注入</span><span class="g-def">把恶意指令藏进网页、文档里等 AI 去读——Agent 时代最著名的安全威胁。<a href="什么是提示注入.html">有专页 ↗</a></span></div>
           <div class="gl-row"><span class="g-term">拒答 Refusal</span><span class="g-def">安全边界触发后，模型回复"我不能帮你做这个"。</span></div>
         </div>
       </details>
@@ -415,7 +460,7 @@
       </details>
 
       <details class="gl-item">
-        <summary>Agent 与工具<span class="g-count">8 词</span><span class="plus">+</span></summary>
+        <summary>Agent 与工具<span class="g-count">10 词</span><span class="plus">+</span></summary>
         <div class="gl-rows">
           <div class="gl-row"><span class="g-term">Agent</span><span class="g-def">能感知、规划并动手执行任务的 AI 系统。<a href="什么是Agent.html">有专页 ↗</a></span></div>
           <div class="gl-row"><span class="g-term">Skill 技能</span><span class="g-def">给 Agent 的操作手册：SKILL.md 按需加载，团队手艺变成资产。<a href="什么是Skill.html">有专页 ↗</a></span></div>
@@ -425,6 +470,8 @@
           <div class="gl-row"><span class="g-term">MCP</span><span class="g-def">Anthropic 开源的连接标准，"AI 的 USB-C"。<a href="什么是MCP.html">有专页 ↗</a></span></div>
           <div class="gl-row"><span class="g-term">子智能体</span><span class="g-def">主 Agent 派出去干专项任务的分身，各带独立上下文。</span></div>
           <div class="gl-row"><span class="g-term">Human-in-the-loop</span><span class="g-def">关键动作先弹审批等人拍板——自治程度的反面刻度。</span></div>
+          <div class="gl-row"><span class="g-term">记忆 Memory</span><span class="g-def">跨会话记住用户事实与偏好的机制：短期靠窗口，长期靠外挂。<a href="什么是记忆.html">有专页 ↗</a></span></div>
+          <div class="gl-row"><span class="g-term">多智能体</span><span class="g-def">主 Agent 拆解派发、子 Agent 并行执行——分治换上下文，成本是乘法。<a href="什么是多智能体.html">有专页 ↗</a></span></div>
         </div>
       </details>
 
@@ -470,7 +517,7 @@
       </div>
       <div>
         <h3>怎么读</h3>
-        <p>建议按 <code>01 → 11</code> 的学习路径推进，每页 5–10 分钟；页面之间通过页脚互链，<a href="#path">随时回到地图</a>。术语速查适合当工具书翻。</p>
+        <p>主修按 <code>01 → 11</code> 推进，进阶专题（12–16）按角色选修，每页 5–10 分钟；页面之间通过页脚互链，<a href="#path">随时回到地图</a>。术语速查适合当工具书翻。</p>
       </div>
       <div>
         <h3>怎么维护</h3>
@@ -510,6 +557,11 @@
           <li><a href="什么是AgentHarness.html">09 · 什么是 Agent Harness？</a></li>
           <li><a href="什么是DeepSeekHarness.html">10 · 什么是 DeepSeek Harness？</a></li>
           <li><a href="什么是飞书CLI.html">11 · 什么是飞书 CLI？</a></li>
+          <li><a href="什么是微调.html">12 · 什么是微调？</a></li>
+          <li><a href="什么是提示注入.html">13 · 什么是提示注入？</a></li>
+          <li><a href="什么是多模态.html">14 · 什么是多模态？</a></li>
+          <li><a href="什么是记忆.html">15 · 什么是记忆？</a></li>
+          <li><a href="什么是多智能体.html">16 · 什么是多智能体？</a></li>
         </ul>
       </div>
     </div>
@@ -556,9 +608,15 @@ var tree = [
   { text: '├── 08 MCP              —— 能力怎么接', cls: 't-out' },
   { text: '├── 09 Agent Harness    —— 怎么有纪律地动手', cls: 't-out' },
   { text: '├── 10 DeepSeek Harness —— 一个开源样本', cls: 't-out' },
-  { text: '└── 11 飞书 CLI         —— 一个真实产品', cls: 't-out' },
+  { text: '├── 11 飞书 CLI         —— 一个真实产品', cls: 't-out' },
+  { text: '└── 进阶专题/', cls: 't-dim' },
+  { text: '    ├── 12 微调         —— 定制它的行为', cls: 't-out' },
+  { text: '    ├── 13 提示注入     —— 安全防线', cls: 't-out' },
+  { text: '    ├── 14 多模态       —— 看图与听声', cls: 't-out' },
+  { text: '    ├── 15 记忆         —— 记住你', cls: 't-out' },
+  { text: '    └── 16 多智能体     —— 组队协作', cls: 't-out' },
   { text: '', cls: 't-dim' },
-  { text: '11 个专题 · 40+ 术语 · 全部离线可读', cls: 't-ok' }
+  { text: '16 个专题 · 40+ 术语 · 全部离线可读', cls: 't-ok' }
 ];
 
 (function renderTree(){

@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#FBFAF7">
+<title>多智能体是什么？ | 让 AI 组队干活</title>
+<meta name="description" content="一页讲清楚多智能体（Multi-agent）：主从、流水线、辩论三种编排，上下文隔离的红利，并行加速与 token 乘法的代价，以及 AutoGen、MetaGPT、Anthropic 研究系统与 A2A 协议的来龙去脉。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2317151F'/%3E%3Ctext x='16' y='22' font-size='15' font-family='monospace' fill='%2393C5FD' text-anchor='middle'%3E%3C/text%3E%3C/svg%3E">
+<style>
+  :root{
+    --cream:#FBFAF7;
+    --ink:#17151F;
+    --paper:#FFFFFF;
+    --yellow:#FFD166;
+    --accent:#1E3A8A;
+    --accent-light:#93C5FD;
+    --muted:rgba(23,21,31,.64);
+    --faint:rgba(23,21,31,.45);
+    --line:rgba(23,21,31,.14);
+    --line-strong:rgba(23,21,31,.85);
+    --cream-muted:rgba(251,250,247,.68);
+    --cream-faint:rgba(251,250,247,.42);
+    --cream-line:rgba(251,250,247,.16);
+    --mono:"SF Mono",ui-monospace,"JetBrains Mono",Menlo,Consolas,"Liberation Mono",monospace;
+    --shadow-card:0 1px 2px rgba(23,21,31,.05),0 10px 28px -14px rgba(23,21,31,.18);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    *,*::before,*::after{animation:none!important;transition:none!important}
+  }
+  body{
+    font-family:"PingFang SC","Microsoft YaHei","Inter Variable",system-ui,sans-serif;
+    background:var(--cream);
+    color:var(--ink);
+    font-size:16px;
+    line-height:1.75;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+  }
+  ::selection{background:var(--accent);color:#fff}
+  a{color:inherit}
+  .container{max-width:1128px;margin:0 auto;padding:0 24px}
+
+  html.js .reveal{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s ease}
+  html.js .reveal.in{opacity:1;transform:none}
+  @media (prefers-reduced-motion:reduce){html.js .reveal{opacity:1;transform:none}}
+  @media print{html.js .reveal{opacity:1!important;transform:none!important}}
+
+  .nav{
+    position:sticky;top:0;z-index:50;
+    background:rgba(251,250,247,.92);
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  .nav-inner{display:flex;align-items:center;justify-content:space-between;height:60px;gap:16px}
+  .brand{display:flex;align-items:center;gap:10px;text-decoration:none;font-weight:800;font-size:15px;letter-spacing:.01em}
+  .brand-mark{
+    width:26px;height:26px;background:var(--ink);color:var(--accent-light);
+    font-family:var(--mono);font-size:12px;font-weight:700;line-height:26px;text-align:center;
+    border-radius:5px;flex:none;
+  }
+  .nav-links{display:flex;align-items:center;gap:22px;list-style:none}
+  .nav-links a{text-decoration:none;font-size:13.5px;font-weight:500;color:var(--muted);transition:color .15s}
+  .nav-links a:hover{color:var(--ink)}
+  .nav-links a.nav-cta{
+    color:var(--ink);font-weight:700;border:1.5px solid var(--line-strong);
+    padding:6px 14px;border-radius:0;
+  }
+  .nav-links a.nav-cta:hover{background:var(--ink);color:var(--cream)}
+  @media (max-width:720px){.nav-links li.hide-sm{display:none}}
+
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:13px 26px;border-radius:0;border:1.5px solid transparent;
+    font-family:inherit;font-size:15px;font-weight:700;letter-spacing:.02em;
+    text-decoration:none;cursor:pointer;transition:transform .15s ease,background .15s ease,color .15s ease,box-shadow .15s ease;
+  }
+  .btn:active{transform:translateY(1px)}
+  .btn-primary{background:var(--accent);color:#fff}
+  .btn-primary:hover{box-shadow:0 6px 0 -2px rgba(23,21,31,.9)}
+  .btn-ghost{border-color:var(--line-strong);color:var(--ink);background:transparent}
+  .btn-ghost:hover{background:var(--ink);color:var(--cream)}
+  .btn-sm{padding:9px 18px;font-size:13.5px}
+
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:9px;
+    font-size:12.5px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;
+  }
+  .eyebrow::before{content:"";width:9px;height:9px;background:currentColor;flex:none}
+  h1{font-size:clamp(42px,6.6vw,74px);line-height:1.08;font-weight:800;letter-spacing:-.015em}
+  h2{font-size:clamp(30px,4.4vw,44px);line-height:1.18;font-weight:800;letter-spacing:-.01em}
+  h3{font-size:20px;font-weight:800;line-height:1.4}
+  .lead{font-size:clamp(17px,2vw,19.5px);line-height:1.8}
+
+  .hero{padding:76px 0 88px}
+  .hero-grid{display:grid;grid-template-columns:1.02fr .98fr;gap:56px;align-items:center}
+  @media (max-width:980px){.hero-grid{grid-template-columns:1fr;gap:44px}}
+  .hero .eyebrow{color:var(--ink);margin-bottom:26px}
+  .hero h1{margin-bottom:24px}
+  .hero .lead{color:var(--ink);margin-bottom:16px;max-width:34em}
+  .hero .example{color:var(--muted);font-size:15.5px;max-width:36em;margin-bottom:32px}
+  .hero .example b{color:var(--ink);font-weight:700}
+  .hero-actions{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:30px}
+  .hero-meta{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{
+    font-size:12px;font-weight:600;color:var(--muted);
+    border:1px solid var(--line);padding:5px 11px;border-radius:999px;
+    display:inline-flex;align-items:center;gap:6px;background:var(--paper);
+  }
+  .chip .dot{width:6px;height:6px;border-radius:50%;background:var(--accent)}
+
+  .terminal{
+    background:var(--ink);border-radius:14px;overflow:hidden;
+    box-shadow:0 2px 4px rgba(23,21,31,.12),0 30px 60px -22px rgba(23,21,31,.45);
+    border:1px solid rgba(23,21,31,.9);
+  }
+  .terminal-bar{
+    display:flex;align-items:center;gap:7px;
+    padding:13px 16px;border-bottom:1px solid var(--cream-line);
+  }
+  .terminal-bar i{width:11px;height:11px;border-radius:50%;background:rgba(251,250,247,.22)}
+  .terminal-bar i:first-child{background:#FF5F57}
+  .terminal-bar i:nth-child(2){background:#FEBC2E}
+  .terminal-bar i:nth-child(3){background:#28C840}
+  .terminal-bar .terminal-title{
+    margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--cream-faint);letter-spacing:.08em;
+  }
+  .terminal-steps{display:flex;gap:6px;padding:12px 14px 0;flex-wrap:wrap}
+  .terminal-steps button{
+    font-family:inherit;font-size:12.5px;font-weight:700;letter-spacing:.04em;
+    background:transparent;color:var(--cream-faint);
+    border:1px solid var(--cream-line);border-radius:999px;
+    padding:5px 13px;cursor:pointer;transition:all .18s;
+  }
+  .terminal-steps button:hover{color:var(--cream);border-color:var(--cream-faint)}
+  .terminal-steps button.active{background:var(--accent);border-color:var(--accent);color:#fff}
+  .terminal-body{padding:18px 20px 22px;min-height:238px;font-family:var(--mono);font-size:13.5px;line-height:1.9}
+  .t-line{white-space:pre-wrap;word-break:break-all}
+  .t-prompt{color:var(--accent-light);font-weight:700;margin-right:9px}
+  .t-cmd{color:var(--cream)}
+  .t-out{color:var(--cream-faint)}
+  .t-ok{color:#3EE8C6}
+  .t-dim{color:rgba(251,250,247,.35)}
+  .t-user{color:var(--yellow)}
+  .t-note{color:var(--cream-faint);font-family:"PingFang SC","Microsoft YaHei",sans-serif;font-size:12px;margin-top:12px;padding-top:10px;border-top:1px dashed var(--cream-line)}
+  .cursor{display:inline-block;width:8px;height:15px;background:var(--accent-light);vertical-align:-2px;animation:blink 1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+  @media (prefers-reduced-motion:reduce){.cursor{animation:none}}
+
+  .section{padding:96px 0}
+  .section-head{max-width:680px;margin-bottom:52px}
+  .section-head .eyebrow{margin-bottom:20px}
+  .section-head p{color:var(--muted);margin-top:16px;font-size:16.5px}
+
+  .section-yellow{background:var(--yellow)}
+  .section-yellow .section-head p{color:rgba(23,21,31,.72)}
+
+  .section-dark{background:var(--ink);color:var(--cream)}
+  .section-dark .eyebrow{color:var(--accent-light)}
+
+  .parts-layout{display:grid;grid-template-columns:.9fr 1.1fr;gap:36px;align-items:start}
+  @media (max-width:900px){.parts-layout{grid-template-columns:1fr}}
+  .parts-list{display:flex;flex-direction:column;gap:10px}
+  .part-btn{
+    display:flex;align-items:center;gap:14px;text-align:left;width:100%;
+    background:var(--paper);border:1.5px solid transparent;border-radius:10px;
+    padding:15px 18px;font-family:inherit;cursor:pointer;
+    transition:transform .16s ease,box-shadow .16s ease,border-color .16s;
+    box-shadow:var(--shadow-card);
+  }
+  .part-btn:hover{transform:translateY(-2px)}
+  .part-btn .num{
+    font-family:var(--mono);font-size:12px;font-weight:700;color:var(--muted);
+    width:30px;height:30px;border:1.5px solid var(--line);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;flex:none;transition:all .16s;
+  }
+  .part-btn .t-name{font-size:15.5px;font-weight:700}
+  .part-btn .t-desc{font-size:13px;color:var(--muted);margin-top:2px}
+  .part-btn.active{border-color:var(--ink);transform:translateY(-2px)}
+  .part-btn.active .num{background:var(--ink);border-color:var(--ink);color:var(--accent-light)}
+  .parts-terminal{position:sticky;top:84px}
+  @media (max-width:900px){.parts-terminal{position:static}}
+
+  .layers{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(23,21,31,.22);border:1.5px solid var(--ink);border-radius:12px;overflow:hidden;margin-top:56px}
+  @media (max-width:820px){.layers{grid-template-columns:1fr}}
+  .layer{background:var(--yellow);padding:26px 26px 24px}
+  .layer .lv{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.14em;color:rgba(23,21,31,.55);display:block;margin-bottom:12px}
+  .layer h3{font-size:17px;margin-bottom:8px}
+  .layer p{font-size:13.5px;color:rgba(23,21,31,.72);line-height:1.7}
+  .layer code{font-family:var(--mono);font-size:12.5px;background:rgba(23,21,31,.1);padding:2px 6px;border-radius:4px}
+
+  .cards-3{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+  @media (max-width:900px){.cards-3{grid-template-columns:1fr}}
+  .card{
+    background:var(--paper);border:1px solid var(--line);border-radius:12px;
+    padding:30px 28px 26px;box-shadow:var(--shadow-card);
+    display:flex;flex-direction:column;
+  }
+  .card .tag-row{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:20px}
+  .tag{
+    font-size:10.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+    padding:4px 9px;border:1px solid var(--line);border-radius:4px;color:var(--muted);
+  }
+  .tag.tag-accent{background:var(--ink);color:var(--accent-light);border-color:var(--ink)}
+  .card h3{margin-bottom:12px}
+  .card p{font-size:14.5px;color:var(--muted);flex:1}
+  .card .seed{
+    margin-top:20px;padding-top:16px;border-top:1px dashed var(--line);
+    font-family:var(--mono);font-size:12px;color:var(--faint);word-break:break-all;
+  }
+  .card .seed b{color:var(--ink);font-weight:700}
+  .cards-note{margin-top:30px;font-size:13px;color:var(--faint);display:flex;align-items:center;gap:8px}
+  .cards-note::before{content:"※";color:var(--muted)}
+
+  .statement{max-width:820px}
+  .statement h2{margin-bottom:28px}
+  .statement .quote{
+    font-size:clamp(17px,2vw,19px);line-height:1.85;color:var(--cream-muted);
+    border-left:3px solid var(--accent-light);padding-left:22px;margin-bottom:52px;max-width:36em;
+  }
+  .statement .quote b{color:var(--cream)}
+  .statement .quote code{font-family:var(--mono);font-size:14px;background:rgba(251,250,247,.12);padding:2px 7px;border-radius:4px;color:var(--cream)}
+  .pillars{display:grid;grid-template-columns:repeat(3,1fr);gap:34px}
+  @media (max-width:820px){.pillars{grid-template-columns:1fr}}
+  .pillar .p-no{font-family:var(--mono);font-size:13px;color:var(--accent-light);font-weight:700;letter-spacing:.12em;display:block;margin-bottom:14px}
+  .pillar h3{color:var(--cream);margin-bottom:10px;font-size:17.5px}
+  .pillar p{font-size:14.5px;color:var(--cream-muted);line-height:1.8}
+  .pillar code{font-family:var(--mono);font-size:12.5px;background:rgba(251,250,247,.12);padding:2px 6px;border-radius:4px;color:var(--cream)}
+
+  .facts{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  @media (max-width:820px){.facts{grid-template-columns:1fr}}
+  .fact{background:var(--paper);padding:26px 26px 22px}
+  .fact .f-k{font-size:12px;font-weight:800;letter-spacing:.14em;color:var(--faint);text-transform:uppercase;display:block;margin-bottom:10px}
+  .fact .f-v{font-size:15.5px;font-weight:600;line-height:1.65}
+  .fact .f-v small{display:block;font-weight:400;font-size:13px;color:var(--muted);margin-top:4px}
+
+  .deep-block{margin-top:76px}
+  .deep-block>h3{margin-bottom:26px;font-size:clamp(21px,2.6vw,25px)}
+
+  .timeline{list-style:none;border-left:2px solid var(--ink);margin-left:6px}
+  .timeline li{position:relative;padding:0 0 26px 28px}
+  .timeline li:last-child{padding-bottom:0}
+  .timeline li::before{
+    content:"";position:absolute;left:-7px;top:9px;width:12px;height:12px;
+    background:var(--accent);border:2px solid var(--ink);border-radius:50%;
+  }
+  .timeline .tl-year{font-family:var(--mono);font-size:12.5px;font-weight:700;letter-spacing:.1em;color:var(--faint);display:block;margin-bottom:4px}
+  .timeline .tl-t{font-weight:800;font-size:16.5px}
+  .timeline p{font-size:14px;color:var(--muted);margin-top:4px;max-width:40em}
+  .timeline code{font-family:var(--mono);font-size:12.5px;background:rgba(23,21,31,.07);padding:2px 6px;border-radius:4px;color:var(--ink)}
+
+  .tensions{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:14px 28px}
+  @media (max-width:820px){.tensions{grid-template-columns:1fr}}
+  .tensions li{
+    display:flex;gap:12px;font-size:14.5px;color:var(--muted);line-height:1.7;
+    padding:14px 0;border-bottom:1px solid var(--line);
+  }
+  .tensions li b{color:var(--ink)}
+  .tensions li::before{content:"◆";color:var(--accent);font-weight:800;flex:none;font-size:12px;padding-top:5px}
+  .tensions-warn{
+    margin-top:26px;padding:18px 22px;border-radius:10px;
+    background:rgba(30,58,138,.08);border:1px solid rgba(30,58,138,.4);
+    font-size:14px;color:var(--muted);
+  }
+  .tensions-warn b{color:var(--ink)}
+
+  .faq-list{max-width:780px}
+  .faq-item{background:var(--paper);border:1.5px solid var(--ink);border-radius:10px;margin-bottom:14px;overflow:hidden;box-shadow:var(--shadow-card)}
+  .faq-item summary{
+    list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:18px;
+    padding:20px 24px;font-weight:700;font-size:16px;
+  }
+  .faq-item summary::-webkit-details-marker{display:none}
+  .faq-item summary .plus{
+    flex:none;width:26px;height:26px;border:1.5px solid var(--ink);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:400;font-size:16px;line-height:1;transition:transform .2s ease,background .2s,color .2s;
+  }
+  .faq-item[open] summary .plus{background:var(--ink);color:var(--yellow);transform:rotate(45deg)}
+  .faq-item .faq-body{padding:0 24px 22px;font-size:14.5px;color:var(--muted);line-height:1.85}
+  .faq-item .faq-body b{color:var(--ink)}
+  .faq-item .faq-body code{font-family:var(--mono);font-size:12.5px;background:rgba(23,21,31,.07);padding:2px 6px;border-radius:4px;color:var(--ink)}
+
+  .aud-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+  @media (max-width:1000px){.aud-grid{grid-template-columns:1fr 1fr}}
+  @media (max-width:640px){.aud-grid{grid-template-columns:1fr}}
+  .aud-card{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:26px 24px;box-shadow:var(--shadow-card);display:flex;flex-direction:column}
+  .aud-card .a-who{font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin-bottom:12px}
+  .aud-card h3{font-size:16.5px;margin-bottom:10px}
+  .aud-card p{font-size:13.5px;color:var(--muted);flex:1;line-height:1.75}
+  .aud-card .start{
+    margin-top:16px;font-family:var(--mono);font-size:11.5px;color:#fff;
+    background:var(--accent);padding:7px 11px;border-radius:6px;word-break:break-all;
+  }
+
+  .sources-card{background:var(--ink);color:var(--cream);border-radius:16px;padding:52px 54px;max-width:860px}
+  @media (max-width:720px){.sources-card{padding:36px 26px}}
+  .sources-card .eyebrow{color:var(--yellow);margin-bottom:28px}
+  .source-item{display:flex;gap:18px;padding:16px 0;border-bottom:1px solid var(--cream-line);text-decoration:none;transition:padding-left .18s}
+  .source-item:hover{padding-left:8px}
+  .source-item:last-of-type{border-bottom:none}
+  .source-item .s-no{font-family:var(--mono);font-size:12.5px;color:var(--accent-light);font-weight:700;flex:none;padding-top:2px}
+  .source-item .s-t{font-weight:700;font-size:15.5px;color:var(--cream)}
+  .source-item .s-d{font-size:13px;color:var(--cream-faint);margin-top:3px}
+  .source-item .s-arrow{margin-left:auto;color:var(--cream-faint);flex:none;padding-top:2px}
+  .sources-note{margin-top:26px;font-size:12.5px;color:var(--cream-faint)}
+
+  .section-cta{background:var(--accent)}
+  .cta-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:48px;align-items:center}
+  @media (max-width:820px){.cta-grid{grid-template-columns:1fr}}
+  .section-cta .eyebrow{color:rgba(255,255,255,.72);margin-bottom:22px}
+  .section-cta h2{margin-bottom:18px;color:#fff}
+  .section-cta p{color:rgba(255,255,255,.85);max-width:30em;margin-bottom:30px}
+  .cta-cmd{
+    display:flex;align-items:flex-start;gap:12px;background:var(--ink);border-radius:10px;
+    padding:16px 18px;font-family:var(--mono);font-size:13px;line-height:1.9;color:var(--cream);
+    max-width:540px;box-shadow:0 14px 30px -12px rgba(23,21,31,.5);
+  }
+  .cta-cmd pre{font-family:inherit;white-space:pre-wrap;word-break:break-all;flex:1;margin:0}
+  .cta-cmd .t-cm{color:var(--accent-light)}
+  .copy-btn{
+    flex:none;font-family:inherit;font-size:11px;font-weight:700;letter-spacing:.08em;
+    background:transparent;color:var(--cream-faint);border:1px solid var(--cream-line);
+    border-radius:4px;padding:4px 9px;cursor:pointer;transition:all .15s;
+  }
+  .cta-cmd .copy-btn{color:var(--cream-muted);border-color:var(--cream-line)}
+  .cta-cmd .copy-btn:hover{color:var(--yellow);border-color:var(--yellow)}
+  .cta-art{display:flex;align-items:center;justify-content:center;gap:22px;font-family:var(--mono);font-weight:700}
+  .cta-art .q,.cta-art .v{font-size:clamp(56px,7vw,88px);line-height:1}
+  .cta-art .q{color:rgba(255,255,255,.32)}
+  .cta-art .v{color:#fff}
+  .cta-art .arrow{font-size:34px;color:rgba(255,255,255,.55)}
+  @media (max-width:820px){.cta-art{display:none}}
+
+  footer{background:var(--ink);color:var(--cream);padding:64px 0 36px}
+  .foot-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:44px;margin-bottom:52px}
+  @media (max-width:820px){.foot-grid{grid-template-columns:1fr}}
+  .foot-brand .brand{color:var(--cream);margin-bottom:16px}
+  .foot-brand .brand-mark{background:var(--accent);color:#fff}
+  .foot-brand p{font-size:13.5px;color:var(--cream-faint);max-width:26em}
+  .foot-col h4{font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--cream-faint);margin-bottom:18px}
+  .foot-col ul{list-style:none}
+  .foot-col li{margin-bottom:11px}
+  .foot-col a{font-size:14px;color:var(--cream-muted);text-decoration:none;transition:color .15s}
+  .foot-col a:hover{color:var(--cream)}
+  .foot-bottom{border-top:1px solid var(--cream-line);padding-top:26px;font-size:12.5px;color:var(--cream-faint);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+  [id]{scroll-margin-top:76px}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="container nav-inner">
+    <a class="brand" href="#top"><span class="brand-mark">&gt;_</span>多智能体是什么？</a>
+    <ul class="nav-links">
+      <li class="hide-sm"><a href="#parts">组队拆解</a></li>
+      <li class="hide-sm"><a href="#timeline">编年史</a></li>
+      <li class="hide-sm"><a href="#makers">谁在做</a></li>
+      <li class="hide-sm"><a href="#faq">常见问题</a></li>
+      <li><a class="nav-cta" href="index.html">🏠 知识地图</a></li>
+    </ul>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="container hero-grid">
+    <div>
+      <p class="eyebrow">给想让 AI 组队干活的人的实用指南</p>
+      <h1>多智能体<br>是什么？</h1>
+      <p class="lead">多智能体（Multi-agent）是让多个 Agent 分工协作：主 Agent 拆解任务、派发给子 Agent，各自带着<strong>干净的上下文</strong>独立执行，再汇总结果。一句话：<b>组队买的不是更聪明，是分治与并行。</b></p>
+      <p class="example">深度研究产品就是标准多智能体：<b>规划员拆问题、多个搜索员并行查证、写作员汇总成稿</b>——单 Agent 串行要一小时，组队十分钟出结果（效果描述以各家产品为准）。</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#parts">组队拆解 ↓</a>
+        <a class="btn btn-ghost" href="index.html">🏠 知识地图</a>
+      </div>
+      <div class="hero-meta">
+        <span class="chip"><i class="dot"></i>主从编排</span>
+        <span class="chip"><i class="dot"></i>上下文隔离</span>
+        <span class="chip"><i class="dot"></i>并行加速</span>
+        <span class="chip"><i class="dot"></i>成本 × N</span>
+      </div>
+    </div>
+
+    <div class="terminal" aria-label="多智能体机制演示">
+      <div class="terminal-bar"><i></i><i></i><i></i><span class="terminal-title">multi-agent — 对比演示</span></div>
+      <div class="terminal-steps" role="tablist" aria-label="演示步骤">
+        <button type="button" role="tab" data-step="0" aria-selected="true">① 单 Agent 的天花板</button>
+        <button type="button" role="tab" data-step="1" aria-selected="false">② 组队：拆解-派发-汇总</button>
+        <button type="button" role="tab" data-step="2" aria-selected="false">③ 代价：通信与级联失败</button>
+      </div>
+      <div class="terminal-body" id="hero-term" aria-live="polite"></div>
+    </div>
+  </div>
+</header>
+
+<section class="section section-yellow" id="parts">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">组队拆解</p>
+      <h2>六个零件，一支小队</h2>
+      <p>一套多智能体系统的全部构件。点击左侧零件，右侧看它的样子——组队的核心其实是三件事：怎么拆、怎么传话、怎么收。</p>
+    </div>
+
+    <div class="parts-layout">
+      <div class="parts-list" id="parts-list" role="tablist" aria-label="零件列表"></div>
+      <div class="parts-terminal">
+        <div class="terminal">
+          <div class="terminal-bar"><i></i><i></i><i></i><span class="terminal-title">multi-agent — 内部视角</span></div>
+          <div class="terminal-body" id="parts-term" aria-live="polite"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="layers reveal">
+      <div class="layer">
+        <span class="lv">2023 · 框架元年</span>
+        <h3>AutoGen、MetaGPT、CrewAI</h3>
+        <p>两篇论文（AutoGen 的多 Agent 对话、MetaGPT 的软件公司式分工）与一批开源框架同年登场，范式首次成形。</p>
+      </div>
+      <div class="layer">
+        <span class="lv">2024–25 · 生产验证</span>
+        <h3>从论文走进产品</h3>
+        <p>Anthropic 公开多智能体研究系统的工程经验；深度研究类产品把主从编排带进大众视野——组队真的能干活。</p>
+      </div>
+      <div class="layer">
+        <span class="lv">2025–26 · 互联互通</span>
+        <h3>协议与工具链成熟</h3>
+        <p>Google A2A 协议发布并捐赠 Linux Foundation，Agent 之间的通信开始标准化；多 Agent 工具链日趋成熟。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="makers">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">谁在做</p>
+      <h2>从论文到生产线</h2>
+      <p>多智能体的三种推手：公开工程经验的实验室、造编排工具的框架厂、定通信标准的协议派。</p>
+    </div>
+    <div class="cards-3">
+      <article class="card reveal">
+        <div class="tag-row"><span class="tag tag-accent">Anthropic</span><span class="tag">工程经验 · 2025</span></div>
+        <h3>多智能体研究系统</h3>
+        <p>官方工程博客公开 <b>lead agent + subagents</b> 架构与经验教训：主 Agent 规划派发、子 Agent 并行探索、汇总合成——也坦承 token 成本显著高于单次聊天，适合高价值任务。</p>
+        <div class="seed">入口 → <b>anthropic.com/engineering</b></div>
+      </article>
+      <article class="card reveal">
+        <div class="tag-row"><span class="tag tag-accent">框架生态</span><span class="tag">编排工具</span></div>
+        <h3>AutoGen · CrewAI · LangGraph</h3>
+        <p>三家的编排抽象各不相同：AutoGen 起于多 Agent 对话，CrewAI 组"角色班子"按工序交接，LangGraph 把协作画成一张可控的图——同一个问题，三种工程答案。</p>
+        <div class="seed">入口 → <b>autogen · crewai · langgraph</b></div>
+      </article>
+      <article class="card reveal">
+        <div class="tag-row"><span class="tag tag-accent">互操作协议</span><span class="tag">开放标准 · 2025</span></div>
+        <h3>A2A 与 MCP 互补</h3>
+        <p>Google 2025 年 4 月发布 A2A（Agent2Agent）协议，6 月捐赠 Linux Foundation 走向中立治理。分工：<b>MCP 管 Agent 接工具，A2A 管 Agent 之间对话</b>——跨厂商组队有了通用语。</p>
+        <div class="seed">入口 → <b>a2a-protocol.org</b></div>
+      </article>
+    </div>
+    <p class="cards-note reveal">框架竞争仍在激烈演化 · 选型先看任务形状与团队熟悉度，再看模式匹配（见常见问题）。</p>
+  </div>
+</section>
+
+<section class="section section-dark" id="why">
+  <div class="container">
+    <div class="statement reveal">
+      <p class="eyebrow">为什么重要</p>
+      <h2>组队不是让 AI 更聪明，<br>是让问题被切成能吞下的小块。</h2>
+      <p class="quote">单 Agent 的瓶颈常是<b>上下文</b>：任务一复杂，窗口被过程填满、注意力被稀释。多智能体用"隔离"换"专注"——每个子 Agent 拿到干净窗口只干一件事。但编排本身也是成本：<b>传话会失真、错误会级联、token 会乘法增长</b>——先跑通单 Agent，再考虑组队。</p>
+      <div class="pillars">
+        <div class="pillar reveal">
+          <span class="p-no">01</span>
+          <h3>分治换上下文</h3>
+          <p>任务拆开后，每个子 Agent 的窗口只装自己那件事，注意力不再被过程稀释——隔离是组队最大的红利。</p>
+        </div>
+        <div class="pillar reveal">
+          <span class="p-no">02</span>
+          <h3>编排是产品设计</h3>
+          <p>拆多细、任务描述怎么写、结果怎么汇总校验——全是产品决策。多智能体的上限在编排设计，不在模型参数。</p>
+        </div>
+        <div class="pillar reveal">
+          <span class="p-no">03</span>
+          <h3>成本是乘法</h3>
+          <p>N 个子 Agent 各烧各的窗口：官方自述研究场景 token 约为单次聊天的 15 倍——组队要花在高价值任务上。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="what">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">依据与事实</p>
+      <h2>先说清楚这套组队</h2>
+    </div>
+    <div class="facts reveal">
+      <div class="fact"><span class="f-k">定义</span><div class="f-v">多智能体（Multi-agent）<small>多个 Agent 分工协作：拆解 → 派发 → 并行执行 → 汇总</small></div></div>
+      <div class="fact"><span class="f-k">框架起点</span><div class="f-v">2023 · AutoGen 与 MetaGPT<small>同年两篇论文：多 Agent 对话与"软件公司"角色分工</small></div></div>
+      <div class="fact"><span class="f-k">生产验证</span><div class="f-v">2025 · Anthropic 研究系统<small>lead + subagents 架构公开；深度研究产品落地</small></div></div>
+      <div class="fact"><span class="f-k">通信</span><div class="f-v">MCP 管工具 · A2A 管 Agent<small>MCP 把能力插给 Agent，A2A 让 Agent 之间互通</small></div></div>
+      <div class="fact"><span class="f-k">编排模式</span><div class="f-v">主从 / 流水线 / 辩论<small>三种主流拓扑，没有默认答案，按任务形状选</small></div></div>
+      <div class="fact"><span class="f-k">代价</span><div class="f-v">token 成本高出约一个数量级<small>官方自述（约聊天 15 倍）· 本站未复测</small></div></div>
+    </div>
+
+    <div class="deep-block reveal" id="timeline">
+      <h3>一支小队的编年史</h3>
+      <ul class="timeline">
+        <li>
+          <span class="tl-year">2023 · 08</span>
+          <span class="tl-t">AutoGen + MetaGPT 论文</span>
+          <p>框架与范式之年：AutoGen 提出多 Agent 对话框架，MetaGPT 把"软件公司"分工（产品、架构、工程、QA）搬进智能体——两条路线同年成形。</p>
+        </li>
+        <li>
+          <span class="tl-year">2024</span>
+          <span class="tl-t">CrewAI、LangGraph 编排流行</span>
+          <p>编排成为显学：角色班子（CrewAI）与图状态机（LangGraph）把组队从论文Demo变成可复用的工程。</p>
+        </li>
+        <li>
+          <span class="tl-year">2025 · 04</span>
+          <span class="tl-t">Google 发布 A2A 协议</span>
+          <p>Agent2Agent 开放协议亮相（50+ 合作伙伴）；6 月捐赠 Linux Foundation，走向中立治理——Agent 之间有了通用语。</p>
+        </li>
+        <li>
+          <span class="tl-year">2025 · 06</span>
+          <span class="tl-t">Anthropic 多智能体研究系统博客</span>
+          <p>《How we built our multi-agent research system》公开 lead + subagents 的工程经验与教训，包括 token 成本约为聊天 15 倍的坦白。</p>
+        </li>
+        <li>
+          <span class="tl-year">2026</span>
+          <span class="tl-t">深度研究普及 · 互操作成主题</span>
+          <p>多智能体从论文话题变成默认产品形态；跨框架组队、可观测性与成本控制成为工程焦点。</p>
+        </li>
+      </ul>
+    </div>
+
+    <div class="deep-block reveal">
+      <h3>设计张力与常见误解</h3>
+      <ul class="tensions">
+        <li><span><b>单 vs 多</b>——默认单 Agent：更稳、更省、更好调试；任务可并行且需要专业分治时才组队。</span></li>
+        <li><span><b>通用 vs 专业子 Agent</b>——一个全能 worker 省心，多个专家各带自己的上下文与工具更准。</span></li>
+        <li><span><b>同步等待 vs 异步并行</b>——等全部完成再汇总（稳），还是先到先用（快）——决定产品的手感。</span></li>
+        <li><span><b>透明 vs 失控感</b>——展示"谁在干什么"让人放心，也暴露了系统的复杂度。</span></li>
+        <li><span><b>效率 vs 成本</b>——并行省的是时间，烧的是 token；快和省很少两全。</span></li>
+      </ul>
+      <p class="tensions-warn"><b>三个常见误解：</b>① "人多力量大"——Agent 越多，通信与失败面越大，收益常常递减；② "多智能体是更强的模型"——它是编排架构，不是模型升级，底座还是同一个 LLM；③ "组队自动更准"——传话失真与级联错误是真实代价，必须有汇总与校验环节兜底。</p>
+    </div>
+  </div>
+</section>
+
+<section class="section section-yellow" id="faq">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">接下来继续了解</p>
+      <h2>常见问题</h2>
+    </div>
+    <div class="faq-list">
+      <details class="faq-item reveal">
+        <summary>什么时候需要多智能体？<span class="plus">+</span></summary>
+        <div class="faq-body">两个信号同时出现才值得：<b>任务可并行</b>（子问题彼此基本独立）且<b>需要专业分治</b>（每块要不同的上下文、工具或视角）。深度研究是典型样例；写一封邮件就不值得。拿不准就先跑单 Agent——组队是手段，不是目的。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>和单 Agent 比，优势到底在哪？<span class="plus">+</span></summary>
+        <div class="faq-body">不在"更聪明"，在三件事：<b>上下文隔离</b>——每个子 Agent 拿干净窗口，过程噪音不回灌；<b>并行加速</b>——N 路同时查证；<b>专业分治</b>——各带各的工具与资料。官方数据显示深度研究这类任务效果显著提升，代价是 token 也显著上升。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>子 Agent 会不会互相打架？<span class="plus">+</span></summary>
+        <div class="faq-body">会，但形态是"撞车"不是"吵架"：重复查同一份资料、结论互相矛盾、格式对不上。解法都在编排里——任务边界写清楚（各自查什么、不查什么）、汇总员负责冲突消解；辩论模式甚至能把"互怼"变成一道质检工序。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>成本大概多少？<span class="plus">+</span></summary>
+        <div class="faq-body">Anthropic 工程博客自述：多智能体研究消耗约为单次聊天的 <b>15 倍 token</b>（单 Agent 约为 4 倍），本站未复测。经验法则：把组队花在高价值、可并行的任务上；低价值任务用单 Agent，甚至普通对话就够。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>怎么调试？<span class="plus">+</span></summary>
+        <div class="faq-body">三件套：<b>留痕</b>——每个子 Agent 的任务描述与回传全部落盘；<b>单点复跑</b>——出错的那一步单独重放；<b>先单后多</b>——先确认每个角色单独能干对，再连成一条线。多数"多智能体 bug"追到根上，是任务描述写得含糊。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>入门选什么框架？<span class="plus">+</span></summary>
+        <div class="faq-body">按口味选：想要"角色班子"式分工看 <b>CrewAI</b>；想要可控的图状态机看 <b>LangGraph</b>；想要对话式协作与实验自由度看 <b>AutoGen</b>。但更重要的问题是"要不要多智能体"——多数场景，单 Agent 加一条好的工具链就已经够了。</div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="who">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">它适合谁</p>
+      <h2>四类读者，四个入口</h2>
+    </div>
+    <div class="aud-grid">
+      <div class="aud-card reveal">
+        <span class="a-who">For Builders</span>
+        <h3>做 AI 产品的研发</h3>
+        <p>深度研究、批量内容、并行分析——组队架构直接决定产品上限，也直接决定月底账单。</p>
+        <div class="start">起点 → 组队拆解 ↓</div>
+      </div>
+      <div class="aud-card reveal">
+        <span class="a-who">For Devs</span>
+        <h3>开发者</h3>
+        <p>在 AutoGen、CrewAI、LangGraph 里选一门编排手艺，从官方 multi-agent 示例跑起。</p>
+        <div class="start">起点 → 常见问题 ⑥</div>
+      </div>
+      <div class="aud-card reveal">
+        <span class="a-who">For PMs</span>
+        <h3>技术决策者</h3>
+        <p>判断"这个需求值不值得组队"：三问过关再上多智能体，别为架构而架构。</p>
+        <div class="start">起点 → 页尾组队三问</div>
+      </div>
+      <div class="aud-card reveal">
+        <span class="a-who">For Curious</span>
+        <h3>好奇者</h3>
+        <p>用过"深度研究"功能吗？它背后就是一支 Agent 小队——本页帮你看见那支队伍的分工。</p>
+        <div class="start">起点 → 零件 ② 上下文隔离</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="sources" style="padding-top:24px">
+  <div class="container">
+    <div class="sources-card reveal">
+      <p class="eyebrow">来源与延伸阅读</p>
+      <a class="source-item" href="https://www.anthropic.com/engineering/built-multi-agent-research-system" target="_blank" rel="noopener">
+        <span class="s-no">01</span>
+        <span><span class="s-t">Anthropic · How we built our multi-agent research system</span><br><span class="s-d">2025-06-13 工程博客：lead agent + subagents 架构与经验教训</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="https://arxiv.org/abs/2308.08155" target="_blank" rel="noopener">
+        <span class="s-no">02</span>
+        <span><span class="s-t">AutoGen 论文 · arXiv:2308.08155</span><br><span class="s-d">2023 · 微软多智能体对话框架（Multi-Agent Conversation Framework）</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="https://arxiv.org/abs/2308.00352" target="_blank" rel="noopener">
+        <span class="s-no">03</span>
+        <span><span class="s-t">MetaGPT 论文 · arXiv:2308.00352</span><br><span class="s-d">2023 · 把 SOP 与"软件公司"分工编进多智能体协作</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="https://a2a-protocol.org" target="_blank" rel="noopener">
+        <span class="s-no">04</span>
+        <span><span class="s-t">A2A 协议官网 · Agent2Agent</span><br><span class="s-d">Google 发起、Linux Foundation 治理的开放协议</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="什么是Agent.html">
+        <span class="s-no">05</span>
+        <span><span class="s-t">姊妹篇 · 什么是 AI Agent？</span><br><span class="s-d">先懂单兵，再谈组队（本系列）</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <p class="sources-note">本页内容整理自以上公开资料，更新于 2026 年 10 月。框架与协议仍在演化，以官方文档为准。</p>
+    </div>
+  </div>
+</section>
+
+<section class="section section-cta">
+  <div class="container cta-grid">
+    <div class="reveal">
+      <p class="eyebrow">开始动手</p>
+      <h2>组队前的三个问题</h2>
+      <p>三问全过再组队——有一问答"否"，单 Agent 就够了。</p>
+      <div class="cta-cmd">
+        <pre><span class="t-cm">组队三问</span>
+① 任务真的可并行，或需要专业分治吗？
+② 拆分边界清晰吗？（每个子任务能独立验收）
+③ 汇总与校验环节想清楚了吗？
+<span class="t-cm">→ 有一个"否"，就先用单 Agent</span></pre>
+        <button class="copy-btn" data-copy="组队三问&#10;① 任务真的可并行，或需要专业分治吗？&#10;② 拆分边界清晰吗？（每个子任务能独立验收）&#10;③ 汇总与校验环节想清楚了吗？&#10;→ 有一个"否"，就先用单 Agent">复制</button>
+      </div>
+    </div>
+    <div class="cta-art" aria-hidden="true">
+      <span class="q">1</span><span class="arrow">→</span><span class="v">N</span>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <a class="brand" href="#top"><span class="brand-mark">&gt;_</span>多智能体是什么？</a>
+        <p>第 16 课：让 AI 组队干活——编排模式、上下文隔离、并行与代价的乘法，以及"什么时候别组队"。</p>
+      </div>
+      <div class="foot-col">
+        <h4>本页导航</h4>
+        <ul>
+          <li><a href="#parts">组队拆解</a></li>
+          <li><a href="#timeline">编年史</a></li>
+          <li><a href="#makers">谁在做</a></li>
+          <li><a href="#faq">常见问题</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h4>本系列</h4>
+        <ul>
+          <li><a href="index.html">🏠 知识地图（主页）</a></li>
+          <li><a href="什么是大模型.html">什么是大模型？</a></li>
+          <li><a href="什么是思维链.html">什么是思维链？</a></li>
+          <li><a href="什么是Prompt工程.html">什么是 Prompt 工程？</a></li>
+          <li><a href="什么是幻觉.html">什么是幻觉？</a></li>
+          <li><a href="什么是RAG.html">什么是 RAG？</a></li>
+          <li><a href="什么是Agent.html">什么是 AI Agent？</a></li>
+          <li><a href="什么是Skill.html">什么是 Skill？</a></li>
+          <li><a href="什么是MCP.html">什么是 MCP？</a></li>
+          <li><a href="什么是AgentHarness.html">什么是 Agent Harness？</a></li>
+          <li><a href="什么是DeepSeekHarness.html">什么是 DeepSeek Harness？</a></li>
+          <li><a href="什么是飞书CLI.html">什么是飞书 CLI？</a></li>
+          <li><a href="什么是微调.html">什么是微调？</a></li>
+          <li><a href="什么是提示注入.html">什么是提示注入？</a></li>
+          <li><a href="什么是多模态.html">什么是多模态？</a></li>
+          <li><a href="什么是记忆.html">什么是记忆？</a></li>
+          <li><a href="#top">什么是多智能体？（本页）</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>本页为独立学习指南，与所提及的各家公司没有关联 · 内容整理自公开资料</span>
+      <span>更新于 2026 年 10 月</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+document.documentElement.classList.add('js');
+
+var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function el(tag, cls, text){
+  var n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text !== undefined) n.textContent = text;
+  return n;
+}
+
+function typeCmd(span, text, done){
+  if (reduceMotion){ span.textContent = text; done && done(); return; }
+  var i = 0;
+  (function tick(){
+    span.textContent = text.slice(0, ++i);
+    if (i < text.length){ setTimeout(tick, text[i-1] === ' ' ? 34 : 18); }
+    else { done && done(); }
+  })();
+}
+
+function renderTerm(container, spec){
+  container.innerHTML = '';
+  var line = el('div','t-line');
+  var prompt = el('span','t-prompt', spec.prompt || '❯');
+  var cmd = el('span','t-cmd');
+  var cur = el('span','cursor');
+  line.appendChild(prompt); line.appendChild(cmd); line.appendChild(cur);
+  container.appendChild(line);
+  typeCmd(cmd, spec.cmd, function(){
+    cur.remove();
+    (spec.out || []).forEach(function(o){
+      container.appendChild(el('div','t-line ' + (o.cls || 't-out'), o.text));
+    });
+    if (spec.note) container.appendChild(el('div','t-note', spec.note));
+  });
+}
+
+var heroSteps = [
+  {
+    cmd: '"深度研究：多智能体的最新进展"',
+    prompt: '你',
+    out: [
+      { text: '→ 单 Agent 串行：查完一个，再查下一个', cls: 't-out' },
+      { text: '✗ 上下文越滚越长，注意力被稀释', cls: 't-out' },
+      { text: '✗ 一小时后：窗口塞满过程，结论开始漂移', cls: 't-dim' }
+    ],
+    note: '聪明 ≠ 扛得住复杂——瓶颈常常不是模型，是上下文窗口。'
+  },
+  {
+    cmd: 'lead → spawn 3 subagents',
+    prompt: '⚙',
+    out: [
+      { text: '→ 规划员拆成 3 个子问题，逐个派发', cls: 't-out' },
+      { text: '→ 子 Agent 各带干净上下文，并行查证', cls: 't-out' },
+      { text: '✓ 汇总员合成成稿：十分钟出结果', cls: 't-ok' }
+    ],
+    note: '组队买的不是更聪明，是分治与并行（效果以各家产品为准）。'
+  },
+  {
+    cmd: 'cost --mode single vs team',
+    out: [
+      { text: '→ 传话失真：任务描述含糊，结果跑偏', cls: 't-out' },
+      { text: '→ 级联失败：一个子 Agent 错，汇总全错', cls: 't-out' },
+      { text: '→ token 乘法：N 个窗口各烧各的', cls: 't-out' },
+      { text: '✗ 官方自述：约聊天 15 倍的 token（本站未复测）', cls: 't-dim' }
+    ],
+    note: '编排本身就是成本——先跑通单 Agent，再考虑组队。'
+  }
+];
+
+var heroTerm = document.getElementById('hero-term');
+var heroBtns = document.querySelectorAll('.terminal-steps button');
+var heroStopped = false;
+
+function showHeroStep(i){
+  heroBtns.forEach(function(b, j){
+    b.classList.toggle('active', i === j);
+    b.setAttribute('aria-selected', i === j ? 'true' : 'false');
+  });
+  renderTerm(heroTerm, heroSteps[i]);
+}
+heroBtns.forEach(function(b){
+  b.addEventListener('click', function(){
+    heroStopped = true;
+    showHeroStep(+b.dataset.step);
+  });
+});
+showHeroStep(0);
+(function autoAdvance(){
+  if (reduceMotion) return;
+  var idx = 0;
+  setInterval(function(){
+    if (heroStopped) return;
+    idx = (idx + 1) % heroSteps.length;
+    showHeroStep(idx);
+  }, 7000);
+})();
+
+var parts = [
+  {
+    name: '编排模式', desc: '主从 / 流水线 / 辩论',
+    spec: {
+      cmd: 'orchestrate --pattern …',
+      out: [
+        { text: '→ 主从 orchestrator-worker：Lead 派活并汇总', cls: 't-out' },
+        { text: '→ 流水线：上一步的输出，是下一步的输入', cls: 't-out' },
+        { text: '→ 辩论 debate：互相挑错，再收敛答案', cls: 't-out' },
+        { text: '✓ 没有默认答案：按任务形状选', cls: 't-ok' }
+      ],
+      note: '深度研究常用主从，内容生产常用流水线，事实核查偏爱辩论。'
+    }
+  },
+  {
+    name: '上下文隔离', desc: '每个子 Agent 独立窗口',
+    spec: {
+      cmd: 'subagent.context = fresh_window',
+      out: [
+        { text: '→ 每个子 Agent 独立窗口，只装自己的任务', cls: 't-out' },
+        { text: '→ 过程噪音不回灌主窗口', cls: 't-out' },
+        { text: '→ 主 Agent 只收结论，不收流水账', cls: 't-out' },
+        { text: '✓ 组队的最大红利：用隔离换专注', cls: 't-ok' }
+      ],
+      note: '单 Agent 的瓶颈常是上下文——组队把窗口问题变成了架构问题。'
+    }
+  },
+  {
+    name: '子 Agent 生成', desc: '按任务动态 spawn · 用完即弃',
+    spec: {
+      cmd: 'spawn worker --task "查证 X"',
+      out: [
+        { text: '→ 按任务动态生成，带一份干净的任务描述', cls: 't-out' },
+        { text: '→ 干完即弃：不占常驻上下文', cls: 't-out' },
+        { text: '→ 数量随任务伸缩：3 个还是 30 个', cls: 't-out' },
+        { text: '✓ 更像进程，不像同事', cls: 't-ok' }
+      ],
+      note: '"spawn" 是多智能体代码里出场率最高的动词。'
+    }
+  },
+  {
+    name: '通信机制', desc: '任务怎么派 · 结果怎么回',
+    spec: {
+      cmd: 'task → result | MCP / A2A',
+      out: [
+        { text: '→ 任务描述怎么写：目标 · 边界 · 验收标准', cls: 't-out' },
+        { text: '→ 结果怎么回传：结论先行，证据跟上', cls: 't-out' },
+        { text: '→ MCP 接工具；A2A 通 Agent', cls: 't-out' },
+        { text: '✓ 传话的带宽，决定协作的上限', cls: 't-ok' }
+      ],
+      note: '一句任务描述写不清楚，子 Agent 就会替你脑补。'
+    }
+  },
+  {
+    name: '失败模式', desc: '传话失真 / 级联 / 成本爆炸',
+    spec: {
+      cmd: 'postmortem multi-agent',
+      out: [
+        { text: '✗ 传话失真：任务描述含糊，结果跑偏', cls: 't-dim' },
+        { text: '✗ 级联错误：一个子 Agent 错，汇总全错', cls: 't-dim' },
+        { text: '✗ 重复劳动：三个 Agent 查了同一页', cls: 't-dim' },
+        { text: '✗ 成本爆炸：token 是乘法，不是加法', cls: 't-dim' }
+      ],
+      note: '官方工程博客也坦承：多智能体贵，贵在并行与重复。'
+    }
+  },
+  {
+    name: '何时组队', desc: '可并行 + 需分治，才值得',
+    spec: {
+      cmd: 'should I multi-agent?',
+      out: [
+        { text: '→ 可并行？子任务彼此基本独立', cls: 't-out' },
+        { text: '→ 需分治？各自要不同的专业上下文', cls: 't-out' },
+        { text: '→ 能验收？每块都能独立判断对错', cls: 't-out' },
+        { text: '✓ 三个都是 → 组队；否则单 Agent 更稳', cls: 't-ok' }
+      ],
+      note: '默认单 Agent——组队是手段，不是目的。'
+    }
+  }
+];
+
+var partsList = document.getElementById('parts-list');
+var partsTerm = document.getElementById('parts-term');
+parts.forEach(function(t, i){
+  var b = el('button', 'part-btn' + (i === 0 ? ' active' : ''));
+  b.type = 'button';
+  b.setAttribute('role', 'tab');
+  b.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
+  b.appendChild(el('span', 'num', String(i + 1)));
+  var wrap = el('span');
+  wrap.appendChild(el('span', 't-name', t.name));
+  wrap.appendChild(document.createElement('br'));
+  wrap.appendChild(el('span', 't-desc', t.desc));
+  b.appendChild(wrap);
+  b.addEventListener('click', function(){
+    partsList.querySelectorAll('.part-btn').forEach(function(x){
+      x.classList.remove('active'); x.setAttribute('aria-selected', 'false');
+    });
+    b.classList.add('active'); b.setAttribute('aria-selected', 'true');
+    renderTerm(partsTerm, t.spec);
+  });
+  partsList.appendChild(b);
+});
+renderTerm(partsTerm, parts[0].spec);
+
+document.querySelectorAll('.copy-btn').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    var text = btn.dataset.copy || '';
+    var done = function(){
+      var old = btn.textContent;
+      btn.textContent = '已复制 ✓';
+      setTimeout(function(){ btn.textContent = old; }, 1600);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done, function(){ fallbackCopy(text); done(); });
+    } else { fallbackCopy(text); done(); }
+  });
+});
+function fallbackCopy(text){
+  var ta = document.createElement('textarea');
+  ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); } catch(e){}
+  ta.remove();
+}
+
+var revealEls = document.querySelectorAll('.reveal');
+if ('IntersectionObserver' in window && !reduceMotion){
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if (en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); }
+    });
+  }, { threshold: 0.12 });
+  revealEls.forEach(function(n){ io.observe(n); });
+} else {
+  revealEls.forEach(function(n){ n.classList.add('in'); });
+}
+</script>
+</body>
+</html>

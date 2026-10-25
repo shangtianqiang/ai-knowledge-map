@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#FBFAF7">
+<title>微调是什么？ | 让大模型更像你们的人</title>
+<meta name="description" content="一页讲清楚微调（Fine-tuning）：SFT、LoRA、RLHF 与 DPO、全参对比高效微调、数据准备与评测——以及为什么记事实用 RAG、学风格与技能才微调。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2317151F'/%3E%3Ctext x='16' y='22' font-size='15' font-family='monospace' fill='%23A78BFA' text-anchor='middle'%3E%3C_/text%3E%3C/svg%3E">
+<style>
+  :root{
+    --cream:#FBFAF7;
+    --ink:#17151F;
+    --paper:#FFFFFF;
+    --yellow:#FFD166;
+    --accent:#7E22CE;
+    --accent-light:#A78BFA;
+    --muted:rgba(23,21,31,.64);
+    --faint:rgba(23,21,31,.45);
+    --line:rgba(23,21,31,.14);
+    --line-strong:rgba(23,21,31,.85);
+    --cream-muted:rgba(251,250,247,.68);
+    --cream-faint:rgba(251,250,247,.42);
+    --cream-line:rgba(251,250,247,.16);
+    --mono:"SF Mono",ui-monospace,"JetBrains Mono",Menlo,Consolas,"Liberation Mono",monospace;
+    --shadow-card:0 1px 2px rgba(23,21,31,.05),0 10px 28px -14px rgba(23,21,31,.18);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    *,*::before,*::after{animation:none!important;transition:none!important}
+  }
+  body{
+    font-family:"PingFang SC","Microsoft YaHei","Inter Variable",system-ui,sans-serif;
+    background:var(--cream);
+    color:var(--ink);
+    font-size:16px;
+    line-height:1.75;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+  }
+  ::selection{background:var(--accent);color:#fff}
+  a{color:inherit}
+  .container{max-width:1128px;margin:0 auto;padding:0 24px}
+
+  html.js .reveal{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s ease}
+  html.js .reveal.in{opacity:1;transform:none}
+  @media (prefers-reduced-motion:reduce){html.js .reveal{opacity:1;transform:none}}
+  @media print{html.js .reveal{opacity:1!important;transform:none!important}}
+
+  .nav{
+    position:sticky;top:0;z-index:50;
+    background:rgba(251,250,247,.92);
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  .nav-inner{display:flex;align-items:center;justify-content:space-between;height:60px;gap:16px}
+  .brand{display:flex;align-items:center;gap:10px;text-decoration:none;font-weight:800;font-size:15px;letter-spacing:.01em}
+  .brand-mark{
+    width:26px;height:26px;background:var(--ink);color:var(--accent-light);
+    font-family:var(--mono);font-size:12px;font-weight:700;line-height:26px;text-align:center;
+    border-radius:5px;flex:none;
+  }
+  .nav-links{display:flex;align-items:center;gap:22px;list-style:none}
+  .nav-links a{text-decoration:none;font-size:13.5px;font-weight:500;color:var(--muted);transition:color .15s}
+  .nav-links a:hover{color:var(--ink)}
+  .nav-links a.nav-cta{
+    color:var(--ink);font-weight:700;border:1.5px solid var(--line-strong);
+    padding:6px 14px;border-radius:0;
+  }
+  .nav-links a.nav-cta:hover{background:var(--ink);color:var(--cream)}
+  @media (max-width:720px){.nav-links li.hide-sm{display:none}}
+
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:13px 26px;border-radius:0;border:1.5px solid transparent;
+    font-family:inherit;font-size:15px;font-weight:700;letter-spacing:.02em;
+    text-decoration:none;cursor:pointer;transition:transform .15s ease,background .15s ease,color .15s ease,box-shadow .15s ease;
+  }
+  .btn:active{transform:translateY(1px)}
+  .btn-primary{background:var(--accent);color:#fff}
+  .btn-primary:hover{box-shadow:0 6px 0 -2px rgba(23,21,31,.9)}
+  .btn-ghost{border-color:var(--line-strong);color:var(--ink);background:transparent}
+  .btn-ghost:hover{background:var(--ink);color:var(--cream)}
+  .btn-sm{padding:9px 18px;font-size:13.5px}
+
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:9px;
+    font-size:12.5px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;
+  }
+  .eyebrow::before{content:"";width:9px;height:9px;background:currentColor;flex:none}
+  h1{font-size:clamp(42px,6.6vw,74px);line-height:1.08;font-weight:800;letter-spacing:-.015em}
+  h2{font-size:clamp(30px,4.4vw,44px);line-height:1.18;font-weight:800;letter-spacing:-.01em}
+  h3{font-size:20px;font-weight:800;line-height:1.4}
+  .lead{font-size:clamp(17px,2vw,19.5px);line-height:1.8}
+
+  .hero{padding:76px 0 88px}
+  .hero-grid{display:grid;grid-template-columns:1.02fr .98fr;gap:56px;align-items:center}
+  @media (max-width:980px){.hero-grid{grid-template-columns:1fr;gap:44px}}
+  .hero .eyebrow{color:var(--ink);margin-bottom:26px}
+  .hero h1{margin-bottom:24px}
+  .hero .lead{color:var(--ink);margin-bottom:16px;max-width:34em}
+  .hero .example{color:var(--muted);font-size:15.5px;max-width:36em;margin-bottom:32px}
+  .hero .example b{color:var(--ink);font-weight:700}
+  .hero-actions{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:30px}
+  .hero-meta{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{
+    font-size:12px;font-weight:600;color:var(--muted);
+    border:1px solid var(--line);padding:5px 11px;border-radius:999px;
+    display:inline-flex;align-items:center;gap:6px;background:var(--paper);
+  }
+  .chip .dot{width:6px;height:6px;border-radius:50%;background:var(--accent)}
+
+  .terminal{
+    background:var(--ink);border-radius:14px;overflow:hidden;
+    box-shadow:0 2px 4px rgba(23,21,31,.12),0 30px 60px -22px rgba(23,21,31,.45);
+    border:1px solid rgba(23,21,31,.9);
+  }
+  .terminal-bar{
+    display:flex;align-items:center;gap:7px;
+    padding:13px 16px;border-bottom:1px solid var(--cream-line);
+  }
+  .terminal-bar i{width:11px;height:11px;border-radius:50%;background:rgba(251,250,247,.22)}
+  .terminal-bar i:first-child{background:#FF5F57}
+  .terminal-bar i:nth-child(2){background:#FEBC2E}
+  .terminal-bar i:nth-child(3){background:#28C840}
+  .terminal-bar .terminal-title{
+    margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--cream-faint);letter-spacing:.08em;
+  }
+  .terminal-steps{display:flex;gap:6px;padding:12px 14px 0;flex-wrap:wrap}
+  .terminal-steps button{
+    font-family:inherit;font-size:12.5px;font-weight:700;letter-spacing:.04em;
+    background:transparent;color:var(--cream-faint);
+    border:1px solid var(--cream-line);border-radius:999px;
+    padding:5px 13px;cursor:pointer;transition:all .18s;
+  }
+  .terminal-steps button:hover{color:var(--cream);border-color:var(--cream-faint)}
+  .terminal-steps button.active{background:var(--accent);border-color:var(--accent);color:#fff}
+  .terminal-body{padding:18px 20px 22px;min-height:238px;font-family:var(--mono);font-size:13.5px;line-height:1.9}
+  .t-line{white-space:pre-wrap;word-break:break-all}
+  .t-prompt{color:var(--accent-light);font-weight:700;margin-right:9px}
+  .t-cmd{color:var(--cream)}
+  .t-out{color:var(--cream-faint)}
+  .t-ok{color:#3EE8C6}
+  .t-dim{color:rgba(251,250,247,.35)}
+  .t-user{color:var(--yellow)}
+  .t-note{color:var(--cream-faint);font-family:"PingFang SC","Microsoft YaHei",sans-serif;font-size:12px;margin-top:12px;padding-top:10px;border-top:1px dashed var(--cream-line)}
+  .cursor{display:inline-block;width:8px;height:15px;background:var(--accent-light);vertical-align:-2px;animation:blink 1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+  @media (prefers-reduced-motion:reduce){.cursor{animation:none}}
+
+  .section{padding:96px 0}
+  .section-head{max-width:680px;margin-bottom:52px}
+  .section-head .eyebrow{margin-bottom:20px}
+  .section-head p{color:var(--muted);margin-top:16px;font-size:16.5px}
+
+  .section-yellow{background:var(--yellow)}
+  .section-yellow .section-head p{color:rgba(23,21,31,.72)}
+
+  .section-dark{background:var(--ink);color:var(--cream)}
+  .section-dark .eyebrow{color:var(--accent-light)}
+
+  .parts-layout{display:grid;grid-template-columns:.9fr 1.1fr;gap:36px;align-items:start}
+  @media (max-width:900px){.parts-layout{grid-template-columns:1fr}}
+  .parts-list{display:flex;flex-direction:column;gap:10px}
+  .part-btn{
+    display:flex;align-items:center;gap:14px;text-align:left;width:100%;
+    background:var(--paper);border:1.5px solid transparent;border-radius:10px;
+    padding:15px 18px;font-family:inherit;cursor:pointer;
+    transition:transform .16s ease,box-shadow .16s ease,border-color .16s;
+    box-shadow:var(--shadow-card);
+  }
+  .part-btn:hover{transform:translateY(-2px)}
+  .part-btn .num{
+    font-family:var(--mono);font-size:12px;font-weight:700;color:var(--muted);
+    width:30px;height:30px;border:1.5px solid var(--line);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;flex:none;transition:all .16s;
+  }
+  .part-btn .t-name{font-size:15.5px;font-weight:700}
+  .part-btn .t-desc{font-size:13px;color:var(--muted);margin-top:2px}
+  .part-btn.active{border-color:var(--ink);transform:translateY(-2px)}
+  .part-btn.active .num{background:var(--ink);border-color:var(--ink);color:var(--accent-light)}
+  .parts-terminal{position:sticky;top:84px}
+  @media (max-width:900px){.parts-terminal{position:static}}
+
+  .layers{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(23,21,31,.22);border:1.5px solid var(--ink);border-radius:12px;overflow:hidden;margin-top:56px}
+  @media (max-width:820px){.layers{grid-template-columns:1fr}}
+  .layer{background:var(--yellow);padding:26px 26px 24px}
+  .layer .lv{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.14em;color:rgba(23,21,31,.55);display:block;margin-bottom:12px}
+  .layer h3{font-size:17px;margin-bottom:8px}
+  .layer p{font-size:13.5px;color:rgba(23,21,31,.72);line-height:1.7}
+  .layer code{font-family:var(--mono);font-size:12.5px;background:rgba(23,21,31,.1);padding:2px 6px;border-radius:4px}
+
+  .cards-3{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+  @media (max-width:900px){.cards-3{grid-template-columns:1fr}}
+  .card{
+    background:var(--paper);border:1px solid var(--line);border-radius:12px;
+    padding:30px 28px 26px;box-shadow:var(--shadow-card);
+    display:flex;flex-direction:column;
+  }
+  .card .tag-row{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:20px}
+  .tag{
+    font-size:10.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+    padding:4px 9px;border:1px solid var(--line);border-radius:4px;color:var(--muted);
+  }
+  .tag.tag-accent{background:var(--ink);color:var(--accent-light);border-color:var(--ink)}
+  .card h3{margin-bottom:12px}
+  .card p{font-size:14.5px;color:var(--muted);flex:1}
+  .card .seed{
+    margin-top:20px;padding-top:16px;border-top:1px dashed var(--line);
+    font-family:var(--mono);font-size:12px;color:var(--faint);word-break:break-all;
+  }
+  .card .seed b{color:var(--ink);font-weight:700}
+  .cards-note{margin-top:30px;font-size:13px;color:var(--faint);display:flex;align-items:center;gap:8px}
+  .cards-note::before{content:"※";color:var(--muted)}
+
+  .statement{max-width:820px}
+  .statement h2{margin-bottom:28px}
+  .statement .quote{
+    font-size:clamp(17px,2vw,19px);line-height:1.85;color:var(--cream-muted);
+    border-left:3px solid var(--accent-light);padding-left:22px;margin-bottom:52px;max-width:36em;
+  }
+  .statement .quote b{color:var(--cream)}
+  .statement .quote code{font-family:var(--mono);font-size:14px;background:rgba(251,250,247,.12);padding:2px 7px;border-radius:4px;color:var(--cream)}
+  .pillars{display:grid;grid-template-columns:repeat(3,1fr);gap:34px}
+  @media (max-width:820px){.pillars{grid-template-columns:1fr}}
+  .pillar .p-no{font-family:var(--mono);font-size:13px;color:var(--accent-light);font-weight:700;letter-spacing:.12em;display:block;margin-bottom:14px}
+  .pillar h3{color:var(--cream);margin-bottom:10px;font-size:17.5px}
+  .pillar p{font-size:14.5px;color:var(--cream-muted);line-height:1.8}
+  .pillar code{font-family:var(--mono);font-size:12.5px;background:rgba(251,250,247,.12);padding:2px 6px;border-radius:4px;color:var(--cream)}
+
+  .facts{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  @media (max-width:820px){.facts{grid-template-columns:1fr}}
+  .fact{background:var(--paper);padding:26px 26px 22px}
+  .fact .f-k{font-size:12px;font-weight:800;letter-spacing:.14em;color:var(--faint);text-transform:uppercase;display:block;margin-bottom:10px}
+  .fact .f-v{font-size:15.5px;font-weight:600;line-height:1.65}
+  .fact .f-v small{display:block;font-weight:400;font-size:13px;color:var(--muted);margin-top:4px}
+
+  .deep-block{margin-top:76px}
+  .deep-block>h3{margin-bottom:26px;font-size:clamp(21px,2.6vw,25px)}
+
+  .timeline{list-style:none;border-left:2px solid var(--ink);margin-left:6px}
+  .timeline li{position:relative;padding:0 0 26px 28px}
+  .timeline li:last-child{padding-bottom:0}
+  .timeline li::before{
+    content:"";position:absolute;left:-7px;top:9px;width:12px;height:12px;
+    background:var(--accent);border:2px solid var(--ink);border-radius:50%;
+  }
+  .timeline .tl-year{font-family:var(--mono);font-size:12.5px;font-weight:700;letter-spacing:.1em;color:var(--faint);display:block;margin-bottom:4px}
+  .timeline .tl-t{font-weight:800;font-size:16.5px}
+  .timeline p{font-size:14px;color:var(--muted);margin-top:4px;max-width:40em}
+  .timeline code{font-family:var(--mono);font-size:12.5px;background:rgba(23,21,31,.07);padding:2px 6px;border-radius:4px;color:var(--ink)}
+
+  .tensions{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:14px 28px}
+  @media (max-width:820px){.tensions{grid-template-columns:1fr}}
+  .tensions li{
+    display:flex;gap:12px;font-size:14.5px;color:var(--muted);line-height:1.7;
+    padding:14px 0;border-bottom:1px solid var(--line);
+  }
+  .tensions li b{color:var(--ink)}
+  .tensions li::before{content:"◆";color:var(--accent);font-weight:800;flex:none;font-size:12px;padding-top:5px}
+  .tensions-warn{
+    margin-top:26px;padding:18px 22px;border-radius:10px;
+    background:rgba(126,34,206,.08);border:1px solid rgba(126,34,206,.4);
+    font-size:14px;color:var(--muted);
+  }
+  .tensions-warn b{color:var(--ink)}
+
+  .faq-list{max-width:780px}
+  .faq-item{background:var(--paper);border:1.5px solid var(--ink);border-radius:10px;margin-bottom:14px;overflow:hidden;box-shadow:var(--shadow-card)}
+  .faq-item summary{
+    list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:18px;
+    padding:20px 24px;font-weight:700;font-size:16px;
+  }
+  .faq-item summary::-webkit-details-marker{display:none}
+  .faq-item summary .plus{
+    flex:none;width:26px;height:26px;border:1.5px solid var(--ink);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:400;font-size:16px;line-height:1;transition:transform .2s ease,background .2s,color .2s;
+  }
+  .faq-item[open] summary .plus{background:var(--ink);color:var(--yellow);transform:rotate(45deg)}
+  .faq-item .faq-body{padding:0 24px 22px;font-size:14.5px;color:var(--muted);line-height:1.85}
+  .faq-item .faq-body b{color:var(--ink)}
+  .faq-item .faq-body code{font-family:var(--mono);font-size:12.5px;background:rgba(23,21,31,.07);padding:2px 6px;border-radius:4px;color:var(--ink)}
+
+  .aud-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+  @media (max-width:1000px){.aud-grid{grid-template-columns:1fr 1fr}}
+  @media (max-width:640px){.aud-grid{grid-template-columns:1fr}}
+  .aud-card{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:26px 24px;box-shadow:var(--shadow-card);display:flex;flex-direction:column}
+  .aud-card .a-who{font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin-bottom:12px}
+  .aud-card h3{font-size:16.5px;margin-bottom:10px}
+  .aud-card p{font-size:13.5px;color:var(--muted);flex:1;line-height:1.75}
+  .aud-card .start{
+    margin-top:16px;font-family:var(--mono);font-size:11.5px;color:#fff;
+    background:var(--accent);padding:7px 11px;border-radius:6px;word-break:break-all;
+  }
+
+  .sources-card{background:var(--ink);color:var(--cream);border-radius:16px;padding:52px 54px;max-width:860px}
+  @media (max-width:720px){.sources-card{padding:36px 26px}}
+  .sources-card .eyebrow{color:var(--yellow);margin-bottom:28px}
+  .source-item{display:flex;gap:18px;padding:16px 0;border-bottom:1px solid var(--cream-line);text-decoration:none;transition:padding-left .18s}
+  .source-item:hover{padding-left:8px}
+  .source-item:last-of-type{border-bottom:none}
+  .source-item .s-no{font-family:var(--mono);font-size:12.5px;color:var(--accent-light);font-weight:700;flex:none;padding-top:2px}
+  .source-item .s-t{font-weight:700;font-size:15.5px;color:var(--cream)}
+  .source-item .s-d{font-size:13px;color:var(--cream-faint);margin-top:3px}
+  .source-item .s-arrow{margin-left:auto;color:var(--cream-faint);flex:none;padding-top:2px}
+  .sources-note{margin-top:26px;font-size:12.5px;color:var(--cream-faint)}
+
+  .section-cta{background:var(--accent)}
+  .cta-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:48px;align-items:center}
+  @media (max-width:820px){.cta-grid{grid-template-columns:1fr}}
+  .section-cta .eyebrow{color:rgba(255,255,255,.72);margin-bottom:22px}
+  .section-cta h2{margin-bottom:18px;color:#fff}
+  .section-cta p{color:rgba(255,255,255,.85);max-width:30em;margin-bottom:30px}
+  .cta-cmd{
+    display:flex;align-items:flex-start;gap:12px;background:var(--ink);border-radius:10px;
+    padding:16px 18px;font-family:var(--mono);font-size:13px;line-height:1.9;color:var(--cream);
+    max-width:540px;box-shadow:0 14px 30px -12px rgba(23,21,31,.5);
+  }
+  .cta-cmd pre{font-family:inherit;white-space:pre-wrap;word-break:break-all;flex:1;margin:0}
+  .cta-cmd .t-cm{color:var(--accent-light)}
+  .copy-btn{
+    flex:none;font-family:inherit;font-size:11px;font-weight:700;letter-spacing:.08em;
+    background:transparent;color:var(--cream-faint);border:1px solid var(--cream-line);
+    border-radius:4px;padding:4px 9px;cursor:pointer;transition:all .15s;
+  }
+  .cta-cmd .copy-btn{color:var(--cream-muted);border-color:var(--cream-line)}
+  .cta-cmd .copy-btn:hover{color:var(--yellow);border-color:var(--yellow)}
+  .cta-art{display:flex;align-items:center;justify-content:center;gap:22px;font-family:var(--mono);font-weight:700}
+  .cta-art .q,.cta-art .v{font-size:clamp(56px,7vw,88px);line-height:1}
+  .cta-art .q{color:rgba(255,255,255,.32)}
+  .cta-art .v{color:#fff}
+  .cta-art .arrow{font-size:34px;color:rgba(255,255,255,.55)}
+  @media (max-width:820px){.cta-art{display:none}}
+
+  footer{background:var(--ink);color:var(--cream);padding:64px 0 36px}
+  .foot-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:44px;margin-bottom:52px}
+  @media (max-width:820px){.foot-grid{grid-template-columns:1fr}}
+  .foot-brand .brand{color:var(--cream);margin-bottom:16px}
+  .foot-brand .brand-mark{background:var(--accent);color:#fff}
+  .foot-brand p{font-size:13.5px;color:var(--cream-faint);max-width:26em}
+  .foot-col h4{font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--cream-faint);margin-bottom:18px}
+  .foot-col ul{list-style:none}
+  .foot-col li{margin-bottom:11px}
+  .foot-col a{font-size:14px;color:var(--cream-muted);text-decoration:none;transition:color .15s}
+  .foot-col a:hover{color:var(--cream)}
+  .foot-bottom{border-top:1px solid var(--cream-line);padding-top:26px;font-size:12.5px;color:var(--cream-faint);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+  [id]{scroll-margin-top:76px}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="container nav-inner">
+    <a class="brand" href="#top"><span class="brand-mark">&gt;_</span>微调是什么？</a>
+    <ul class="nav-links">
+      <li class="hide-sm"><a href="#parts">拆解微调</a></li>
+      <li class="hide-sm"><a href="#timeline">编年史</a></li>
+      <li class="hide-sm"><a href="#makers">谁在微调</a></li>
+      <li class="hide-sm"><a href="#faq">常见问题</a></li>
+      <li><a class="nav-cta" href="index.html">🏠 知识地图</a></li>
+    </ul>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="container hero-grid">
+    <div>
+      <p class="eyebrow">给想让模型更像你们的人的实用指南</p>
+      <h1>微调<br>是什么？</h1>
+      <p class="lead">微调（Fine-tuning）是在预训练模型上用你自己的数据继续训练，改变它的行为、风格与领域能力——一句话定位：<b>记事实用 RAG，学风格与技能才微调。</b></p>
+      <p class="example">比如客服模型通过微调学会你们的话术与口径，回答格式固定、口吻统一——这是提示词和 RAG 都做不到的<b>"肌肉记忆"</b>：规范长进了权重里，不用每次重复交代。</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#parts">拆解微调 ↓</a>
+        <a class="btn btn-ghost" href="index.html">🏠 知识地图</a>
+      </div>
+      <div class="hero-meta">
+        <span class="chip"><i class="dot"></i>2021 · LoRA 论文</span>
+        <span class="chip"><i class="dot"></i>SFT · RLHF</span>
+        <span class="chip"><i class="dot"></i>参数 &lt;1%</span>
+        <span class="chip"><i class="dot"></i>先提示，后微调</span>
+      </div>
+    </div>
+
+    <div class="terminal" aria-label="微调机制演示">
+      <div class="terminal-bar"><i></i><i></i><i></i><span class="terminal-title">finetune — 对比演示</span></div>
+      <div class="terminal-steps" role="tablist" aria-label="演示步骤">
+        <button type="button" role="tab" data-step="0" aria-selected="true">① 通才的预训练模型</button>
+        <button type="button" role="tab" data-step="1" aria-selected="false">② 微调后的专才</button>
+        <button type="button" role="tab" data-step="2" aria-selected="false">③ 提示 / RAG / 微调怎么选</button>
+      </div>
+      <div class="terminal-body" id="hero-term" aria-live="polite"></div>
+    </div>
+  </div>
+</header>
+
+<section class="section section-yellow" id="parts">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">拆解微调</p>
+      <h2>六个零件，把通才变专才</h2>
+      <p>微调流程的全部构件。点击左侧零件，右侧看它的样子——训练只是中间一步，数据与评测才是真正的大头。</p>
+    </div>
+
+    <div class="parts-layout">
+      <div class="parts-list" id="parts-list" role="tablist" aria-label="零件列表"></div>
+      <div class="parts-terminal">
+        <div class="terminal">
+          <div class="terminal-bar"><i></i><i></i><i></i><span class="terminal-title">finetune — 内部视角</span></div>
+          <div class="terminal-body" id="parts-term" aria-live="polite"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="layers reveal">
+      <div class="layer">
+        <span class="lv">2021 · LoRA 诞生</span>
+        <h3>低秩适配，成本骤降</h3>
+        <p>微软发布 LoRA 论文（arXiv:2106.09685）：冻结原权重、只训低秩增量矩阵——大模型微调的算力门槛降了一个数量级。</p>
+      </div>
+      <div class="layer">
+        <span class="lv">2022–23 · 指令微调普及</span>
+        <h3>InstructGPT 路线成为标配</h3>
+        <p>SFT + RLHF 的三段式训练成为对话模型标配；闭源厂商相继开放官方微调 API，企业可以定制自己的版本。</p>
+      </div>
+      <div class="layer">
+        <span class="lv">2024–26 · 平民化时代</span>
+        <h3>消费级显卡也能微调</h3>
+        <p>LoRA / QLoRA + 开放权重 + PEFT 生态成熟，个人用一张显卡就能训练并插拔自己的适配器——定制模型不再是机房专属。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="makers">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">谁在微调</p>
+      <h2>三条路线，各有各的玩法</h2>
+      <p>闭源 API 省心、开源生态自由、垂直领域深耕——三条微调路线，对应三种资源结构与三种诉求。</p>
+    </div>
+    <div class="cards-3">
+      <article class="card reveal">
+        <div class="tag-row"><span class="tag tag-accent">闭源路线</span><span class="tag">官方 API</span></div>
+        <h3>官方微调 API</h3>
+        <p>OpenAI 开放 GPT 系列的微调接口，官方定位清晰：改风格、格式、领域行为用微调，注入知识建议走检索（RAG）。Anthropic 直连 API 暂未公开提供微调（官方注明可联系洽谈），Claude 3 Haiku 可经 Amazon Bedrock 定制训练。</p>
+        <div class="seed">入口 → <b>platform.openai.com · AWS Bedrock</b></div>
+      </article>
+      <article class="card reveal">
+        <div class="tag-row"><span class="tag tag-accent">开源生态</span><span class="tag">HuggingFace</span></div>
+        <h3>开源 + LoRA + PEFT</h3>
+        <p>HuggingFace PEFT 库把 LoRA、QLoRA 等参数高效微调做成一行配置；配合 Llama 等开放权重，一张消费级显卡就能训练自己的适配器，用完即插即拔——开源世界的微调标配。</p>
+        <div class="seed">入口 → <b>huggingface.co/docs/peft</b></div>
+      </article>
+      <article class="card reveal">
+        <div class="tag-row"><span class="tag tag-accent">垂直领域</span><span class="tag">实践 · 未复测</span></div>
+        <h3>医疗、法律、代码的定制实践</h3>
+        <p>社区大量实践把微调用于医疗问答、法律文书风格、代码补全等场景，共同结论是：收益高度依赖数据质量与评测严谨度。（社区案例，本站未复测。）</p>
+        <div class="seed">关键 → <b>数据质量 &gt; 数量 · 评测护航</b></div>
+      </article>
+    </div>
+    <p class="cards-note reveal">各领域成效差异很大 · 社区案例未经本站复测，决策前以官方文档与你自己的评测为准。</p>
+  </div>
+</section>
+
+<section class="section section-dark" id="why">
+  <div class="container">
+    <div class="statement reveal">
+      <p class="eyebrow">为什么重要</p>
+      <h2>微调改的是行为，<br>不是知识库。</h2>
+      <p class="quote">这是厂商文档反复强调的共识：<b>要事实、要出处、要随时更新——用 RAG</b>，知识放外部检索，可溯源、可替换；<b>要口吻、要格式、要稳定复现的行为——用微调</b>，规范长进权重里。微调失败最常见的原因不是训不好，而是<b>用错了工具</b>：想让模型"记住"文档库的人选择了微调，结果知识没存住，风格也没改好。</p>
+      <div class="pillars">
+        <div class="pillar reveal">
+          <span class="p-no">01</span>
+          <h3>数据质量 &gt; 数量</h3>
+          <p>几百条口径统一的高质量样本，常胜过几千条原始聊天记录。清洗、去噪、对齐格式与禁忌——数据工程占了微调项目的大头时间。</p>
+        </div>
+        <div class="pillar reveal">
+          <span class="p-no">02</span>
+          <h3>行为可学，事实难存</h3>
+          <p>微调擅长固化"怎么做"：口吻、格式、流程。硬塞"是什么"的知识既不可靠也难更新，还会随时间悄悄过期——那是 RAG 的地盘。</p>
+        </div>
+        <div class="pillar reveal">
+          <span class="p-no">03</span>
+          <h3>评测护航</h3>
+          <p>微调完可能忘掉通用能力（灾难性遗忘）。领域测试集之外必须跑通用回归集——专才上线前，先确认通才没有掉线。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="what">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">依据与事实</p>
+      <h2>先说清楚这件事</h2>
+    </div>
+    <div class="facts reveal">
+      <div class="fact"><span class="f-k">全称</span><div class="f-v">Fine-tuning（微调）<small>在预训练模型之上，用自己的数据继续训练</small></div></div>
+      <div class="fact"><span class="f-k">出生</span><div class="f-v">BERT 时代已流行<small>大模型时代：2021 LoRA · 2022 InstructGPT</small></div></div>
+      <div class="fact"><span class="f-k">参数占比</span><div class="f-v">LoRA 可训练 &lt;1%<small>冻结原权重，只训低秩增量矩阵</small></div></div>
+      <div class="fact"><span class="f-k">数据量</span><div class="f-v">数百到数千条高质量样本<small>改变行为的常见经验值，因任务而异</small></div></div>
+      <div class="fact"><span class="f-k">流程</span><div class="f-v">数据 → 训练 → 评测 → 部署<small>评测不过关，坚决不上线</small></div></div>
+      <div class="fact"><span class="f-k">边界</span><div class="f-v">改行为，不改知识<small>注入事实请用 RAG（官方共识）</small></div></div>
+    </div>
+
+    <div class="deep-block reveal" id="timeline">
+      <h3>微调的编年史</h3>
+      <ul class="timeline">
+        <li>
+          <span class="tl-year">2019</span>
+          <span class="tl-t">BERT 微调时代</span>
+          <p>"预训练 + 微调"成为 NLP 标配范式：下游任务接上分类头，用领域数据把 BERT 调成专用模型——微调这个词由此进入大众视野。</p>
+        </li>
+        <li>
+          <span class="tl-year">2021</span>
+          <span class="tl-t">LoRA 论文</span>
+          <p>微软发布低秩适配（arXiv:2106.09685）：冻结预训练权重、只训练注入的低秩矩阵，可训练参数骤减——大模型微调的成本降了一个数量级。</p>
+        </li>
+        <li>
+          <span class="tl-year">2022</span>
+          <span class="tl-t">InstructGPT</span>
+          <p>OpenAI 发表 SFT + 奖励模型 + RLHF 三段式（arXiv:2203.02155），"指令微调 + 人类反馈"成为对齐主线，也是 ChatGPT 的前身。</p>
+        </li>
+        <li>
+          <span class="tl-year">2023</span>
+          <span class="tl-t">API 与开放权重</span>
+          <p>GPT-3.5 微调 API 上线，闭源模型也能定制；Llama 开放权重发布，开源社区掀起 LoRA 微调热潮。</p>
+        </li>
+        <li>
+          <span class="tl-year">2024+</span>
+          <span class="tl-t">LoRA 生态平民化</span>
+          <p>QLoRA、PEFT 等工具成熟，消费级显卡可微调十亿级参数模型；微调从研究课题变成工程师的常规手段。</p>
+        </li>
+        <li>
+          <span class="tl-year">2026</span>
+          <span class="tl-t">企业知识资产化</span>
+          <p>企业把话术、口径、领域行为沉淀为数据集与 LoRA 权重，与 RAG 组合部署——"定制能力"本身成为可复用的知识资产。</p>
+        </li>
+      </ul>
+    </div>
+
+    <div class="deep-block reveal">
+      <h3>设计张力与常见误解</h3>
+      <ul class="tensions">
+        <li><span><b>RAG vs 微调</b>——事实与出处选 RAG，风格与行为选微调；生产系统常常两者叠加，各管一段。</span></li>
+        <li><span><b>全参 vs LoRA</b>——全参上限高但贵且难保存；LoRA 便宜、可插拔，多数场景从 LoRA 起步验证。</span></li>
+        <li><span><b>灾难性遗忘</b>——专才变强可能以通才退步为代价；混入通用数据、控制轮数、跑回归评测来对冲。</span></li>
+        <li><span><b>数据合规与版权</b>——数据一旦训进权重就难撤回：隐私、版权、商业机密必须在入口把关。</span></li>
+        <li><span><b>成本与周期</b>——显卡、数据清洗、评测、重训运维都是持续成本；一次微调不等于一劳永逸。</span></li>
+        <li><span><b>通用 vs 专用</b>——越专用越偏离通才；多任务并存时，专用与通用模型分工比"一个全能"更稳。</span></li>
+      </ul>
+      <p class="tensions-warn"><b>三个常见误解：</b>① "微调能记住我的文档库"——不能，知识注入用 RAG，微调学的是行为与风格；② "微调后模型全面变强"——它只是在特定维度变好，可能牺牲通用性；③ "LoRA 便宜所以随便调"——真正的大头是数据准备与评测，训练只是中间一步。</p>
+    </div>
+  </div>
+</section>
+
+<section class="section section-yellow" id="faq">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">接下来继续了解</p>
+      <h2>常见问题</h2>
+    </div>
+    <div class="faq-list">
+      <details class="faq-item reveal">
+        <summary>微调和 RAG 怎么选？<span class="plus">+</span></summary>
+        <div class="faq-body">分工看目标：<b>要事实、要出处、要随时更新，选 RAG</b>——知识放外部，可溯源可替换；<b>要口吻、要格式、要稳定复现的行为，选微调</b>。OpenAI 官方文档也是这个口径：注入知识靠检索，微调负责行为。两者不互斥：RAG 兜住事实、微调统一风格，是生产系统的常见组合。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>需要多少数据？<span class="plus">+</span></summary>
+        <div class="faq-body">经验值：<b>数百到数千条高质量样本</b>通常足以改变行为。OpenAI 官方称最少 10 条就能起一个任务、50–100 条已能看到改善；复杂任务或开源模型可能需要更多。关键不在量：几百条口径统一的好样本，常胜过几千条原始聊天记录。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>大概多少钱？<span class="plus">+</span></summary>
+        <div class="faq-body">两条路线两种账：闭源 API 按<b>训练时长 + 调用</b>计费，还有托管版模型的调用溢价；开源 + LoRA 的主要成本是<b>显卡与你的时间</b>。价格随厂商与机型变动很快，本站不报具体数字——动手前以官方价格页为准，并记得把数据清洗与评测的人力算进去。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>会让模型变笨吗？<span class="plus">+</span></summary>
+        <div class="faq-body">可能会，这叫<b>灾难性遗忘</b>：在领域数据上训得太狠，通用能力（常识、推理、指令遵循）可能退步。对冲方法：训练数据里混入通用样本、控制训练轮数、微调完必跑通用回归评测——专才变强的前提是通才不掉线。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>多久做一次？<span class="plus">+</span></summary>
+        <div class="faq-body">不是一劳永逸：话术口径变了、底座模型升级了、评测发现漂移了，都要重训或增量微调。把<b>数据集 + 评测集 + 训练脚本</b>当代码管理，重训才便宜。也正因如此，能用提示词解决的别急着微调——先提示，后 RAG，最后才是微调。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>个人能玩吗？<span class="plus">+</span></summary>
+        <div class="faq-body">能，这正是 LoRA 时代的变化：<b>开放权重 + PEFT 等工具</b>，一张消费级显卡（或租来的算力）就能微调十亿级参数的模型练手，社区有大量教程与公开数据集。但先记住边界：它学的是行为，不是外挂硬盘——想给它加知识，请看姊妹篇 RAG。</div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="who">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">它适合谁</p>
+      <h2>四类读者，四个入口</h2>
+    </div>
+    <div class="aud-grid">
+      <div class="aud-card reveal">
+        <span class="a-who">For Teams</span>
+        <h3>企业与团队</h3>
+        <p>客服口径、品牌口吻、固定格式——当提示词管不住一致性时，把规范微调进权重，全员共用同一个"腔调"。</p>
+        <div class="start">起点 → 零件 ① SFT</div>
+      </div>
+      <div class="aud-card reveal">
+        <span class="a-who">For Devs</span>
+        <h3>开发者</h3>
+        <p>开放权重上用 LoRA + PEFT 训练自己的适配器；搭好数据管线与评测集，才是这项手艺的真功夫。</p>
+        <div class="start">起点 → 零件 ② LoRA</div>
+      </div>
+      <div class="aud-card reveal">
+        <span class="a-who">For PM</span>
+        <h3>产品与决策者</h3>
+        <p>先算账：数据从哪来、评测怎么定、多久重训一次——三问答不上来，就先留在提示词与 RAG 阶段。</p>
+        <div class="start">起点 → 页尾三问清单 ↓</div>
+      </div>
+      <div class="aud-card reveal">
+        <span class="a-who">For Curious</span>
+        <h3>个人玩家</h3>
+        <p>消费级显卡 + 开放权重就能练手：先微调一个小模型，亲身体感"原来行为是可以训练的"。</p>
+        <div class="start">起点 → 姊妹篇 RAG 对比 ↗</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="sources" style="padding-top:24px">
+  <div class="container">
+    <div class="sources-card reveal">
+      <p class="eyebrow">来源与延伸阅读</p>
+      <a class="source-item" href="https://arxiv.org/abs/2106.09685" target="_blank" rel="noopener">
+        <span class="s-no">01</span>
+        <span><span class="s-t">LoRA: Low-Rank Adaptation of Large Language Models · arXiv:2106.09685</span><br><span class="s-d">Hu et al., 2021 · 微软 · 冻结权重 + 低秩增量矩阵</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="https://arxiv.org/abs/2203.02155" target="_blank" rel="noopener">
+        <span class="s-no">02</span>
+        <span><span class="s-t">Training language models to follow instructions with human feedback · arXiv:2203.02155</span><br><span class="s-d">InstructGPT · OpenAI, 2022 · SFT + RM + RLHF 三段式</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="https://developers.openai.com/api/docs/guides/supervised-fine-tuning" target="_blank" rel="noopener">
+        <span class="s-no">03</span>
+        <span><span class="s-t">OpenAI Docs · Supervised Fine-Tuning 官方微调文档</span><br><span class="s-d">何时微调、数据量建议（50–100 条可见改善）与最佳实践</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="https://huggingface.co/docs/peft/en/index" target="_blank" rel="noopener">
+        <span class="s-no">04</span>
+        <span><span class="s-t">HuggingFace Docs · PEFT</span><br><span class="s-d">LoRA / QLoRA 等参数高效微调工具库</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="什么是RAG.html">
+        <span class="s-no">05</span>
+        <span><span class="s-t">姊妹篇 · 什么是 RAG？</span><br><span class="s-d">另一条定制路线：知识外挂而非行为训练（本系列）</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <p class="sources-note">本页内容整理自以上公开资料，更新于 2026 年 10 月。数据量等经验值因任务与模型而异，动手前以官方文档为准。</p>
+    </div>
+  </div>
+</section>
+
+<section class="section section-cta">
+  <div class="container cta-grid">
+    <div class="reveal">
+      <p class="eyebrow">开始动手</p>
+      <h2>该不该微调？三问</h2>
+      <p>三个问题都答"是"再开工——否则先回提示词与 RAG。</p>
+      <div class="cta-cmd">
+        <pre>该不该微调 · 三问自检
+<span class="t-cm">①</span> 是风格 / 格式 / 行为问题吗？
+<span class="t-cm">②</span> 提示词试到头了吗？
+<span class="t-cm">③</span> 有几百条高质量样本和评测集吗？
+<span class="t-cm">→</span> 三个都答"是"，才动手微调</pre>
+        <button class="copy-btn" data-copy="该不该微调 · 三问自检&#10;① 是风格 / 格式 / 行为问题吗？&#10;② 提示词试到头了吗？&#10;③ 有几百条高质量样本和评测集吗？&#10;→ 三个都答"是"，才动手微调">复制</button>
+      </div>
+    </div>
+    <div class="cta-art" aria-hidden="true">
+      <span class="q">?</span><span class="arrow">→</span><span class="v">✓</span>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <a class="brand" href="#top"><span class="brand-mark">&gt;_</span>微调是什么？</a>
+        <p>第 12 课：微调（Fine-tuning）入门——SFT、LoRA、RLHF/DPO 六个零件，以及"记事实用 RAG，学风格与技能才微调"的边界。</p>
+      </div>
+      <div class="foot-col">
+        <h4>本页导航</h4>
+        <ul>
+          <li><a href="#parts">拆解微调</a></li>
+          <li><a href="#timeline">编年史</a></li>
+          <li><a href="#makers">谁在微调</a></li>
+          <li><a href="#faq">常见问题</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h4>本系列</h4>
+        <ul>
+          <li><a href="index.html">🏠 知识地图（主页）</a></li>
+          <li><a href="什么是大模型.html">什么是大模型？</a></li>
+          <li><a href="什么是思维链.html">什么是思维链？</a></li>
+          <li><a href="什么是Prompt工程.html">什么是 Prompt 工程？</a></li>
+          <li><a href="什么是幻觉.html">什么是幻觉？</a></li>
+          <li><a href="什么是RAG.html">什么是 RAG？</a></li>
+          <li><a href="什么是Agent.html">什么是 AI Agent？</a></li>
+          <li><a href="什么是Skill.html">什么是 Skill？</a></li>
+          <li><a href="什么是MCP.html">什么是 MCP？</a></li>
+          <li><a href="什么是AgentHarness.html">什么是 Agent Harness？</a></li>
+          <li><a href="什么是DeepSeekHarness.html">什么是 DeepSeek Harness？</a></li>
+          <li><a href="什么是飞书CLI.html">什么是飞书 CLI？</a></li>
+          <li><a href="#top">什么是微调？（本页）</a></li>
+          <li><a href="什么是提示注入.html">什么是提示注入？</a></li>
+          <li><a href="什么是多模态.html">什么是多模态？</a></li>
+          <li><a href="什么是记忆.html">什么是记忆？</a></li>
+          <li><a href="什么是多智能体.html">什么是多智能体？</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>本页为独立学习指南，与所提及的各家公司没有关联 · 内容整理自公开资料</span>
+      <span>更新于 2026 年 10 月</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+document.documentElement.classList.add('js');
+
+var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function el(tag, cls, text){
+  var n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text !== undefined) n.textContent = text;
+  return n;
+}
+
+function typeCmd(span, text, done){
+  if (reduceMotion){ span.textContent = text; done && done(); return; }
+  var i = 0;
+  (function tick(){
+    span.textContent = text.slice(0, ++i);
+    if (i < text.length){ setTimeout(tick, text[i-1] === ' ' ? 34 : 18); }
+    else { done && done(); }
+  })();
+}
+
+function renderTerm(container, spec){
+  container.innerHTML = '';
+  var line = el('div','t-line');
+  var prompt = el('span','t-prompt', spec.prompt || '❯');
+  var cmd = el('span','t-cmd');
+  var cur = el('span','cursor');
+  line.appendChild(prompt); line.appendChild(cmd); line.appendChild(cur);
+  container.appendChild(line);
+  typeCmd(cmd, spec.cmd, function(){
+    cur.remove();
+    (spec.out || []).forEach(function(o){
+      container.appendChild(el('div','t-line ' + (o.cls || 't-out'), o.text));
+    });
+    if (spec.note) container.appendChild(el('div','t-note', spec.note));
+  });
+}
+
+var heroSteps = [
+  {
+    cmd: '"按我们的口径回复客户投诉"',
+    prompt: '你',
+    out: [
+      { text: '→ 语气对了，话术和格式总差一口气', cls: 't-out' },
+      { text: '✗ 每次都要在提示里塞整套规范', cls: 't-out' },
+      { text: '✗ 提示越写越长，输出越不稳定', cls: 't-dim' }
+    ],
+    note: '预训练模型是通才——什么都懂一点，但不像"你们的人"。'
+  },
+  {
+    cmd: 'fine-tune: support-bot-v2',
+    prompt: '⚙',
+    out: [
+      { text: '→ 几百条你们的优质对话，喂进去', cls: 't-out' },
+      { text: '→ 口吻统一 · 格式固定 · 术语准确', cls: 't-out' },
+      { text: '✓ 行为长进权重里，像"肌肉记忆"', cls: 't-ok' }
+    ],
+    note: '微调改的是行为，不是记忆——它没背下文档库，只是更像你们。'
+  },
+  {
+    cmd: 'prompt / RAG / fine-tune 怎么选',
+    out: [
+      { text: '① 改口吻与格式 → 先把提示词写好', cls: 't-out' },
+      { text: '② 引用事实知识 → RAG（可更新 · 有出处）', cls: 't-out' },
+      { text: '③ 稳定复现行为 → 微调', cls: 't-out' },
+      { text: '✓ 三者不互斥，生产系统常叠加使用', cls: 't-ok' }
+    ],
+    note: '官方共识：知识靠检索注入，风格与行为才靠训练。'
+  }
+];
+
+var heroTerm = document.getElementById('hero-term');
+var heroBtns = document.querySelectorAll('.terminal-steps button');
+var heroStopped = false;
+
+function showHeroStep(i){
+  heroBtns.forEach(function(b, j){
+    b.classList.toggle('active', i === j);
+    b.setAttribute('aria-selected', i === j ? 'true' : 'false');
+  });
+  renderTerm(heroTerm, heroSteps[i]);
+}
+heroBtns.forEach(function(b){
+  b.addEventListener('click', function(){
+    heroStopped = true;
+    showHeroStep(+b.dataset.step);
+  });
+});
+showHeroStep(0);
+(function autoAdvance(){
+  if (reduceMotion) return;
+  var idx = 0;
+  setInterval(function(){
+    if (heroStopped) return;
+    idx = (idx + 1) % heroSteps.length;
+    showHeroStep(idx);
+  }, 7000);
+})();
+
+var parts = [
+  {
+    name: 'SFT 监督微调', desc: '教它照着示范做',
+    spec: {
+      cmd: 'dataset: {"prompt":…, "ideal":…} × 500',
+      out: [
+        { text: '→ 每条样本 = 输入 + 你心中的标准答案', cls: 't-out' },
+        { text: '→ 模型逐条模仿，行为写进权重', cls: 't-out' },
+        { text: '✓ InstructGPT 三段式的第一步', cls: 't-ok' }
+      ],
+      note: '监督微调是主力形态：你给示范，它学"怎么答"。'
+    }
+  },
+  {
+    name: 'LoRA 低秩适配', desc: '冻结原权重，只训零头',
+    spec: {
+      cmd: 'ΔW = B·A （秩 r 远小于原维度）',
+      out: [
+        { text: '→ 原权重整体冻结：不更新、不弄丢', cls: 't-out' },
+        { text: '→ 只训练注入的低秩矩阵 A、B', cls: 't-out' },
+        { text: '✓ 可训练参数常 <1%，显存骤降', cls: 't-ok' }
+      ],
+      note: '2021 年微软论文（arXiv:2106.09685）：微调从"机房"走进"桌面"。'
+    }
+  },
+  {
+    name: 'RLHF 与 DPO', desc: '用人类偏好校准行为',
+    spec: {
+      cmd: 'SFT → 奖励模型 → 强化学习',
+      out: [
+        { text: '① SFT：教它照示范做', cls: 't-out' },
+        { text: '② RM：学人类觉得哪个回答更好', cls: 't-out' },
+        { text: '③ PPO：朝高奖励方向优化', cls: 't-out' },
+        { text: '✓ DPO：跳过奖励模型的简化路线', cls: 't-ok' }
+      ],
+      note: 'InstructGPT（arXiv:2203.02155）三段式——ChatGPT 的同款路线。'
+    }
+  },
+  {
+    name: '全参 vs 高效微调', desc: '动全部权重，还是只动零头',
+    spec: {
+      cmd: 'full fine-tune vs LoRA / QLoRA',
+      out: [
+        { text: '→ 全参：效果上限高，算力与存储都贵', cls: 't-out' },
+        { text: '→ LoRA/QLoRA：小成本，多数场景够用', cls: 't-out' },
+        { text: '✓ HuggingFace PEFT 一行配置切换', cls: 't-ok' }
+      ],
+      note: '工程惯例：先 LoRA 打基线，确有缺口再考虑全参。'
+    }
+  },
+  {
+    name: '数据准备', desc: '最关键的一步：几百条好样本',
+    spec: {
+      cmd: '500 条好样本 > 5000 条原始记录',
+      out: [
+        { text: '→ 覆盖真实场景、边界与禁忌问法', cls: 't-out' },
+        { text: '→ 统一口径：格式 · 术语 · 免责话术', cls: 't-out' },
+        { text: '✗ 未清洗的原始记录直接喂 = 灾难', cls: 't-dim' }
+      ],
+      note: '官方经验：50–100 条已可见改善；数百到数千条常足以改变行为。'
+    }
+  },
+  {
+    name: '评测与过拟合', desc: '微调完必须跑回归',
+    spec: {
+      cmd: 'eval: 领域测试集 + 通用回归集',
+      out: [
+        { text: '→ 领域任务：到底变好了多少？', cls: 't-out' },
+        { text: '→ 通用基准：退步了没有？（灾难性遗忘）', cls: 't-out' },
+        { text: '✗ 只看几条样例的手感 = 过拟合陷阱', cls: 't-dim' }
+      ],
+      note: '专才上线前，先确认通才没掉线——评测集要和数据集一起建。'
+    }
+  }
+];
+
+var partsList = document.getElementById('parts-list');
+var partsTerm = document.getElementById('parts-term');
+parts.forEach(function(t, i){
+  var b = el('button', 'part-btn' + (i === 0 ? ' active' : ''));
+  b.type = 'button';
+  b.setAttribute('role', 'tab');
+  b.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
+  b.appendChild(el('span', 'num', String(i + 1)));
+  var wrap = el('span');
+  wrap.appendChild(el('span', 't-name', t.name));
+  wrap.appendChild(document.createElement('br'));
+  wrap.appendChild(el('span', 't-desc', t.desc));
+  b.appendChild(wrap);
+  b.addEventListener('click', function(){
+    partsList.querySelectorAll('.part-btn').forEach(function(x){
+      x.classList.remove('active'); x.setAttribute('aria-selected', 'false');
+    });
+    b.classList.add('active'); b.setAttribute('aria-selected', 'true');
+    renderTerm(partsTerm, t.spec);
+  });
+  partsList.appendChild(b);
+});
+renderTerm(partsTerm, parts[0].spec);
+
+document.querySelectorAll('.copy-btn').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    var text = btn.dataset.copy || '';
+    var done = function(){
+      var old = btn.textContent;
+      btn.textContent = '已复制 ✓';
+      setTimeout(function(){ btn.textContent = old; }, 1600);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done, function(){ fallbackCopy(text); done(); });
+    } else { fallbackCopy(text); done(); }
+  });
+});
+function fallbackCopy(text){
+  var ta = document.createElement('textarea');
+  ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); } catch(e){}
+  ta.remove();
+}
+
+var revealEls = document.querySelectorAll('.reveal');
+if ('IntersectionObserver' in window && !reduceMotion){
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if (en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); }
+    });
+  }, { threshold: 0.12 });
+  revealEls.forEach(function(n){ io.observe(n); });
+} else {
+  revealEls.forEach(function(n){ n.classList.add('in'); });
+}
+</script>
+</body>
+</html>
