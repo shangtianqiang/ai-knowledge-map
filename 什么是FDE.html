@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#FBFAF7">
+<title>FDE 是什么？ | 前沿部署工程师 · AI 时代最火的岗位之一</title>
+<meta name="description" content="一页讲清楚 FDE（Forward Deployed Engineer，前沿部署工程师）：源自 Palantir、在 AI 落地潮中爆火的角色——驻场工程师、业务翻译官、AI 落地最后一公里的人。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2317151F'/%3E%3Ctext x='16' y='22' font-size='15' font-family='monospace' fill='%23F9A8D4' text-anchor='middle'%3E%3E_%3C/text%3E%3C/svg%3E">
+<style>
+  :root{
+    --cream:#FBFAF7;
+    --ink:#17151F;
+    --paper:#FFFFFF;
+    --yellow:#FFD166;
+    --pink:#DB2777;
+    --pink-light:#F9A8D4;
+    --muted:rgba(23,21,31,.64);
+    --faint:rgba(23,21,31,.45);
+    --line:rgba(23,21,31,.14);
+    --line-strong:rgba(23,21,31,.85);
+    --cream-muted:rgba(251,250,247,.68);
+    --cream-faint:rgba(251,250,247,.42);
+    --cream-line:rgba(251,250,247,.16);
+    --mono:"SF Mono",ui-monospace,"JetBrains Mono",Menlo,Consolas,"Liberation Mono",monospace;
+    --shadow-card:0 1px 2px rgba(23,21,31,.05),0 10px 28px -14px rgba(23,21,31,.18);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    *,*::before,*::after{animation:none!important;transition:none!important}
+  }
+  body{
+    font-family:"PingFang SC","Microsoft YaHei","Inter Variable",system-ui,sans-serif;
+    background:var(--cream);
+    color:var(--ink);
+    font-size:16px;
+    line-height:1.75;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+  }
+  ::selection{background:var(--pink);color:#fff}
+  a{color:inherit}
+  .container{max-width:1128px;margin:0 auto;padding:0 24px}
+
+  html.js .reveal{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s ease}
+  html.js .reveal.in{opacity:1;transform:none}
+  @media (prefers-reduced-motion:reduce){html.js .reveal{opacity:1;transform:none}}
+  @media print{html.js .reveal{opacity:1!important;transform:none!important}}
+
+  .nav{
+    position:sticky;top:0;z-index:50;
+    background:rgba(251,250,247,.92);
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  .nav-inner{display:flex;align-items:center;justify-content:space-between;height:60px;gap:16px}
+  .brand{display:flex;align-items:center;gap:10px;text-decoration:none;font-weight:800;font-size:15px;letter-spacing:.01em}
+  .brand-mark{
+    width:26px;height:26px;background:var(--ink);color:var(--pink-light);
+    font-family:var(--mono);font-size:12px;font-weight:700;line-height:26px;text-align:center;
+    border-radius:5px;flex:none;
+  }
+  .nav-links{display:flex;align-items:center;gap:22px;list-style:none}
+  .nav-links a{text-decoration:none;font-size:13.5px;font-weight:500;color:var(--muted);transition:color .15s}
+  .nav-links a:hover{color:var(--ink)}
+  .nav-links a.nav-cta{
+    color:var(--ink);font-weight:700;border:1.5px solid var(--line-strong);
+    padding:6px 14px;border-radius:0;
+  }
+  .nav-links a.nav-cta:hover{background:var(--ink);color:var(--cream)}
+  @media (max-width:720px){.nav-links li.hide-sm{display:none}}
+
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:13px 26px;border-radius:0;border:1.5px solid transparent;
+    font-family:inherit;font-size:15px;font-weight:700;letter-spacing:.02em;
+    text-decoration:none;cursor:pointer;transition:transform .15s ease,background .15s ease,color .15s ease,box-shadow .15s ease;
+  }
+  .btn:active{transform:translateY(1px)}
+  .btn-primary{background:var(--pink);color:#fff}
+  .btn-primary:hover{box-shadow:0 6px 0 -2px rgba(23,21,31,.9)}
+  .btn-ghost{border-color:var(--line-strong);color:var(--ink);background:transparent}
+  .btn-ghost:hover{background:var(--ink);color:var(--cream)}
+  .btn-sm{padding:9px 18px;font-size:13.5px}
+
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:9px;
+    font-size:12.5px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;
+  }
+  .eyebrow::before{content:"";width:9px;height:9px;background:currentColor;flex:none}
+  h1{font-size:clamp(42px,6.6vw,74px);line-height:1.08;font-weight:800;letter-spacing:-.015em}
+  h2{font-size:clamp(30px,4.4vw,44px);line-height:1.18;font-weight:800;letter-spacing:-.01em}
+  h3{font-size:20px;font-weight:800;line-height:1.4}
+  .lead{font-size:clamp(17px,2vw,19.5px);line-height:1.8}
+
+  .hero{padding:76px 0 88px}
+  .hero-grid{display:grid;grid-template-columns:1.02fr .98fr;gap:56px;align-items:center}
+  @media (max-width:980px){.hero-grid{grid-template-columns:1fr;gap:44px}}
+  .hero .eyebrow{color:var(--ink);margin-bottom:26px}
+  .hero h1{margin-bottom:24px}
+  .hero .lead{color:var(--ink);margin-bottom:16px;max-width:34em}
+  .hero .example{color:var(--muted);font-size:15.5px;max-width:36em;margin-bottom:32px}
+  .hero .example b{color:var(--ink);font-weight:700}
+  .hero-actions{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:30px}
+  .hero-meta{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{
+    font-size:12px;font-weight:600;color:var(--muted);
+    border:1px solid var(--line);padding:5px 11px;border-radius:999px;
+    display:inline-flex;align-items:center;gap:6px;background:var(--paper);
+  }
+  .chip .dot{width:6px;height:6px;border-radius:50%;background:var(--pink)}
+
+  .terminal{
+    background:var(--ink);border-radius:14px;overflow:hidden;
+    box-shadow:0 2px 4px rgba(23,21,31,.12),0 30px 60px -22px rgba(23,21,31,.45);
+    border:1px solid rgba(23,21,31,.9);
+  }
+  .terminal-bar{
+    display:flex;align-items:center;gap:7px;
+    padding:13px 16px;border-bottom:1px solid var(--cream-line);
+  }
+  .terminal-bar i{width:11px;height:11px;border-radius:50%;background:rgba(251,250,247,.22)}
+  .terminal-bar i:first-child{background:#FF5F57}
+  .terminal-bar i:nth-child(2){background:#FEBC2E}
+  .terminal-bar i:nth-child(3){background:#28C840}
+  .terminal-bar .terminal-title{
+    margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--cream-faint);letter-spacing:.08em;
+  }
+  .terminal-steps{display:flex;gap:6px;padding:12px 14px 0;flex-wrap:wrap}
+  .terminal-steps button{
+    font-family:inherit;font-size:12.5px;font-weight:700;letter-spacing:.04em;
+    background:transparent;color:var(--cream-faint);
+    border:1px solid var(--cream-line);border-radius:999px;
+    padding:5px 13px;cursor:pointer;transition:all .18s;
+  }
+  .terminal-steps button:hover{color:var(--cream);border-color:var(--cream-faint)}
+  .terminal-steps button.active{background:var(--pink);border-color:var(--pink);color:#fff}
+  .terminal-body{padding:18px 20px 22px;min-height:238px;font-family:var(--mono);font-size:13.5px;line-height:1.9}
+  .t-line{white-space:pre-wrap;word-break:break-all}
+  .t-prompt{color:var(--pink-light);font-weight:700;margin-right:9px}
+  .t-cmd{color:var(--cream)}
+  .t-out{color:var(--cream-faint)}
+  .t-ok{color:#3EE8C6}
+  .t-dim{color:rgba(251,250,247,.35)}
+  .t-user{color:var(--yellow)}
+  .t-note{color:var(--cream-faint);font-family:"PingFang SC","Microsoft YaHei",sans-serif;font-size:12px;margin-top:12px;padding-top:10px;border-top:1px dashed var(--cream-line)}
+  .cursor{display:inline-block;width:8px;height:15px;background:var(--pink-light);vertical-align:-2px;animation:blink 1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+  @media (prefers-reduced-motion:reduce){.cursor{animation:none}}
+
+  .section{padding:96px 0}
+  .section-head{max-width:680px;margin-bottom:52px}
+  .section-head .eyebrow{margin-bottom:20px}
+  .section-head p{color:var(--muted);margin-top:16px;font-size:16.5px}
+
+  .section-yellow{background:var(--yellow)}
+  .section-yellow .section-head p{color:rgba(23,21,31,.72)}
+
+  .section-dark{background:var(--ink);color:var(--cream)}
+  .section-dark .eyebrow{color:var(--pink-light)}
+
+  .parts-layout{display:grid;grid-template-columns:.9fr 1.1fr;gap:36px;align-items:start}
+  @media (max-width:900px){.parts-layout{grid-template-columns:1fr}}
+  .parts-list{display:flex;flex-direction:column;gap:10px}
+  .part-btn{
+    display:flex;align-items:center;gap:14px;text-align:left;width:100%;
+    background:var(--paper);border:1.5px solid transparent;border-radius:10px;
+    padding:15px 18px;font-family:inherit;cursor:pointer;
+    transition:transform .16s ease,box-shadow .16s ease,border-color .16s;
+    box-shadow:var(--shadow-card);
+  }
+  .part-btn:hover{transform:translateY(-2px)}
+  .part-btn .num{
+    font-family:var(--mono);font-size:12px;font-weight:700;color:var(--muted);
+    width:30px;height:30px;border:1.5px solid var(--line);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;flex:none;transition:all .16s;
+  }
+  .part-btn .t-name{font-size:15.5px;font-weight:700}
+  .part-btn .t-desc{font-size:13px;color:var(--muted);margin-top:2px}
+  .part-btn.active{border-color:var(--ink);transform:translateY(-2px)}
+  .part-btn.active .num{background:var(--ink);border-color:var(--ink);color:var(--pink-light)}
+  .parts-terminal{position:sticky;top:84px}
+  @media (max-width:900px){.parts-terminal{position:static}}
+
+  .layers{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(23,21,31,.22);border:1.5px solid var(--ink);border-radius:12px;overflow:hidden;margin-top:56px}
+  @media (max-width:820px){.layers{grid-template-columns:1fr}}
+  .layer{background:var(--yellow);padding:26px 26px 24px}
+  .layer .lv{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.14em;color:rgba(23,21,31,.55);display:block;margin-bottom:12px}
+  .layer h3{font-size:17px;margin-bottom:8px}
+  .layer p{font-size:13.5px;color:rgba(23,21,31,.72);line-height:1.7}
+  .layer code{font-family:var(--mono);font-size:12.5px;background:rgba(23,21,31,.1);padding:2px 6px;border-radius:4px}
+
+  .cards-3{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+  @media (max-width:900px){.cards-3{grid-template-columns:1fr}}
+  .card{
+    background:var(--paper);border:1px solid var(--line);border-radius:12px;
+    padding:30px 28px 26px;box-shadow:var(--shadow-card);
+    display:flex;flex-direction:column;
+  }
+  .card .tag-row{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:20px}
+  .tag{
+    font-size:10.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+    padding:4px 9px;border:1px solid var(--line);border-radius:4px;color:var(--muted);
+  }
+  .tag.tag-accent{background:var(--ink);color:var(--pink-light);border-color:var(--ink)}
+  .card h3{margin-bottom:12px}
+  .card p{font-size:14.5px;color:var(--muted);flex:1}
+  .card p b{color:var(--ink)}
+  .card .seed{
+    margin-top:20px;padding-top:16px;border-top:1px dashed var(--line);
+    font-family:var(--mono);font-size:12px;color:var(--faint);word-break:break-all;
+  }
+  .card .seed b{color:var(--ink);font-weight:700}
+  .cards-note{margin-top:30px;font-size:13px;color:var(--faint);display:flex;align-items:center;gap:8px}
+  .cards-note::before{content:"※";color:var(--muted)}
+
+  .statement{max-width:820px}
+  .statement h2{margin-bottom:28px}
+  .statement .quote{
+    font-size:clamp(17px,2vw,19px);line-height:1.85;color:var(--cream-muted);
+    border-left:3px solid var(--pink-light);padding-left:22px;margin-bottom:52px;max-width:36em;
+  }
+  .statement .quote b{color:var(--cream)}
+  .statement .quote code{font-family:var(--mono);font-size:14px;background:rgba(251,250,247,.12);padding:2px 7px;border-radius:4px;color:var(--cream)}
+  .pillars{display:grid;grid-template-columns:repeat(3,1fr);gap:34px}
+  @media (max-width:820px){.pillars{grid-template-columns:1fr}}
+  .pillar .p-no{font-family:var(--mono);font-size:13px;color:var(--pink-light);font-weight:700;letter-spacing:.12em;display:block;margin-bottom:14px}
+  .pillar h3{color:var(--cream);margin-bottom:10px;font-size:17.5px}
+  .pillar p{font-size:14.5px;color:var(--cream-muted);line-height:1.8}
+  .pillar code{font-family:var(--mono);font-size:12.5px;background:rgba(251,250,247,.12);padding:2px 6px;border-radius:4px;color:var(--cream)}
+
+  .facts{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  @media (max-width:820px){.facts{grid-template-columns:1fr}}
+  .fact{background:var(--paper);padding:26px 26px 22px}
+  .fact .f-k{font-size:12px;font-weight:800;letter-spacing:.14em;color:var(--faint);text-transform:uppercase;display:block;margin-bottom:10px}
+  .fact .f-v{font-size:15.5px;font-weight:600;line-height:1.65}
+  .fact .f-v small{display:block;font-weight:400;font-size:13px;color:var(--muted);margin-top:4px}
+
+  .deep-block{margin-top:76px}
+  .deep-block>h3{margin-bottom:26px;font-size:clamp(21px,2.6vw,25px)}
+
+  .timeline{list-style:none;border-left:2px solid var(--ink);margin-left:6px}
+  .timeline li{position:relative;padding:0 0 26px 28px}
+  .timeline li:last-child{padding-bottom:0}
+  .timeline li::before{
+    content:"";position:absolute;left:-7px;top:9px;width:12px;height:12px;
+    background:var(--pink);border:2px solid var(--ink);border-radius:50%;
+  }
+  .timeline .tl-year{font-family:var(--mono);font-size:12.5px;font-weight:700;letter-spacing:.1em;color:var(--faint);display:block;margin-bottom:4px}
+  .timeline .tl-t{font-weight:800;font-size:16.5px}
+  .timeline p{font-size:14px;color:var(--muted);margin-top:4px;max-width:40em}
+  .timeline code{font-family:var(--mono);font-size:12.5px;background:rgba(23,21,31,.07);padding:2px 6px;border-radius:4px;color:var(--ink)}
+
+  .tensions{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:14px 28px}
+  @media (max-width:820px){.tensions{grid-template-columns:1fr}}
+  .tensions li{
+    display:flex;gap:12px;font-size:14.5px;color:var(--muted);line-height:1.7;
+    padding:14px 0;border-bottom:1px solid var(--line);
+  }
+  .tensions li b{color:var(--ink)}
+  .tensions li::before{content:"◆";color:var(--pink);font-weight:800;flex:none;font-size:12px;padding-top:5px}
+  .tensions-warn{
+    margin-top:26px;padding:18px 22px;border-radius:10px;
+    background:rgba(219,39,119,.08);border:1px solid rgba(219,39,119,.4);
+    font-size:14px;color:var(--muted);
+  }
+  .tensions-warn b{color:var(--ink)}
+
+  .faq-list{max-width:780px}
+  .faq-item{background:var(--paper);border:1.5px solid var(--ink);border-radius:10px;margin-bottom:14px;overflow:hidden;box-shadow:var(--shadow-card)}
+  .faq-item summary{
+    list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:18px;
+    padding:20px 24px;font-weight:700;font-size:16px;
+  }
+  .faq-item summary::-webkit-details-marker{display:none}
+  .faq-item summary .plus{
+    flex:none;width:26px;height:26px;border:1.5px solid var(--ink);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:400;font-size:16px;line-height:1;transition:transform .2s ease,background .2s,color .2s;
+  }
+  .faq-item[open] summary .plus{background:var(--ink);color:var(--yellow);transform:rotate(45deg)}
+  .faq-item .faq-body{padding:0 24px 22px;font-size:14.5px;color:var(--muted);line-height:1.85}
+  .faq-item .faq-body b{color:var(--ink)}
+  .faq-item .faq-body code{font-family:var(--mono);font-size:12.5px;background:rgba(23,21,31,.07);padding:2px 6px;border-radius:4px;color:var(--ink)}
+
+  .aud-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+  @media (max-width:1000px){.aud-grid{grid-template-columns:1fr 1fr}}
+  @media (max-width:640px){.aud-grid{grid-template-columns:1fr}}
+  .aud-card{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:26px 24px;box-shadow:var(--shadow-card);display:flex;flex-direction:column}
+  .aud-card .a-who{font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin-bottom:12px}
+  .aud-card h3{font-size:16.5px;margin-bottom:10px}
+  .aud-card p{font-size:13.5px;color:var(--muted);flex:1;line-height:1.75}
+  .aud-card .start{
+    margin-top:16px;font-family:var(--mono);font-size:11.5px;color:#fff;
+    background:var(--pink);padding:7px 11px;border-radius:6px;word-break:break-all;
+  }
+
+  .sources-card{background:var(--ink);color:var(--cream);border-radius:16px;padding:52px 54px;max-width:860px}
+  @media (max-width:720px){.sources-card{padding:36px 26px}}
+  .sources-card .eyebrow{color:var(--yellow);margin-bottom:28px}
+  .source-item{display:flex;gap:18px;padding:16px 0;border-bottom:1px solid var(--cream-line);text-decoration:none;transition:padding-left .18s}
+  .source-item:hover{padding-left:8px}
+  .source-item:last-of-type{border-bottom:none}
+  .source-item .s-no{font-family:var(--mono);font-size:12.5px;color:var(--pink-light);font-weight:700;flex:none;padding-top:2px}
+  .source-item .s-t{font-weight:700;font-size:15.5px;color:var(--cream)}
+  .source-item .s-d{font-size:13px;color:var(--cream-faint);margin-top:3px}
+  .source-item .s-arrow{margin-left:auto;color:var(--cream-faint);flex:none;padding-top:2px}
+  .sources-note{margin-top:26px;font-size:12.5px;color:var(--cream-faint)}
+
+  .section-cta{background:var(--pink)}
+  .cta-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:48px;align-items:center}
+  @media (max-width:820px){.cta-grid{grid-template-columns:1fr}}
+  .section-cta .eyebrow{color:rgba(255,255,255,.72);margin-bottom:22px}
+  .section-cta h2{margin-bottom:18px;color:#fff}
+  .section-cta p{color:rgba(255,255,255,.85);max-width:30em;margin-bottom:30px}
+  .cta-cmd{
+    display:flex;align-items:flex-start;gap:12px;background:var(--ink);border-radius:10px;
+    padding:16px 18px;font-family:var(--mono);font-size:13px;line-height:1.9;color:var(--cream);
+    max-width:540px;box-shadow:0 14px 30px -12px rgba(23,21,31,.5);
+  }
+  .cta-cmd pre{font-family:inherit;white-space:pre-wrap;word-break:break-all;flex:1;margin:0}
+  .cta-cmd .t-cm{color:var(--pink-light)}
+  .copy-btn{
+    flex:none;font-family:inherit;font-size:11px;font-weight:700;letter-spacing:.08em;
+    background:transparent;color:var(--cream-faint);border:1px solid var(--cream-line);
+    border-radius:4px;padding:4px 9px;cursor:pointer;transition:all .15s;
+  }
+  .cta-cmd .copy-btn{color:var(--cream-muted);border-color:var(--cream-line)}
+  .cta-cmd .copy-btn:hover{color:var(--yellow);border-color:var(--yellow)}
+  .cta-art{display:flex;align-items:center;justify-content:center;gap:22px;font-family:var(--mono);font-weight:700}
+  .cta-art .q,.cta-art .v{font-size:clamp(56px,7vw,88px);line-height:1}
+  .cta-art .q{color:rgba(255,255,255,.32)}
+  .cta-art .v{color:#fff}
+  .cta-art .arrow{font-size:34px;color:rgba(255,255,255,.55)}
+  @media (max-width:820px){.cta-art{display:none}}
+
+  footer{background:var(--ink);color:var(--cream);padding:64px 0 36px}
+  .foot-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:44px;margin-bottom:52px}
+  @media (max-width:820px){.foot-grid{grid-template-columns:1fr}}
+  .foot-brand .brand{color:var(--cream);margin-bottom:16px}
+  .foot-brand .brand-mark{background:var(--pink);color:#fff}
+  .foot-brand p{font-size:13.5px;color:var(--cream-faint);max-width:26em}
+  .foot-col h4{font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--cream-faint);margin-bottom:18px}
+  .foot-col ul{list-style:none}
+  .foot-col li{margin-bottom:11px}
+  .foot-col a{font-size:14px;color:var(--cream-muted);text-decoration:none;transition:color .15s}
+  .foot-col a:hover{color:var(--cream)}
+  .foot-bottom{border-top:1px solid var(--cream-line);padding-top:26px;font-size:12.5px;color:var(--cream-faint);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+  [id]{scroll-margin-top:76px}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="container nav-inner">
+    <a class="brand" href="#top"><span class="brand-mark">&gt;_</span>FDE 是什么？</a>
+    <ul class="nav-links">
+      <li class="hide-sm"><a href="#parts">角色拆解</a></li>
+      <li class="hide-sm"><a href="#timeline">编年史</a></li>
+      <li class="hide-sm"><a href="#makers">谁在招</a></li>
+      <li class="hide-sm"><a href="#faq">常见问题</a></li>
+      <li><a class="nav-cta" href="index.html">🏠 知识地图</a></li>
+    </ul>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="container hero-grid">
+    <div>
+      <p class="eyebrow">给想在 AI 浪潮里找到位置的人的实用指南</p>
+      <h1>FDE<br>是什么？</h1>
+      <p class="lead">FDE（Forward Deployed Engineer，前沿部署工程师）是把自己"部署"到客户身边的工程师：驻场搞清真实业务，把 AI 产品配置、集成、调通，直到真正产生价值。这个角色源自 Palantir，在 AI 落地潮中重新爆火——一句话：<strong>离客户最近的工程师，也是离价值最近的。</strong></p>
+      <p class="example">AI 工具卖进一家公司，卡住的往往不是模型，而是"数据散在七个系统、流程没有标准答案"——FDE 驻场几周，打通数据、配置工作流、培训用户，让产品从<b>"买回来了"变成"用起来了"</b>。2025 年 1–9 月，FDE 岗位招聘量暴增超 800%。</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#parts">看角色拆解 ↓</a>
+        <a class="btn btn-ghost" href="index.html">🏠 知识地图</a>
+      </div>
+      <div class="hero-meta">
+        <span class="chip"><i class="dot"></i>源自 Palantir</span>
+        <span class="chip"><i class="dot"></i>2025 · 招聘 +800%</span>
+        <span class="chip"><i class="dot"></i>一半工程师 · 一半顾问</span>
+        <span class="chip"><i class="dot"></i>AI 落地最后一公里</span>
+      </div>
+    </div>
+
+    <div class="terminal" aria-label="FDE 工作方式演示">
+      <div class="terminal-bar"><i></i><i></i><i></i><span class="terminal-title">fde — 对比演示</span></div>
+      <div class="terminal-steps" role="tablist" aria-label="演示步骤">
+        <button type="button" role="tab" data-step="0" aria-selected="true">① 传统交付</button>
+        <button type="button" role="tab" data-step="1" aria-selected="false">② FDE 模式</button>
+        <button type="button" role="tab" data-step="2" aria-selected="false">③ AI 时代</button>
+      </div>
+      <div class="terminal-body" id="hero-term" aria-live="polite"></div>
+    </div>
+  </div>
+</header>
+
+<section class="section section-yellow" id="parts">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">角色拆解</p>
+      <h2>六个侧面，看清这个角色</h2>
+      <p>FDE 不是新工种那么简单——它是"产品未定型时代"的交付方式。点击左侧每个侧面，右侧看它具体指什么。</p>
+    </div>
+
+    <div class="parts-layout">
+      <div class="parts-list" id="parts-list" role="tablist" aria-label="角色侧面"></div>
+      <div class="parts-terminal">
+        <div class="terminal">
+          <div class="terminal-bar"><i></i><i></i><i></i><span class="terminal-title">fde — 内部视角</span></div>
+          <div class="terminal-body" id="parts-term" aria-live="polite"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="layers reveal">
+      <div class="layer">
+        <span class="lv">2000s · 起源</span>
+        <h3>Palantir 首创</h3>
+        <p>概念源于军事用语，由 Palantir 引入商业世界：为政府与情报机构这类高度定制的客户，把工程师派到现场做方案。</p>
+      </div>
+      <div class="layer">
+        <span class="lv">2025 · 复兴</span>
+        <h3>AI 落地潮引爆</h3>
+        <p>模型能力猛涨、企业却"买了用不起来"——最后一公里缺口把 FDE 推上风口：OpenAI、Anthropic 等大厂都在组建团队。</p>
+      </div>
+      <div class="layer">
+        <span class="lv">2026 · 品类化</span>
+        <h3>从岗位到家族</h3>
+        <p>角色正在细分：架构 FDE、AI FDE、安全 FDE、基础设施 FDE——"驻场+定制"成为 AI 公司标配打法。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="makers">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">谁在招</p>
+      <h2>三类玩家，一个方向</h2>
+      <p>以下均来自公开报道与官方招聘页；薪酬为海外岗位公开数字，国内行情差异较大，以实际招聘为准。</p>
+    </div>
+    <div class="cards-3">
+      <article class="card reveal">
+        <div class="tag-row"><span class="tag tag-accent">起源者</span><span class="tag">Palantir</span></div>
+        <h3>Palantir：模式开创者</h3>
+        <p>为美国政府与情报机构服务起家，客户需求高度定制，于是把工程师派到现场"驻场造方案"——FDE 从此成为其核心组织模式，被业界研究多年。</p>
+        <div class="seed">关键词 → <b>驻场 · 定制 · Delta 工程师</b></div>
+      </article>
+      <article class="card reveal">
+        <div class="tag-row"><span class="tag tag-accent">AI 大厂</span><span class="tag">OpenAI · Anthropic 等</span></div>
+        <h3>AI 公司竞建团队</h3>
+        <p>OpenAI 的 FDE 招聘页写明：驻场服务最战略性的企业与政府客户，公开底薪约 18.5 万–30 万美元 + 股票、最多 50% 出差；Anthropic、AWS、Google 也在竞建 FDE 团队（CNBC 报道）。</p>
+        <div class="seed">关键词 → <b>企业落地 · 驻场 · 高薪高出差</b></div>
+      </article>
+      <article class="card reveal">
+        <div class="tag-row"><span class="tag tag-accent">中文生态</span><span class="tag">岗位升温</span></div>
+        <h3>中文世界的 FDE 热</h3>
+        <p>中文招聘与讨论明显升温，出现了开源的《FDE 从零入门指南》（范冰维护）等系统介绍——一个角色火不火，看有没有人写攻略。</p>
+        <div class="seed">关键词 → <b>入门指南 · 岗位讨论 · 报道增多</b></div>
+      </article>
+    </div>
+    <p class="cards-note reveal">薪酬与招聘动态变化快 · 以官方招聘页为准 · 第三方统计数据本站未复测。</p>
+  </div>
+</section>
+
+<section class="section section-dark" id="why">
+  <div class="container">
+    <div class="statement reveal">
+      <p class="eyebrow">为什么重要</p>
+      <h2>AI 不缺会造的人，<br>缺的是让它落地的人。</h2>
+      <p class="quote">模型能力每季度上一个台阶，企业侧的瓶颈却越来越清楚：<b>买得到模型，用不上能力</b>。数据散落、流程各异、组织惯性——这些"最后一公里"问题没有现成答案，只能有人到现场去解。FDE 火爆的本质，是市场在为"把 AI 变成业务结果"这件事重新定价。</p>
+      <div class="pillars">
+        <div class="pillar reveal">
+          <span class="p-no">01</span>
+          <h3>最后一公里决定价值</h3>
+          <p>客户不为"模型很强"付费，只为"我的业务变好了"付费——中间那段路，就是 FDE 的战场。</p>
+        </div>
+        <div class="pillar reveal">
+          <span class="p-no">02</span>
+          <h3>驻场是最好的反馈回路</h3>
+          <p>FDE 每天看到的真实痛点，是产品路线图最贵的输入——很多功能就是这样从客户现场长回产品里的。</p>
+        </div>
+        <div class="pillar reveal">
+          <span class="p-no">03</span>
+          <h3>人是信任的界面</h3>
+          <p>企业把数据与流程交给你，靠的不是 API 文档，是一个懂技术也懂他们业务的、坐在旁边的人。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="what">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">依据与事实</p>
+      <h2>先说清楚这个角色</h2>
+    </div>
+    <div class="facts reveal">
+      <div class="fact"><span class="f-k">全称</span><div class="f-v">Forward Deployed Engineer<small>前沿部署工程师——把自己"部署"到客户前线</small></div></div>
+      <div class="fact"><span class="f-k">起源</span><div class="f-v">军事用语 → Palantir 商业化<small>约二十年前，为政府与情报机构定制交付而生</small></div></div>
+      <div class="fact"><span class="f-k">职责</span><div class="f-v">调研 · 配置 · 集成 · 培训 · 反馈<small>解决方案工程 + 咨询 + 产品工程的混合体</small></div></div>
+      <div class="fact"><span class="f-k">热度</span><div class="f-v">2025 年 1–9 月招聘 +800%<small>据 The New Stack 报道的行业统计（本站未复测）</small></div></div>
+      <div class="fact"><span class="f-k">薪酬例证</span><div class="f-v">OpenAI 公开底薪 $185K–$300K<small>海外岗位 + 股票 + 最多 50% 出差（官方招聘页）</small></div></div>
+      <div class="fact"><span class="f-k">家族化</span><div class="f-v">架构 / AI / 安全 / 基础设施 FDE<small>2025 年起从单一岗位演变为角色家族</small></div></div>
+    </div>
+
+    <div class="deep-block reveal" id="timeline">
+      <h3>一个角色的编年史</h3>
+      <ul class="timeline">
+        <li>
+          <span class="tl-year">2000s</span>
+          <span class="tl-t">Palantir 首创</span>
+          <p>服务美国政府与情报机构：需求高度定制、现场极其复杂，工程师必须驻场——FDE 模式由此诞生。</p>
+        </li>
+        <li>
+          <span class="tl-year">2010s</span>
+          <span class="tl-t">模式被验证与研究</span>
+          <p>Palantir 把 FDE 做成组织核心（据报道其"Delta"工程师一度多于普通开发者）；模式被业界反复研究。</p>
+        </li>
+        <li>
+          <span class="tl-year">2023–2024</span>
+          <span class="tl-t">AI 落地潮起</span>
+          <p>企业大量购入模型与 Agent 产品，却发现"买了用不起来"——模型能力与业务价值之间的缺口暴露。</p>
+        </li>
+        <li>
+          <span class="tl-year">2025</span>
+          <span class="tl-t">复兴元年</span>
+          <p>1–9 月 FDE 招聘暴增超 800%；OpenAI、Anthropic、AWS、Google 竞建团队（CNBC、The New Stack 报道）。</p>
+        </li>
+        <li>
+          <span class="tl-year">2026</span>
+          <span class="tl-t">岗位家族化</span>
+          <p>细分为架构、AI、安全、基础设施等方向的 FDE；中文生态出现系统的入门指南，讨论持续升温。</p>
+        </li>
+      </ul>
+    </div>
+
+    <div class="deep-block reveal">
+      <h3>角色张力与常见误解</h3>
+      <ul class="tensions">
+        <li><span><b>定制 vs 规模化</b>——每个客户都不一样，FDE 做深定制天然难复制；出路是把共性沉淀回产品。</span></li>
+        <li><span><b>人 vs 产品</b>——靠人堆交付 vs 把现场经验产品化，两家公司的路线之争。</span></li>
+        <li><span><b>深入 vs 边界</b>——驻场容易被无穷需求吞没；定义清楚"什么不做"是核心技能。</span></li>
+        <li><span><b>技术深度 vs 业务广度</b>——不需要每个系统都精通，但要能在陌生领域快速搭出能用的东西。</span></li>
+        <li><span><b>高薪 vs 高强度</b>——薪酬显著高于同级工程岗（海外公开数字），代价是出差与现场压力。</span></li>
+        <li><span><b>会被 AI 取代吗</b>——短期内恰恰相反：AI 越强，能被部署的场景越复杂；长期部分搭建工作会被 Agent 接管，角色会演化而非消失。</span></li>
+      </ul>
+      <p class="tensions-warn"><b>三个常见误解：</b>① "FDE = 外包驻场程序员"——不是：FDE 面向业务价值、常直接对话客户决策层，是配置与产品决策的参与者；② "过渡性岗位，吃青春饭"——它被普遍视为高势能路径：通向产品负责人、解决方案负责人乃至创业（现场看过的需求是最好的创业雷达）；③ "AI 进步后 FDE 会消失"——目前趋势相反：模型每强一档，可落地的场景就多一批，缺口在变大而不是变小。</p>
+    </div>
+  </div>
+</section>
+
+<section class="section section-yellow" id="faq">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">接下来继续了解</p>
+      <h2>常见问题</h2>
+    </div>
+    <div class="faq-list">
+      <details class="faq-item reveal">
+        <summary>和解决方案工程师 / 售前有什么区别？<span class="plus">+</span></summary>
+        <div class="faq-body">边界在淡化，粗略区分：售前偏"讲清楚能做什么"，解决方案工程师偏"搭出演示"，FDE 则要<b>驻场把生产环境真正跑通并对结果负责</b>——调研、集成、定制、培训、反馈一竿子到底，工程比重和决策权都更高。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>什么背景的人适合？<span class="plus">+</span></summary>
+        <div class="faq-body">三条都占最好：<b>工程能力</b>（能独立搭东西）、<b>业务嗅觉</b>（快速理解一个陌生行业）、<b>沟通意愿</b>（享受和客户泡在一起）。常见来源是全栈/数据工程师转型，咨询与技术实施背景的人也很多。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>待遇怎么样？<span class="plus">+</span></summary>
+        <div class="faq-body">海外公开数字很有竞争力：OpenAI 的 FDE 职位公开底薪约 $185K–$300K + 股票（官方招聘页）。国内行情差异大且变化快，看具体公司——总体规律：因为稀缺，普遍高于同级纯工程岗。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>怎么入行？<span class="plus">+</span></summary>
+        <div class="faq-body">路径一：在现公司争取驻场与客户项目，积累"把东西用起来"的案例；路径二：直接投 AI 公司的 FDE/解决方案岗，用"我搭过什么、解决过什么业务问题"的作品说话。中文世界已有开源的《FDE 从零入门指南》可以系统了解（见来源卡）。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>哪些公司在招？<span class="plus">+</span></summary>
+        <div class="faq-body">公开报道与招聘页可见：OpenAI、Anthropic、AWS、Google 等在竞建 FDE 团队（CNBC、The New Stack），Palantir 是传统大户；国内 AI 公司与数据平台也在跟进——搜"Forward Deployed / 前沿部署 / 解决方案工程师"都能看到。</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary>AI 会不会取代这个岗位？<span class="plus">+</span></summary>
+        <div class="faq-body">分两层：搭建类工作（写集成、配环境）会越来越多交给 Agent；但<b>搞清真实问题、建立信任、对结果负责</b>这些"人的部分"短期反而更值钱。合理预期：角色演化——FDE 从亲自搭，变成带着 Agent 搭。</div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="who">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">它适合谁</p>
+      <h2>四类读者，四个入口</h2>
+    </div>
+    <div class="aud-grid">
+      <div class="aud-card reveal">
+        <span class="a-who">For Engineers</span>
+        <h3>工程师</h3>
+        <p>厌倦了离业务太远？FDE 让你的代码直接换算成客户的业务结果。</p>
+        <div class="start">起点 → 角色拆解 ③ 技能画像</div>
+      </div>
+      <div class="aud-card reveal">
+        <span class="a-who">For Grads</span>
+        <h3>应届生</h3>
+        <p>起点即前线：三年驻场攒下的行业认知，是坐在办公室里十年也得不到的。</p>
+        <div class="start">起点 → FAQ 怎么入行</div>
+      </div>
+      <div class="aud-card reveal">
+        <span class="a-who">For Founders</span>
+        <h3>创业者</h3>
+        <p>FDE 是最好的需求雷达：现场看过的痛点，就是下一个产品的路标。</p>
+        <div class="start">起点 → 张力 ② 人 vs 产品</div>
+      </div>
+      <div class="aud-card reveal">
+        <span class="a-who">For Buyers</span>
+        <h3>企业采购方</h3>
+        <p>买 AI 产品时问一句"你们 FDE 怎么配"——答案往往预示落地成败。</p>
+        <div class="start">起点 → 理念区 三支柱</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="sources" style="padding-top:24px">
+  <div class="container">
+    <div class="sources-card reveal">
+      <p class="eyebrow">来源与延伸阅读</p>
+      <a class="source-item" href="https://thenewstack.io/forward-deployed-engineers-ai" target="_blank" rel="noopener">
+        <span class="s-no">01</span>
+        <span><span class="s-t">The New Stack · Why OpenAI and Anthropic are hiring FDEs</span><br><span class="s-d">2025 年 1–9 月招聘 +800% 的行业报道（2026-05）</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="https://openai.com/careers/" target="_blank" rel="noopener">
+        <span class="s-no">02</span>
+        <span><span class="s-t">OpenAI 招聘页 · Forward Deployed Engineer</span><br><span class="s-d">驻场战略客户、公开薪酬与出差比例的一手职位说明</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="https://baike.baidu.com/item/%E5%89%8D%E6%B2%BF%E9%83%A8%E7%BD%B2%E5%B7%A5%E7%A8%8B%E5%B8%88(FDE)/67210101" target="_blank" rel="noopener">
+        <span class="s-no">03</span>
+        <span><span class="s-t">百度百科 · 前沿部署工程师（FDE）词条</span><br><span class="s-d">军事渊源与 Palantir 商业化的中文定义</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="https://github.com/xdash/FDE-the-Guidance-Book-of-Forward-Deployed-Engineer" target="_blank" rel="noopener">
+        <span class="s-no">04</span>
+        <span><span class="s-t">GitHub · FDE 从零入门指南（开源）</span><br><span class="s-d">范冰维护的中文系统入门资料</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <a class="source-item" href="什么是AI工具选择.html">
+        <span class="s-no">05</span>
+        <span><span class="s-t">姊妹篇 · AI 工具怎么选？</span><br><span class="s-d">选完工具，还得有人把它用起来——那就是 FDE（本系列）</span></span>
+        <span class="s-arrow">↗</span>
+      </a>
+      <p class="sources-note">本页内容整理自以上公开资料，更新于 2026 年 10 月。招聘与薪酬动态变化快，以官方招聘页为准；第三方统计已标注"本站未复测"。</p>
+    </div>
+  </div>
+</section>
+
+<section class="section section-cta">
+  <div class="container cta-grid">
+    <div class="reveal">
+      <p class="eyebrow">开始动手</p>
+      <h2>三问自测：你适合做 FDE 吗</h2>
+      <p>投简历前，诚实地回答这三个问题——两个以上"是"再说。</p>
+      <div class="cta-cmd">
+        <pre><span class="t-cm">①</span> 我享受和客户泡在一起找问题吗？
+<span class="t-cm">②</span> 我能在没文档的烂摊子里搭出方案吗？
+<span class="t-cm">③</span> 我能把技术讲给业务的人听懂吗？</pre>
+        <button class="copy-btn" data-copy="① 我享受和客户泡在一起找问题吗？&#10;② 我能在没文档的烂摊子里搭出方案吗？&#10;③ 我能把技术讲给业务的人听懂吗？">复制</button>
+      </div>
+    </div>
+    <div class="cta-art" aria-hidden="true">
+      <span class="q">?</span><span class="arrow">→</span><span class="v">✓</span>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <a class="brand" href="#top"><span class="brand-mark">&gt;_</span>FDE 是什么？</a>
+        <p>第 18 课：前沿部署工程师——源自 Palantir、在 AI 落地潮中爆火的角色：离客户最近的工程师，也是离价值最近的。</p>
+      </div>
+      <div class="foot-col">
+        <h4>本页导航</h4>
+        <ul>
+          <li><a href="#parts">角色拆解</a></li>
+          <li><a href="#timeline">编年史</a></li>
+          <li><a href="#makers">谁在招</a></li>
+          <li><a href="#faq">常见问题</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h4>本系列</h4>
+        <ul>
+          <li><a href="index.html">🏠 知识地图（主页）</a></li>
+          <li><a href="什么是大模型.html">什么是大模型？</a></li>
+          <li><a href="什么是思维链.html">什么是思维链？</a></li>
+          <li><a href="什么是Prompt工程.html">什么是 Prompt 工程？</a></li>
+          <li><a href="什么是幻觉.html">什么是幻觉？</a></li>
+          <li><a href="什么是RAG.html">什么是 RAG？</a></li>
+          <li><a href="什么是Agent.html">什么是 AI Agent？</a></li>
+          <li><a href="什么是Skill.html">什么是 Skill？</a></li>
+          <li><a href="什么是MCP.html">什么是 MCP？</a></li>
+          <li><a href="什么是AgentHarness.html">什么是 Agent Harness？</a></li>
+          <li><a href="什么是DeepSeekHarness.html">什么是 DeepSeek Harness？</a></li>
+          <li><a href="什么是飞书CLI.html">什么是飞书 CLI？</a></li>
+          <li><a href="什么是微调.html">什么是微调？</a></li>
+          <li><a href="什么是提示注入.html">什么是提示注入？</a></li>
+          <li><a href="什么是多模态.html">什么是多模态？</a></li>
+          <li><a href="什么是记忆.html">什么是记忆？</a></li>
+          <li><a href="什么是多智能体.html">什么是多智能体？</a></li>
+          <li><a href="什么是AI工具选择.html">AI 工具怎么选？</a></li>
+          <li><a href="#top">什么是 FDE？（本页）</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>本页为独立学习指南，与所提及的各家公司没有关联 · 内容整理自公开资料</span>
+      <span>更新于 2026 年 10 月</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+document.documentElement.classList.add('js');
+
+var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function el(tag, cls, text){
+  var n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text !== undefined) n.textContent = text;
+  return n;
+}
+
+function typeCmd(span, text, done){
+  if (reduceMotion){ span.textContent = text; done && done(); return; }
+  var i = 0;
+  (function tick(){
+    span.textContent = text.slice(0, ++i);
+    if (i < text.length){ setTimeout(tick, text[i-1] === ' ' ? 34 : 18); }
+    else { done && done(); }
+  })();
+}
+
+function renderTerm(container, spec){
+  container.innerHTML = '';
+  var line = el('div','t-line');
+  var prompt = el('span','t-prompt', spec.prompt || '❯');
+  var cmd = el('span','t-cmd');
+  var cur = el('span','cursor');
+  line.appendChild(prompt); line.appendChild(cmd); line.appendChild(cur);
+  container.appendChild(line);
+  typeCmd(cmd, spec.cmd, function(){
+    cur.remove();
+    (spec.out || []).forEach(function(o){
+      container.appendChild(el('div','t-line ' + (o.cls || 't-out'), o.text));
+    });
+    if (spec.note) container.appendChild(el('div','t-note', spec.note));
+  });
+}
+
+var heroSteps = [
+  {
+    cmd: '交付 = 培训视频 + 工单系统',
+    prompt: '传统',
+    out: [
+      { text: '→ 销售卖完 → 实施团队照手册配', cls: 't-out' },
+      { text: '→ 客户："系统是上线了，但没人用"', cls: 't-out' },
+      { text: '✗ 差距：产品能力 ≠ 业务结果', cls: 't-dim' }
+    ],
+    note: '标准交付假设客户需求标准——但 AI 落地恰恰最不标准。'
+  },
+  {
+    cmd: 'FDE 到现场：调研→打通→培训',
+    prompt: 'FDE',
+    out: [
+      { text: '→ 第 1 周：跟岗调研，画出真实流程', cls: 't-out' },
+      { text: '→ 第 2-3 周：打通数据 · 配置工作流', cls: 't-out' },
+      { text: '→ 第 4 周：培训用户，回收反馈给产品', cls: 't-out' },
+      { text: '✓ 从"买回来了"到"用起来了"', cls: 't-ok' }
+    ],
+    note: 'Palantir 模式：把工程师部署到客户前线，而不是把问题搬回公司。'
+  },
+  {
+    cmd: 'AI 时代：FDE + Agent 搭档',
+    prompt: '2026',
+    out: [
+      { text: '→ 搭建类工作越来越多交给 Agent', cls: 't-out' },
+      { text: '→ 人负责：搞清问题 · 建立信任 · 对结果负责', cls: 't-out' },
+      { text: '✓ 缺口在变大：2025 招聘 +800%', cls: 't-ok' }
+    ],
+    note: '模型每强一档，可落地场景就多一批——"懂现场的人"更值钱了。'
+  }
+];
+
+var heroTerm = document.getElementById('hero-term');
+var heroBtns = document.querySelectorAll('.terminal-steps button');
+var heroStopped = false;
+
+function showHeroStep(i){
+  heroBtns.forEach(function(b, j){
+    b.classList.toggle('active', i === j);
+    b.setAttribute('aria-selected', i === j ? 'true' : 'false');
+  });
+  renderTerm(heroTerm, heroSteps[i]);
+}
+heroBtns.forEach(function(b){
+  b.addEventListener('click', function(){
+    heroStopped = true;
+    showHeroStep(+b.dataset.step);
+  });
+});
+showHeroStep(0);
+(function autoAdvance(){
+  if (reduceMotion) return;
+  var idx = 0;
+  setInterval(function(){
+    if (heroStopped) return;
+    idx = (idx + 1) % heroSteps.length;
+    showHeroStep(idx);
+  }, 7000);
+})();
+
+var parts = [
+  {
+    name: '起源', desc: 'Palantir 的发明',
+    spec: {
+      cmd: 'forward deployed ← 军事用语',
+      out: [
+        { text: '→ Palantir 服务政府/情报机构：需求高度定制', cls: 't-out' },
+        { text: '→ 答案不是写文档，是把工程师派过去', cls: 't-out' },
+        { text: '✓ 驻场做方案，模式由此诞生', cls: 't-ok' }
+      ],
+      note: '约二十年前商业化——AI 公司今天是在复用这套被验证过的打法。'
+    }
+  },
+  {
+    name: '职责', desc: '调研 → 集成 → 培训 → 反馈',
+    spec: {
+      cmd: 'discover → integrate → adopt → feedback',
+      out: [
+        { text: '→ 调研：跟岗摸清真实流程与数据', cls: 't-out' },
+        { text: '→ 集成：打通系统，配置与定制方案', cls: 't-out' },
+        { text: '→ 培训：让用户真的用起来', cls: 't-out' },
+        { text: '→ 反馈：把现场痛点带回产品', cls: 't-ok' }
+      ],
+      note: '闭环最后一环最值钱：FDE 是产品与客户之间的双向翻译官。'
+    }
+  },
+  {
+    name: '技能画像', desc: '一半工程师，一半顾问',
+    spec: {
+      cmd: 'engineering × business × trust',
+      out: [
+        { text: '→ 工程：能独立搭出能跑的东西', cls: 't-out' },
+        { text: '→ 业务：快速听懂陌生行业', cls: 't-out' },
+        { text: '→ 沟通：对工程师讲业务，对业务讲技术', cls: 't-out' },
+        { text: '✓ 三角都及格，比单项满分更稀缺', cls: 't-ok' }
+      ],
+      note: '官方招聘也这么写：解决方案工程 + 咨询 + 产品工程的混合体。'
+    }
+  },
+  {
+    name: '与近亲角色的区别', desc: 'vs 售前 / 实施 / 架构师 / 咨询',
+    spec: {
+      cmd: 'FDE vs SE vs 咨询顾问',
+      out: [
+        { text: '售前：讲清楚能做什么', cls: 't-out' },
+        { text: '实施/解决方案：搭出演示', cls: 't-out' },
+        { text: 'FDE：驻场跑通生产环境，对结果负责', cls: 't-ok' },
+        { text: '咨询：给建议；FDE：给能用的系统', cls: 't-out' }
+      ],
+      note: '边界在淡化——判断标准就一条：离业务结果的距离。'
+    }
+  },
+  {
+    name: 'AI 时代为何爆火', desc: '最后一公里缺口',
+    spec: {
+      cmd: '模型能力 ↑↑ → 落地缺口 ↑',
+      out: [
+        { text: '→ 买模型容易，用起来难：数据散 · 流程异', cls: 't-out' },
+        { text: '→ 2025 招聘 +800%（行业统计，未复测）', cls: 't-out' },
+        { text: '→ OpenAI/Anthropic/AWS/Google 竞建团队', cls: 't-ok' }
+      ],
+      note: '市场在为"把 AI 变成业务结果"重新定价——这就是 FDE 的行情。'
+    }
+  },
+  {
+    name: '职业路径', desc: '高势能出口',
+    spec: {
+      cmd: 'FDE → 产品 / 解决方案 / 创业',
+      out: [
+        { text: '→ 出口一：产品负责人（现场=需求雷达）', cls: 't-out' },
+        { text: '→ 出口二：解决方案/客户成功负责人', cls: 't-out' },
+        { text: '→ 出口三：创业（看过的痛点即机会）', cls: 't-out' },
+        { text: '✓ 不是过渡岗，是加速度岗', cls: 't-ok' }
+      ],
+      note: '三年驻场攒下的行业认知，坐在办公室里十年也攒不出来。'
+    }
+  }
+];
+
+var partsList = document.getElementById('parts-list');
+var partsTerm = document.getElementById('parts-term');
+parts.forEach(function(t, i){
+  var b = el('button', 'part-btn' + (i === 0 ? ' active' : ''));
+  b.type = 'button';
+  b.setAttribute('role', 'tab');
+  b.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
+  b.appendChild(el('span', 'num', String(i + 1)));
+  var wrap = el('span');
+  wrap.appendChild(el('span', 't-name', t.name));
+  wrap.appendChild(document.createElement('br'));
+  wrap.appendChild(el('span', 't-desc', t.desc));
+  b.appendChild(wrap);
+  b.addEventListener('click', function(){
+    partsList.querySelectorAll('.part-btn').forEach(function(x){
+      x.classList.remove('active'); x.setAttribute('aria-selected', 'false');
+    });
+    b.classList.add('active'); b.setAttribute('aria-selected', 'true');
+    renderTerm(partsTerm, t.spec);
+  });
+  partsList.appendChild(b);
+});
+renderTerm(partsTerm, parts[0].spec);
+
+document.querySelectorAll('.copy-btn').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    var text = btn.dataset.copy || '';
+    var done = function(){
+      var old = btn.textContent;
+      btn.textContent = '已复制 ✓';
+      setTimeout(function(){ btn.textContent = old; }, 1600);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done, function(){ fallbackCopy(text); done(); });
+    } else { fallbackCopy(text); done(); }
+  });
+});
+function fallbackCopy(text){
+  var ta = document.createElement('textarea');
+  ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); } catch(e){}
+  ta.remove();
+}
+
+var revealEls = document.querySelectorAll('.reveal');
+if ('IntersectionObserver' in window && !reduceMotion){
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if (en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); }
+    });
+  }, { threshold: 0.12 });
+  revealEls.forEach(function(n){ io.observe(n); });
+} else {
+  revealEls.forEach(function(n){ n.classList.add('in'); });
+}
+</script>
+</body>
+</html>
