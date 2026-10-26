@@ -230,18 +230,43 @@
   .about-grid code{font-family:var(--mono);font-size:12.5px;background:rgba(251,250,247,.12);padding:2px 6px;border-radius:4px;color:var(--cream)}
 
   /* ---------- footer ---------- */
-  footer{background:var(--ink);color:var(--cream);padding:64px 0 36px}
-  .foot-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:44px;margin-bottom:52px}
-  @media (max-width:820px){.foot-grid{grid-template-columns:1fr}}
-  .foot-brand .brand{color:var(--cream);margin-bottom:16px}
+  footer{background:var(--ink);color:var(--cream);padding:46px 0 30px}
+  .foot-top{display:flex;align-items:center;justify-content:space-between;gap:30px;flex-wrap:wrap;padding-bottom:26px;border-bottom:1px solid var(--cream-line);margin-bottom:26px}
+  .foot-brand{max-width:330px}
+  .foot-brand .brand{color:var(--cream);margin-bottom:10px}
   .foot-brand .brand-mark{background:var(--yellow);color:var(--ink)}
-  .foot-brand p{font-size:13.5px;color:var(--cream-faint);max-width:26em}
-  .foot-col h4{font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--cream-faint);margin-bottom:18px}
-  .foot-col ul{list-style:none}
-  .foot-col li{margin-bottom:11px}
-  .foot-col a{font-size:14px;color:var(--cream-muted);text-decoration:none;transition:color .15s}
-  .foot-col a:hover{color:var(--cream)}
-  .foot-bottom{border-top:1px solid var(--cream-line);padding-top:26px;font-size:12.5px;color:var(--cream-faint);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .foot-brand p{font-size:13px;color:var(--cream-faint);margin:0}
+  .foot-right{display:flex;align-items:center;gap:18px;flex-wrap:wrap;justify-content:flex-end}
+  .foot-nav{display:flex;flex-wrap:wrap;gap:7px 18px}
+  .foot-nav a{font-size:13.5px;color:var(--cream-muted);text-decoration:none;transition:color .15s}
+  .foot-nav a:hover{color:var(--cream)}
+  .foot-sep{width:1px;height:20px;background:var(--cream-line);flex-shrink:0}
+  .foot-icons{display:flex;gap:9px}
+  .ficon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;text-decoration:none;transition:transform .15s,filter .15s}
+  .ficon:hover{transform:translateY(-2px);filter:brightness(1.12)}
+  .ficon svg{width:19px;height:19px;display:block}
+  .ficon-github{background:#fff}.ficon-github svg path{fill:#1f2328}
+  .ficon-wechat{background:#07c160}.ficon-zhihu{background:#0066ff}
+  .ficon-toutiao{background:#f04142}.ficon-xhs{background:#ff2442}.ficon-csdn{background:#e80018}
+  .ficon-wechat svg path{fill:#fff}
+  .foot-series{margin-bottom:26px}
+  .foot-series h4{font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--cream-faint);margin:0 0 14px}
+  .foot-series ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(6,1fr);gap:11px 20px}
+  .foot-series a{font-size:13px;color:var(--cream-muted);text-decoration:none;transition:color .15s;white-space:nowrap}
+  .foot-series a:hover{color:var(--cream)}
+  @media (max-width:980px){.foot-series ul{grid-template-columns:repeat(4,1fr)}}
+  @media (max-width:600px){.foot-series ul{grid-template-columns:repeat(3,1fr)}.foot-sep{display:none}}
+  @media (max-width:420px){.foot-series ul{grid-template-columns:repeat(2,1fr)}}
+  .foot-bottom{padding-top:20px;font-size:12px;color:var(--cream-faint);display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
+  .qr-modal{position:fixed;inset:0;z-index:999;display:none;align-items:center;justify-content:center;padding:20px}
+  .qr-modal.open{display:flex}
+  .qr-mask{position:absolute;inset:0;background:rgba(0,0,0,.72)}
+  .qr-box{position:relative;background:#fff;border-radius:16px;padding:26px 26px 22px;text-align:center;max-width:320px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+  .qr-box img{width:220px;height:220px;display:block;margin:0 auto 16px;border-radius:8px}
+  .qr-box p{margin:0;color:#1f2328;font-size:14.5px;font-weight:600}
+  .qr-box p small{display:block;font-weight:400;color:#888;font-size:12px;margin-top:4px}
+  .qr-close{position:absolute;top:8px;right:10px;width:32px;height:32px;border:0;background:transparent;font-size:24px;line-height:1;color:#999;cursor:pointer;border-radius:50%}
+  .qr-close:hover{color:#333;background:rgba(0,0,0,.06)}
 
   [id]{scroll-margin-top:76px}
 </style>
@@ -542,42 +567,50 @@
 <!-- ================= FOOTER ================= -->
 <footer>
   <div class="container">
-    <div class="foot-grid">
+    <div class="foot-top">
       <div class="foot-brand">
         <a class="brand" href="#top"><span class="brand-mark">&gt;_</span>AI 大模型知识地图</a>
         <p>十一个专题、四十多个术语，从"怎么问"到"怎么动手"——给想用好 AI 的人的一份中文地图。</p>
       </div>
-      <div class="foot-col">
-        <h4>本页导航</h4>
-        <ul>
-          <li><a href="#path">学习路径</a></li>
-          <li><a href="#glossary">术语速查</a></li>
-          <li><a href="#about">关于本站</a></li>
-        </ul>
+      <div class="foot-right">
+        <nav class="foot-nav">
+          <a href="#path">学习路径</a>
+          <a href="#glossary">术语速查</a>
+          <a href="#about">关于本站</a>
+        </nav>
+        <span class="foot-sep"></span>
+        <div class="foot-icons">
+          <a class="ficon ficon-github" href="https://github.com/shangtianqiang/ai-knowledge-map" target="_blank" rel="noopener" title="GitHub 项目主页" aria-label="GitHub 项目主页"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg></a>
+          <span class="ficon ficon-wechat" id="wechatBtn" role="button" tabindex="0" title="微信公众号「大话数据分析」" aria-label="微信公众号"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8.691 2.188C3.891 2.188 0 5.476 0 9.53c0 2.212 1.17 4.203 3.002 5.55a.59.59 0 0 1 .213.665l-.39 1.48c-.019.07-.048.141-.048.213 0 .163.13.295.29.295a.326.326 0 0 0 .167-.054l1.903-1.114a.864.864 0 0 1 .717-.098 10.16 10.16 0 0 0 2.837.403c.276 0 .543-.027.811-.05-.857-2.578.157-4.972 1.932-6.446 1.703-1.415 3.882-1.98 5.853-1.838-.576-3.583-4.196-6.348-8.596-6.348zM5.785 5.991c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178A1.17 1.17 0 0 1 4.623 7.17c0-.651.52-1.18 1.162-1.18zm5.813 0c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178 1.17 1.17 0 0 1-1.162-1.178c0-.651.52-1.18 1.162-1.18zm5.34 2.867c-1.797-.052-3.746.512-5.28 1.786-1.72 1.428-2.687 3.72-1.78 6.22.942 2.453 3.666 4.229 6.884 4.229.826 0 1.622-.12 2.361-.336a.722.722 0 0 1 .598.082l1.584.926a.272.272 0 0 0 .14.047c.134 0 .24-.111.24-.247 0-.06-.023-.12-.038-.177l-.327-1.233a.582.582 0 0 1-.023-.156.49.49 0 0 1 .201-.398C23.024 18.48 24 16.82 24 14.98c0-3.21-2.931-5.837-6.656-6.088V8.89c-.135-.01-.27-.027-.407-.03zm-2.53 3.274c.535 0 .969.44.969.982a.976.976 0 0 1-.969.983.976.976 0 0 1-.969-.983c0-.542.434-.982.97-.982zm4.844 0c.535 0 .969.44.969.982a.976.976 0 0 1-.969.983.976.976 0 0 1-.969-.983c0-.542.434-.982.969-.982z" fill="#fff"/></svg></span>
+          <a class="ficon ficon-zhihu" href="https://www.zhihu.com/people/xin-cheng-jiu-meng-98" target="_blank" rel="noopener" title="知乎" aria-label="知乎"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><text x="12" y="17" text-anchor="middle" font-family="sans-serif" font-size="15" font-weight="bold" fill="#fff">知</text></svg></a>
+          <a class="ficon ficon-toutiao" href="https://www.toutiao.com/c/user/token/CidmU1H4ss1W9QdaCOWs2Onqcj3vTwYopWsYCs9hGsj-WqFWg9CgFI0aSQo8AAAAAAAAAAAAAFEQGlSQiqvJvjnsBF5iBWCfTSj1Nw4EJGYflBPWTmfcT3GaSQ1thL6-PoANL-4DalXsEKr1nw4Yw8WD6gQiAQORP_Mq/?source=mine_profile&log_from=487b6e835859a_1793002012983" target="_blank" rel="noopener" title="今日头条" aria-label="今日头条"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><text x="12" y="17" text-anchor="middle" font-family="sans-serif" font-size="15" font-weight="bold" fill="#fff">头</text></svg></a>
+          <a class="ficon ficon-xhs" href="https://www.xiaohongshu.com/user/profile/609ff36a0000000001007360?m_source=mengfanwetab" target="_blank" rel="noopener" title="小红书" aria-label="小红书"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><text x="12" y="17" text-anchor="middle" font-family="sans-serif" font-size="15" font-weight="bold" fill="#fff">红</text></svg></a>
+          <a class="ficon ficon-csdn" href="https://blog.csdn.net/weixin_42684533?type=blog" target="_blank" rel="noopener" title="CSDN" aria-label="CSDN"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4.693 13.638c-.497.568-1.363.63-1.712.63-.648 0-1.144-.164-1.474-.488-.313-.307-.478-.76-.489-1.346-.025-1.358.744-2.762 2.074-2.762.635 0 1.124.455 1.311.644a.337.337 0 0 0 .282.099.38.38 0 0 0 .241-.159c.068-.087.135-.237.138-.401s-.057-.344-.243-.49a2.642 2.642 0 0 0-1.668-.591c-.819 0-1.627.376-2.218 1.033-.621.691-.953 1.63-.935 2.646.015.815.282 1.5.773 1.982.528.518 1.3.791 2.235.791 1.097 0 1.776-.325 2.154-.597a.584.584 0 0 0 .24-.456.702.702 0 0 0-.208-.497c-.23-.248-.448-.101-.503-.037ZM9.663 11.488a7.471 7.471 0 0 0-.698-.248c-.157-.048-.309-.091-.45-.131-.922-.26-1.027-.5-1.017-.68.022-.363.515-.853 1.352-.792.607.045 1.015.509 1.205.781.149.214.371.135.434.095a.602.602 0 0 0 .309-.514.626.626 0 0 0-.209-.488 2.654 2.654 0 0 0-3.347-.273c-.456.323-.744.772-.77 1.202-.064 1.061 1.015 1.366 1.803 1.588.214.061.429.127.667.202 1.14.357 1.173.717 1.092 1.267-.082.556-.696.834-1.685.761-1.029-.076-1.464-.61-1.612-.901-.05-.098-.205-.248-.413-.156-.514.229-.473.731-.26.993.339.416 1.15 1.035 2.667 1.035 1.734 0 2.255-.875 2.378-1.64.092-.572-.022-1.028-.348-1.396-.236-.267-.592-.495-1.101-.706ZM16.44 9.323c-.598-.431-1.393-.61-2.36-.532-.712.058-1.274.243-1.335.263l-.006.002a.437.437 0 0 0-.297.379l-.47 5.201a.337.337 0 0 0 .247.35l.072.02.066.018.086.021a7.914 7.914 0 0 0 1.64.183c.972 0 1.765-.23 2.36-.684.764-.583 1.141-1.5 1.118-2.725-.021-1.135-.398-1.974-1.121-2.495Zm-.662 4.461c-.836.639-2.09.562-2.677.481a.128.128 0 0 1-.109-.137l.397-4.248a.113.113 0 0 1 .086-.1c.999-.241 1.777-.168 2.312.218.189.137.348.331.471.568.176.339.277.765.286 1.234.017.916-.24 1.583-.765 1.984ZM23.967 10.41a1.92 1.92 0 0 0-.432-.919c-.399-.465-1.029-.689-1.848-.689-.734 0-1.372.228-1.947.799.007-.086.019-.159.018-.223s-.017-.116-.066-.163c-.048-.045-.077-.067-.127-.077-.05-.01-.122-.008-.256-.006a.587.587 0 0 0-.589.54s-.325 3.874-.428 5.165a.308.308 0 0 0 .073.228.36.36 0 0 0 .26.131h.387a.224.224 0 0 0 .226-.205l.273-2.929.014-.147a1.902 1.902 0 0 1 .082-.412c.014-.045.03-.092.047-.14.245-.694.803-1.72 1.971-1.694.84.018 1.449.455 1.385 1.114-.101 1.034-.266 3.1-.358 4.14-.019.209.182.273.252.273h.304a.442.442 0 0 0 .444-.404s.185-2.127.294-3.352l.048-.532a1.959 1.959 0 0 0-.026-.5Z" fill="#fff"/></svg></a>
+        </div>
       </div>
-      <div class="foot-col">
-        <h4>本系列</h4>
-        <ul>
-          <li><a href="什么是大模型.html">01 · 什么是大模型？</a></li>
-          <li><a href="什么是思维链.html">02 · 什么是思维链？</a></li>
-          <li><a href="什么是Prompt工程.html">03 · 什么是 Prompt 工程？</a></li>
-          <li><a href="什么是幻觉.html">04 · 什么是幻觉？</a></li>
-          <li><a href="什么是RAG.html">05 · 什么是 RAG？</a></li>
-          <li><a href="什么是Agent.html">06 · 什么是 AI Agent？</a></li>
-          <li><a href="什么是Skill.html">07 · 什么是 Skill？</a></li>
-          <li><a href="什么是MCP.html">08 · 什么是 MCP？</a></li>
-          <li><a href="什么是AgentHarness.html">09 · 什么是 Agent Harness？</a></li>
-          <li><a href="什么是DeepSeekHarness.html">10 · 什么是 DeepSeek Harness？</a></li>
-          <li><a href="什么是飞书CLI.html">11 · 什么是飞书 CLI？</a></li>
-          <li><a href="什么是微调.html">12 · 什么是微调？</a></li>
-          <li><a href="什么是提示注入.html">13 · 什么是提示注入？</a></li>
-          <li><a href="什么是多模态.html">14 · 什么是多模态？</a></li>
-          <li><a href="什么是记忆.html">15 · 什么是记忆？</a></li>
-          <li><a href="什么是多智能体.html">16 · 什么是多智能体？</a></li>
-          <li><a href="什么是AI工具选择.html">17 · AI 工具怎么选？</a></li>
-          <li><a href="什么是FDE.html">18 · 什么是 FDE？</a></li>
-        </ul>
-      </div>
+    </div>
+    <div class="foot-series">
+      <h4>本系列</h4>
+      <ul>
+        <li><a href="什么是大模型.html">01 · 什么是大模型？</a></li>
+        <li><a href="什么是思维链.html">02 · 什么是思维链？</a></li>
+        <li><a href="什么是Prompt工程.html">03 · 什么是 Prompt 工程？</a></li>
+        <li><a href="什么是幻觉.html">04 · 什么是幻觉？</a></li>
+        <li><a href="什么是RAG.html">05 · 什么是 RAG？</a></li>
+        <li><a href="什么是Agent.html">06 · 什么是 AI Agent？</a></li>
+        <li><a href="什么是Skill.html">07 · 什么是 Skill？</a></li>
+        <li><a href="什么是MCP.html">08 · 什么是 MCP？</a></li>
+        <li><a href="什么是AgentHarness.html">09 · 什么是 Agent Harness？</a></li>
+        <li><a href="什么是DeepSeekHarness.html">10 · 什么是 DeepSeek Harness？</a></li>
+        <li><a href="什么是飞书CLI.html">11 · 什么是飞书 CLI？</a></li>
+        <li><a href="什么是微调.html">12 · 什么是微调？</a></li>
+        <li><a href="什么是提示注入.html">13 · 什么是提示注入？</a></li>
+        <li><a href="什么是多模态.html">14 · 什么是多模态？</a></li>
+        <li><a href="什么是记忆.html">15 · 什么是记忆？</a></li>
+        <li><a href="什么是多智能体.html">16 · 什么是多智能体？</a></li>
+        <li><a href="什么是AI工具选择.html">17 · AI 工具怎么选？</a></li>
+        <li><a href="什么是FDE.html">18 · 什么是 FDE？</a></li>
+      </ul>
     </div>
     <div class="foot-bottom">
       <span>独立学习指南，与所提及的各家公司没有关联 · 内容整理自公开资料</span>
@@ -585,6 +618,15 @@
     </div>
   </div>
 </footer>
+<div class="qr-modal" id="qrModal">
+  <div class="qr-mask" data-close></div>
+  <div class="qr-box">
+    <button class="qr-close" data-close aria-label="关闭">&times;</button>
+    <img src="assets/wechat-qrcode.jpg" alt="微信公众号「大话数据分析」二维码" width="220" height="220">
+    <p>微信扫码关注「大话数据分析」<small>数据 · 分析 · AI 实战</small></p>
+  </div>
+</div>
+
 
 <script>
 document.documentElement.classList.add('js');
@@ -668,6 +710,21 @@ if ('IntersectionObserver' in window && !reduceMotion){
 } else {
   revealEls.forEach(function(n){ n.classList.add('in'); });
 }
+</script>
+<script>
+(function(){
+  var modal=document.getElementById('qrModal');
+  if(!modal)return;
+  var btn=document.getElementById('wechatBtn');
+  function openModal(){modal.classList.add('open');document.body.style.overflow='hidden'}
+  function closeModal(){modal.classList.remove('open');document.body.style.overflow=''}
+  if(btn){
+    btn.addEventListener('click',openModal);
+    btn.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();openModal();}});
+  }
+  modal.addEventListener('click',function(e){if(e.target.hasAttribute('data-close'))closeModal()});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')closeModal()});
+})();
 </script>
 </body>
 </html>
